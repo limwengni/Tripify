@@ -126,7 +126,7 @@ class _TravelAssistantState extends State<TravelAssistant> {
         messages.removeWhere(
             (msg) => msg['isTyping'] == 'true' && msg['sender'] == 'ai');
         messages.add({
-          'text': "Sorry, I couldn't get a response from the server.",
+          'text': "Hmm, it seems there was a network error. Please try again later.",
           'sender': 'ai'
         });
         isTyping = false;
