@@ -14,10 +14,6 @@ class MyApp extends StatelessWidget {
       title: 'Travis - Travel Assistant',
       theme: ThemeData(primarySwatch: Colors.blue),
       home: TravelAssistantView(),
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
-      home: TravelAssistant(),
     );
   }
 }
