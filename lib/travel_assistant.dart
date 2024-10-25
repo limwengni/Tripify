@@ -23,24 +23,29 @@ class _TravelAssistantState extends State<TravelAssistant> {
   @override
   void initState() {
     super.initState();
-    messages.add({
-      'text':
-          "Hey there! Travis here, your travel assistant. What can I help you plan today?",
-      'sender': 'ai'
-    });
-    futurePrompts = fetchPrompts();
+
+    messages = [
+      {
+        'text':
+            "Hey there! Travis here, your travel assistant. What can I help you plan today?",
+        'sender': 'ai'
+      }
+    ];
+
+    // Uncomment the next line to fetch prompts if that feature is needed
+    // futurePrompts = fetchPrompts();
   }
 
-  // Function to fetch generated prompts from the backend
-  Future<List<String>> fetchPrompts() async {
-    final response =
-        await http.get(Uri.parse('http://127.0.0.1:5000/api/prompts'));
-    if (response.statusCode == 200) {
-      return List<String>.from(jsonDecode(response.body));
-    } else {
-      throw Exception('Failed to load prompts');
-    }
-  }
+  // // Function to fetch generated prompts from the backend
+  // Future<List<String>> fetchPrompts() async {
+  //   final response =
+  //       await http.get(Uri.parse('http://127.0.0.1:5000/api/prompts'));
+  //   if (response.statusCode == 200) {
+  //     return List<String>.from(jsonDecode(response.body));
+  //   } else {
+  //     throw Exception('Failed to load prompts');
+  //   }
+  // }
 
   // Function to send message to my API
   Future<String> sendMessageToApi(String message, int userId) async {
@@ -126,7 +131,8 @@ class _TravelAssistantState extends State<TravelAssistant> {
         messages.removeWhere(
             (msg) => msg['isTyping'] == 'true' && msg['sender'] == 'ai');
         messages.add({
-          'text': "Hmm, it seems there was a network error. Please try again later.",
+          'text':
+              "Hmm, it seems there was a network error. Please try again later.",
           'sender': 'ai'
         });
         isTyping = false;
@@ -155,7 +161,7 @@ class _TravelAssistantState extends State<TravelAssistant> {
     super.dispose();
   }
 
-   @override
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -174,31 +180,31 @@ class _TravelAssistantState extends State<TravelAssistant> {
               },
             ),
           ),
-          if (showPrompts)
-            FutureBuilder<List<String>>(
-              future: futurePrompts,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return CircularProgressIndicator();
-                } else if (snapshot.hasError) {
-                  return Text('Failed to fetch prompts');
-                } else {
-                  return Column(
-                    children: snapshot.data!.map((prompt) {
-                      return ListTile(
-                        title: Text(prompt),
-                        onTap: () {
-                          _sendMessage(prompt);
-                          setState(() {
-                            showPrompts = false;
-                          });
-                        },
-                      );
-                    }).toList(),
-                  );
-                }
-              },
-            ),
+          // if (showPrompts)
+          //   FutureBuilder<List<String>>(
+          //     future: futurePrompts,
+          //     builder: (context, snapshot) {
+          //       if (snapshot.connectionState == ConnectionState.waiting) {
+          //         return CircularProgressIndicator();
+          //       } else if (snapshot.hasError) {
+          //         return Text('Failed to fetch prompts');
+          //       } else {
+          //         return Column(
+          //           children: snapshot.data!.map((prompt) {
+          //             return ListTile(
+          //               title: Text(prompt),
+          //               onTap: () {
+          //                 _sendMessage(prompt);
+          //                 setState(() {
+          //                   showPrompts = false;
+          //                 });
+          //               },
+          //             );
+          //           }).toList(),
+          //         );
+          //       }
+          //     },
+          //   ),
           Padding(
             padding: const EdgeInsets.all(10.0),
             child: Container(
