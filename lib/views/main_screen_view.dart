@@ -29,55 +29,58 @@ class _MainScreenState extends State<MainScreenView> {
 
   @override
   Widget build(BuildContext context) {
+    // Access the theme colors
+    final selectedColor = Theme.of(context).colorScheme.onSurface.withOpacity(0.6);
+    final unselectedColor = Theme.of(context).colorScheme.onSurface.withOpacity(0.6);
+
     return Scaffold(
       body: _screens[_currentIndex],
       bottomNavigationBar: BottomNavigationBar(
-        iconSize: 24, // Consistent icon size
-        selectedFontSize: 12.0, // Set the selected font size
-        unselectedFontSize: 12.0, // Set the unselected font size
+        iconSize: 24,
+        selectedFontSize: 12.0,
+        unselectedFontSize: 12.0,
         items: [
           BottomNavigationBarItem(
             icon: Icon(
               _currentIndex == 0 ? Icons.home : Icons.home_outlined,
-              color: _currentIndex == 0 ? Colors.black : Colors.black54,
+              color: _currentIndex == 0 ? selectedColor : unselectedColor,
             ),
             label: 'Home',
           ),
           BottomNavigationBarItem(
             icon: Icon(
               _currentIndex == 1 ? Icons.shopping_cart : Icons.shopping_cart_outlined,
-              color: _currentIndex == 1 ? Colors.black : Colors.black54,
+              color: _currentIndex == 1 ? selectedColor : unselectedColor,
             ),
             label: 'Marketplace',
           ),
           BottomNavigationBarItem(
             icon: Icon(
               _currentIndex == 2 ? Icons.map : Icons.map_outlined,
-              color: _currentIndex == 2 ? Colors.black : Colors.black54,
+              color: _currentIndex == 2 ? selectedColor : unselectedColor,
             ),
             label: 'Itinerary',
           ),
           BottomNavigationBarItem(
             icon: Icon(
-              _currentIndex == 3 ? Icons.commute : Icons.commute_rounded,
-              color: _currentIndex == 3 ? Colors.black : Colors.black54,
+              _currentIndex == 3 ? Icons.local_taxi : Icons.local_taxi_rounded,
+              color: _currentIndex == 3 ? selectedColor : unselectedColor,
             ),
             label: 'Request',
           ),
           BottomNavigationBarItem(
             icon: Icon(
               _currentIndex == 4 ? Icons.person : Icons.person_outline,
-              color: _currentIndex == 4 ? Colors.black : Colors.black54,
+              color: _currentIndex == 4 ? selectedColor : unselectedColor,
             ),
             label: 'Profile',
           ),
         ],
         currentIndex: _currentIndex,
         onTap: _onItemTapped,
-        backgroundColor: Colors.white,
-        selectedItemColor: Colors.black,
-        unselectedItemColor: Colors.black54,
-        type: BottomNavigationBarType.fixed, // Ensures the items do not shift
+        selectedItemColor: selectedColor,
+        unselectedItemColor: unselectedColor,
+        type: BottomNavigationBarType.fixed,
       ),
     );
   }

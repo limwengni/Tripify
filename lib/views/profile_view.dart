@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tripify/views/settings_view.dart';
 
 class ProfileView extends StatelessWidget {
   @override
@@ -41,20 +42,6 @@ class ProfileView extends StatelessWidget {
       ),
       body: Center(
         child: Text("Manage Your Profile"),
-      ),
-    );
-  }
-}
-
-class SettingsView extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text("Settings"),
-      ),
-      body: Center(
-        child: Text("Settings Page"),
       ),
     );
   }

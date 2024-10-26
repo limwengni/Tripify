@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../theme_notifier.dart';
 
 class HomeView extends StatelessWidget {
   @override
