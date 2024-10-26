@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'views/travel_assistant_view.dart';
-import 'package:tripify/views/accommodation_requirement_page.dart';
-import 'travel_assistant.dart'; // Import your travel assistant file
+import 'views/main_screen_view.dart';
 
 void main() {
   runApp(MyApp());
@@ -13,7 +11,8 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Travis - Travel Assistant',
       theme: ThemeData(primarySwatch: Colors.blue),
-      home: TravelAssistantView(),
+      home: MainScreenView(),
+      debugShowCheckedModeBanner: false,
     );
   }
 }
