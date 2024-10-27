@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-class RequestView extends StatelessWidget {
+class RequestPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(

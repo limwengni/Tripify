@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:tripify/views/home_view.dart';
-import 'package:tripify/views/itinerary_view.dart';
-import 'package:tripify/views/marketplace_view.dart';
-import 'package:tripify/views/request_view.dart';
-import 'package:tripify/views/profile_view.dart';
+import 'package:tripify/views/home_page.dart';
+import 'package:tripify/views/itinerary_page.dart';
+import 'package:tripify/views/marketplace_page.dart';
+import 'package:tripify/views/request_page.dart';
+import 'package:tripify/views/profile_page.dart';
+import 'package:tripify/widgets/profile_drawer.dart'; // Make sure to import your ProfileDrawer
 
 class MainScreenView extends StatefulWidget {
   @override
@@ -14,11 +15,11 @@ class _MainScreenState extends State<MainScreenView> {
   int _currentIndex = 0;
 
   final List<Widget> _screens = [
-    HomeView(),
-    MarketplaceView(),
-    ItineraryView(),
-    RequestView(),
-    ProfileView(),
+    HomePage(),
+    MarketplacePage(),
+    ItineraryPage(),
+    RequestPage(),
+    ProfilePage(),
   ];
 
   void _onItemTapped(int index) {
@@ -30,11 +31,22 @@ class _MainScreenState extends State<MainScreenView> {
   @override
   Widget build(BuildContext context) {
     // Access the theme colors
-    final selectedColor = Theme.of(context).colorScheme.onSurface.withOpacity(0.6);
-    final unselectedColor = Theme.of(context).colorScheme.onSurface.withOpacity(0.6);
+    final selectedColor =
+        Theme.of(context).colorScheme.onSurface.withOpacity(0.6);
+    final unselectedColor =
+        Theme.of(context).colorScheme.onSurface.withOpacity(0.6);
 
     return Scaffold(
-      body: _screens[_currentIndex],
+      drawer: ProfileDrawer(
+        onItemTapped: _onItemTapped, // Pass the callback function
+      ), // Your custom drawer
+      body: Row(
+        children: [
+          Expanded(
+            child: _screens[_currentIndex],
+          ),
+        ],
+      ),
       bottomNavigationBar: BottomNavigationBar(
         iconSize: 24,
         selectedFontSize: 12.0,
@@ -49,7 +61,9 @@ class _MainScreenState extends State<MainScreenView> {
           ),
           BottomNavigationBarItem(
             icon: Icon(
-              _currentIndex == 1 ? Icons.shopping_cart : Icons.shopping_cart_outlined,
+              _currentIndex == 1
+                  ? Icons.shopping_cart
+                  : Icons.shopping_cart_outlined,
               color: _currentIndex == 1 ? selectedColor : unselectedColor,
             ),
             label: 'Marketplace',
@@ -63,7 +77,7 @@ class _MainScreenState extends State<MainScreenView> {
           ),
           BottomNavigationBarItem(
             icon: Icon(
-              _currentIndex == 3 ? Icons.local_taxi : Icons.local_taxi_rounded,
+              _currentIndex == 3 ? Icons.local_taxi : Icons.local_taxi_outlined,
               color: _currentIndex == 3 ? selectedColor : unselectedColor,
             ),
             label: 'Request',

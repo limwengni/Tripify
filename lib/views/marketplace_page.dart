@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 
-class ItineraryView extends StatelessWidget {
+class MarketplacePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Itinerary"),
+        title: Text("Marketplace"),
       ),
       body: Center(
-        child: Text("Manage Your Itineraries!"),
+        child: Text("Explore Travel Packages!"),
       ),
     );
   }
