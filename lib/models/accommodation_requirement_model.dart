@@ -1,5 +1,6 @@
 class AccommodationRequirement {
   final String id;
+  final String title;
   final String location;
   final DateTime checkinDate;
   final DateTime checkoutDate;
@@ -10,6 +11,7 @@ class AccommodationRequirement {
 
   AccommodationRequirement({
     required this.id,
+    required this.title,
     required this.location,
     required this.checkinDate,
     required this.checkoutDate,
