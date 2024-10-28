@@ -86,7 +86,7 @@ class _MyAppState extends State<MyApp> {
       'widget': const CurrencyExchangePage(),
     },
      {
-      'title': 'Setting',
+      'title': 'Settings',
       'widget': SettingsPage(),
     },
   ];
@@ -105,7 +105,6 @@ class _MyAppState extends State<MyApp> {
     return Consumer<ThemeNotifier>(
       builder: (context, themeNotifier, child) {
         return MaterialApp(
-          title: 'Travis - Travel Assistant',
           theme: lightTheme,
           darkTheme: darkTheme,
           themeMode: themeNotifier.themeMode,
@@ -113,15 +112,6 @@ class _MyAppState extends State<MyApp> {
             appBar: AppBar(
               title: Text(_title),
               actions: [
-                Padding(
-                  padding: EdgeInsets.only(right: 16), // Right padding only
-                  child: IconButton(
-                    icon: Icon(Icons.favorite_outline),
-                    onPressed: () {
-                      // Open favorite action
-                    },
-                  ),
-                ),
                 Padding(
                   padding: EdgeInsets.only(right: 16), // Right padding only
                   child: IconButton(

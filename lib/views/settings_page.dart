@@ -10,9 +10,6 @@ class SettingsPage extends StatelessWidget {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text("Settings"),
-      ),
       body: ListView(
         padding: const EdgeInsets.all(20.0),
         children: [

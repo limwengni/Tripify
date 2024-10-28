@@ -70,7 +70,7 @@ class TripifyDrawer extends StatelessWidget {
             },
           ),
           ListTile(
-            title: const Text('Setting'),
+            title: const Text('Settings'),
             onTap: () {
               onItemTapped(11);
               Navigator.pop(context);
