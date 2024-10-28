@@ -1,41 +1,67 @@
 import 'package:flutter/material.dart';
-import 'package:tripify/navigation/app_routes.dart';
-import 'package:tripify/theme/app_theme.dart';
-import 'travel_assistant.dart'; // Import your travel assistant file
+import 'package:provider/provider.dart';
+import 'package:tripify/widgets/tripify_navigation_bar.dart';
+import 'theme_notifier.dart';
+import 'theme.dart';
+import 'package:tripify/views/home_page.dart';
+import 'package:tripify/views/itinerary_page.dart';
+import 'package:tripify/views/marketplace_page.dart';
+import 'package:tripify/views/request_page.dart';
+import 'package:tripify/views/profile_page.dart';
 
-// void main() {
-//   runApp(MyApp());
-// }
-
-// class MyApp extends StatelessWidget {
-//   @override
-//   Widget build(BuildContext context) {
-//     return MaterialApp(
-//       theme: ThemeData(
-//         primarySwatch: Colors.blue,
-//       ),
-//       home: TravelAssistant(),
-//     );
-//   }
-// }
-
-void main() {
-  runApp( MyApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  runApp(
+    ChangeNotifierProvider(
+      create: (context) => ThemeNotifier(),
+      child: const MyApp(),
+    ),
+  );
 }
 
-class MyApp extends StatelessWidget {
-   MyApp({super.key});
- final appRoutes = AppRoutes();
+class MyApp extends StatefulWidget {
+  const MyApp({super.key});
+
+  @override
+  _MyAppState createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  int _currentIndex = 0;
+
+  final List<Widget> _screens = [
+    HomePage(),
+    MarketplacePage(),
+    ItineraryPage(),
+    RequestPage(),
+    ProfilePage(),
+  ];
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _currentIndex = index;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-
-    return MaterialApp.router(
-      theme: AppTheme.lightTheme, // Using the defined theme
-      darkTheme: AppTheme.darkTheme, // Optional dark theme
-      themeMode: ThemeMode.system,
-      routerConfig: appRoutes.router,
-      
+    return Consumer<ThemeNotifier>(
+      builder: (context, themeNotifier, child) {
+        return MaterialApp(
+          title: 'Travis - Travel Assistant',
+          theme: lightTheme,
+          darkTheme: darkTheme,
+          themeMode: themeNotifier.themeMode,
+          home: Scaffold(
+            body: _screens[_currentIndex],
+            bottomNavigationBar: TripifyNavBar(
+              currentIndex: _currentIndex,
+              onItemTapped: _onItemTapped,
+            ),
+          ),
+          debugShowCheckedModeBanner: false,
+        );
+      },
     );
   }
 }

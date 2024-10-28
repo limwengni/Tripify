@@ -4,7 +4,6 @@ import 'package:tripify/widgets/tripify_drawer.dart';
 import 'package:go_router/go_router.dart';
 
 class HomeView extends StatelessWidget {
-
   const HomeView({super.key});
 
 
