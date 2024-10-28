@@ -116,15 +116,6 @@ class _MyAppState extends State<MyApp> {
                 Padding(
                   padding: EdgeInsets.only(right: 16), // Right padding only
                   child: IconButton(
-                    icon: Icon(Icons.favorite_outline),
-                    onPressed: () {
-                      // Open favorite action
-                    },
-                  ),
-                ),
-                Padding(
-                  padding: EdgeInsets.only(right: 16), // Right padding only
-                  child: IconButton(
                     icon: SvgPicture.asset(
                       '../assets/icons/message_icon.svg', // Path to your SVG file
                       color: isDarkMode
