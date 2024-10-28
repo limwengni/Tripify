@@ -16,13 +16,7 @@ class _AccommodationRequirementViewState
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("Accommodation Requirement"),
-      ),
-      drawer: const TripifyDrawer(),
-     
-      body: const Center(
+    return  const Center(
         child: Column(
           children: [
             Expanded(
@@ -30,7 +24,6 @@ class _AccommodationRequirementViewState
             ),
           ],
         ),
-      ),
     );
   }
 }
