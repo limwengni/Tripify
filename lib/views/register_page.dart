@@ -1,26 +1,23 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:tripify/components/components.dart';
-import 'package:tripify/views/home_page.dart';
-import 'package:tripify/views/login_page.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:tripify/constants.dart';
-import 'package:loading_overlay/loading_overlay.dart';
 import 'package:tripify/views/welcome_page.dart';
+import 'package:loading_overlay/loading_overlay.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class RegistrationPage extends StatefulWidget {
   const RegistrationPage({super.key});
-  static String id = 'register_screen';
+  static String id = 'registration_screen';
 
   @override
-  State<RegistrationPage> createState() => _SignUpScreenState();
+  State<RegistrationPage> createState() => _RegistrationScreenState();
 }
 
-class _SignUpScreenState extends State<RegistrationPage> {
+class _RegistrationScreenState extends State<RegistrationPage> {
   final _auth = FirebaseAuth.instance;
   late String _email;
   late String _password;
-  late String _confirmPass;
+  late String _confirmPassword;
   bool _saving = false;
 
   @override
@@ -28,129 +25,129 @@ class _SignUpScreenState extends State<RegistrationPage> {
     return WillPopScope(
       onWillPop: () async {
         Navigator.popAndPushNamed(context, WelcomePage.id);
-        return true;
+        return false;
       },
       child: Scaffold(
         backgroundColor: Colors.white,
+        appBar: AppBar(
+          leading: IconButton(
+            icon: Icon(Icons.arrow_back),
+            onPressed: () {
+              Navigator.popAndPushNamed(context, WelcomePage.id);
+            },
+          ),
+          backgroundColor: Colors.transparent,
+          elevation: 0, // Removes shadow under the AppBar
+        ),
         body: LoadingOverlay(
           isLoading: _saving,
           child: SafeArea(
             child: Padding(
               padding: const EdgeInsets.all(20.0),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const TopScreenImage(screenImageName: 'signup.png'),
                   Expanded(
                     flex: 2,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 15,
-                      ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          const ScreenTitle(title: 'Sign Up'),
-                          CustomTextField(
-                            textField: TextField(
-                              onChanged: (value) {
-                                _email = value;
-                              },
-                              style: const TextStyle(
-                                fontSize: 20,
-                              ),
-                              decoration: kTextInputDecoration.copyWith(
-                                hintText: 'Email',
-                              ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        const ScreenTitle(title: 'Register'),
+                        const SizedBox(height: 10),
+                        CustomTextField(
+                          textField: TextField(
+                            onChanged: (value) {
+                              _email = value;
+                            },
+                            style: const TextStyle(
+                              fontSize: 20,
                             ),
+                            decoration: kTextInputDecoration.copyWith(
+                                hintText: 'Email'),
                           ),
-                          CustomTextField(
-                            textField: TextField(
-                              obscureText: true,
-                              onChanged: (value) {
-                                _password = value;
-                              },
-                              style: const TextStyle(
-                                fontSize: 20,
-                              ),
-                              decoration: kTextInputDecoration.copyWith(
-                                hintText: 'Password',
-                              ),
+                        ),
+                        const SizedBox(height: 10),
+                        CustomTextField(
+                          textField: TextField(
+                            obscureText: true,
+                            onChanged: (value) {
+                              _password = value;
+                            },
+                            style: const TextStyle(
+                              fontSize: 20,
                             ),
+                            decoration: kTextInputDecoration.copyWith(
+                                hintText: 'Password'),
                           ),
-                          CustomTextField(
-                            textField: TextField(
-                              obscureText: true,
-                              onChanged: (value) {
-                                _confirmPass = value;
-                              },
-                              style: const TextStyle(
-                                fontSize: 20,
-                              ),
-                              decoration: kTextInputDecoration.copyWith(
-                                hintText: 'Confirm Password',
-                              ),
+                        ),
+                        const SizedBox(height: 10),
+                        CustomTextField(
+                          textField: TextField(
+                            obscureText: true,
+                            onChanged: (value) {
+                              _confirmPassword = value;
+                            },
+                            style: const TextStyle(
+                              fontSize: 20,
                             ),
+                            decoration: kTextInputDecoration.copyWith(
+                                hintText: 'Confirm Password'),
                           ),
-                          CustomBottomScreen(
-                            textButton: 'Sign Up',
-                            heroTag: 'signup_btn',
-                            question: 'Have an account?',
-                            buttonPressed: () async {
-                              FocusManager.instance.primaryFocus?.unfocus();
-                              setState(() {
-                                _saving = true;
-                              });
-                              if (_confirmPass == _password) {
-                                try {
-                                  await _auth.createUserWithEmailAndPassword(
-                                      email: _email, password: _password);
+                        ),
+                        const SizedBox(height: 20),
+                        CustomBottomScreen(
+                          textButton: 'Sign Up',
+                          heroTag: 'register_btn',
+                          question: 'Have an account?',
+                          buttonPressed: () async {
+                            FocusManager.instance.primaryFocus?.unfocus();
+                            setState(() {
+                              _saving = true;
+                            });
 
-                                  if (context.mounted) {
-                                    signUpAlert(
-                                      context: context,
-                                      title: 'GOOD JOB',
-                                      desc: 'Go login now',
-                                      btnText: 'Login Now',
-                                      onPressed: () {
-                                        setState(() {
-                                          _saving = false;
-                                          Navigator.popAndPushNamed(
-                                              context, RegistrationPage.id);
-                                        });
-                                        Navigator.pushNamed(
-                                            context, LoginPage.id);
-                                      },
-                                    ).show();
-                                  }
-                                } catch (e) {
-                                  signUpAlert(
-                                      context: context,
-                                      onPressed: () {
-                                        SystemNavigator.pop();
-                                      },
-                                      title: 'SOMETHING WRONG',
-                                      desc: 'Close the app and try again',
-                                      btnText: 'Close Now');
+                            if (_password == _confirmPassword) {
+                              try {
+                                await _auth.createUserWithEmailAndPassword(
+                                    email: _email, password: _password);
+
+                                if (context.mounted) {
+                                  setState(() {
+                                    _saving = false;
+                                    Navigator.popAndPushNamed(
+                                        context, RegistrationPage.id);
+                                  });
+                                  // Navigate to home page or another screen
                                 }
-                              } else {
-                                showAlert(
-                                    context: context,
-                                    title: 'WRONG PASSWORD',
-                                    desc:
-                                        'Make sure that you write the same password twice',
-                                    onPressed: () {
-                                      Navigator.pop(context);
-                                    }).show();
+                              } catch (e) {
+                                signUpAlert(
+                                  context: context,
+                                  onPressed: () {
+                                    setState(() {
+                                      _saving = false;
+                                    });
+                                    Navigator.popAndPushNamed(
+                                        context, RegistrationPage.id);
+                                  },
+                                  title: 'ERROR',
+                                  desc: 'Failed to register. Please try again.',
+                                  btnText: 'Try Again',
+                                ).show();
                               }
-                            },
-                            questionPressed: () async {
-                              Navigator.pushNamed(context, LoginPage.id);
-                            },
-                          ),
-                        ],
-                      ),
+                            } else {
+                              showAlert(
+                                  context: context,
+                                  title: 'PASSWORD MISMATCH',
+                                  desc: 'Ensure both passwords match.',
+                                  onPressed: () {
+                                    Navigator.pop(context);
+                                  }).show();
+                            }
+                          },
+                          questionPressed: () {
+                            Navigator.popAndPushNamed(context, RegistrationPage.id);
+                          },
+                        ),
+                      ],
                     ),
                   ),
                 ],
