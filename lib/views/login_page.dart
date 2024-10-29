@@ -31,7 +31,7 @@ class _LoginScreenState extends State<LoginPage> {
         backgroundColor: Colors.white,
         appBar: AppBar(
           leading: IconButton(
-            icon: Icon(Icons.arrow_back),
+            icon: const Icon(Icons.arrow_back),
             onPressed: () {
               Navigator.popAndPushNamed(context, WelcomePage.id);
             },
@@ -59,9 +59,6 @@ class _LoginScreenState extends State<LoginPage> {
                             onChanged: (value) {
                               _email = value;
                             },
-                            // style: const TextStyle(
-                            //   fontSize: 20,
-                            // ),
                             decoration: kTextInputDecoration.copyWith(
                                 hintText: 'Email',
                                 hintStyle: const TextStyle(color: Colors.grey)),
@@ -74,9 +71,6 @@ class _LoginScreenState extends State<LoginPage> {
                             onChanged: (value) {
                               _password = value;
                             },
-                            // style: const TextStyle(
-                            //   fontSize: 20,
-                            // ),
                             decoration: kTextInputDecoration.copyWith(
                                 hintText: 'Password',
                                 hintStyle: const TextStyle(color: Colors.grey)),
@@ -88,7 +82,8 @@ class _LoginScreenState extends State<LoginPage> {
                           heroTag: 'login_btn',
                           question: 'Forgot password?',
                           buttonPressed: () async {
-                            FocusManager.instance.primaryFocus?.unfocus();
+                            FocusManager.instance.primaryFocus
+                                ?.unfocus(); // dismiss the keyboard
                             setState(() {
                               _saving = true;
                             });
@@ -105,20 +100,31 @@ class _LoginScreenState extends State<LoginPage> {
                                 Navigator.pushNamed(context, WelcomePage.id);
                               }
                             } catch (e) {
-                              signUpAlert(
-                                context: context,
-                                onPressed: () {
-                                  setState(() {
-                                    _saving = false;
-                                  });
-                                  Navigator.popAndPushNamed(
-                                      context, LoginPage.id);
-                                },
-                                title: 'WRONG PASSWORD OR EMAIL',
-                                desc:
-                                    'Confirm your email and password and try again',
-                                btnText: 'Try Now',
-                              ).show();
+                              // Reset _saving to false on error
+                              setState(() {
+                                _saving = false; // Reset loading state
+                              });
+
+                              showDialog(
+                                  context: context,
+                                  builder: (BuildContext context) =>
+                                      AlertDialog(
+                                        title: const Text(
+                                          'Error',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        content: const Text(
+                                            'Confirm your email and password and try again'),
+                                        actions: <Widget>[
+                                          TextButton(
+                                            onPressed: () =>
+                                                Navigator.pop(context, 'OK'),
+                                            child: const Text('OK'),
+                                          ),
+                                        ],
+                                      ));
                             }
                           },
                           questionPressed: () {

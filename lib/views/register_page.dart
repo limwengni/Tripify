@@ -31,7 +31,7 @@ class _RegistrationScreenState extends State<RegistrationPage> {
         backgroundColor: Colors.white,
         appBar: AppBar(
           leading: IconButton(
-            icon: Icon(Icons.arrow_back),
+            icon: const Icon(Icons.arrow_back),
             onPressed: () {
               Navigator.popAndPushNamed(context, WelcomePage.id);
             },
@@ -59,11 +59,9 @@ class _RegistrationScreenState extends State<RegistrationPage> {
                             onChanged: (value) {
                               _email = value;
                             },
-                            style: const TextStyle(
-                              fontSize: 20,
-                            ),
                             decoration: kTextInputDecoration.copyWith(
-                                hintText: 'Email'),
+                                hintText: 'Email',
+                                hintStyle: const TextStyle(color: Colors.grey)),
                           ),
                         ),
                         const SizedBox(height: 10),
@@ -73,11 +71,9 @@ class _RegistrationScreenState extends State<RegistrationPage> {
                             onChanged: (value) {
                               _password = value;
                             },
-                            style: const TextStyle(
-                              fontSize: 20,
-                            ),
                             decoration: kTextInputDecoration.copyWith(
-                                hintText: 'Password'),
+                                hintText: 'Password',
+                                hintStyle: const TextStyle(color: Colors.grey)),
                           ),
                         ),
                         const SizedBox(height: 10),
@@ -87,17 +83,15 @@ class _RegistrationScreenState extends State<RegistrationPage> {
                             onChanged: (value) {
                               _confirmPassword = value;
                             },
-                            style: const TextStyle(
-                              fontSize: 20,
-                            ),
                             decoration: kTextInputDecoration.copyWith(
-                                hintText: 'Confirm Password'),
+                                hintText: 'Confirm Password',
+                                hintStyle: const TextStyle(color: Colors.grey)),
                           ),
                         ),
                         const SizedBox(height: 20),
                         CustomBottomScreen(
                           textButton: 'Sign Up',
-                          heroTag: 'register_btn',
+                          heroTag: 'signup_btn',
                           question: 'Have an account?',
                           buttonPressed: () async {
                             FocusManager.instance.primaryFocus?.unfocus();
@@ -144,7 +138,8 @@ class _RegistrationScreenState extends State<RegistrationPage> {
                             }
                           },
                           questionPressed: () {
-                            Navigator.popAndPushNamed(context, RegistrationPage.id);
+                            Navigator.popAndPushNamed(
+                                context, RegistrationPage.id);
                           },
                         ),
                       ],

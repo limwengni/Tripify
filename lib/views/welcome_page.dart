@@ -60,7 +60,7 @@ class WelcomePage extends StatelessWidget {
                   tag: 'signup_btn',
                   child: CustomButton(
                     buttonText: 'Sign Up',
-                    isOutlined: true,
+             
                     onPressed: () {
                       Navigator.push(
                         context,
