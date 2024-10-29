@@ -20,6 +20,13 @@ class _RegistrationScreenState extends State<RegistrationPage> {
   late String _confirmPassword;
   bool _saving = false;
 
+
+ // Regular expression for validating email format
+  final RegExp _emailRegExp = RegExp(
+    r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
+  );
+
+
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
@@ -99,6 +106,31 @@ class _RegistrationScreenState extends State<RegistrationPage> {
                               _saving = true;
                             });
 
+                            // Validate email format
+                            if (!_emailRegExp.hasMatch(_email)) {
+                              setState(() {
+                                _saving = false; // Reset loading state
+                              });
+                              showDialog(
+                                context: context,
+                                builder: (BuildContext context) => AlertDialog(
+                                  title: const Text(
+                                    'Error',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  content: const Text('Please enter a valid email address.'),
+                                  actions: <Widget>[
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(context, 'OK'),
+                                      child: const Text('OK'),
+                                    ),
+                                  ],
+                                ),
+                              );
+                              return; // Exit the method if email is invalid
+                            }
                             if (_password == _confirmPassword) {
                               try {
                                 await _auth.createUserWithEmailAndPassword(
@@ -113,28 +145,56 @@ class _RegistrationScreenState extends State<RegistrationPage> {
                                   Navigator.pushNamed(context, WelcomePage.id);
                                 }
                               } catch (e) {
-                                signUpAlert(
-                                  context: context,
-                                  onPressed: () {
-                                    setState(() {
-                                      _saving = false;
-                                    });
-                                    Navigator.popAndPushNamed(
-                                        context, RegistrationPage.id);
-                                  },
-                                  title: 'ERROR',
-                                  desc: 'Failed to register. Please try again.',
-                                  btnText: 'Try Again',
-                                ).show();
+                                setState(() {
+                                  _saving = false; 
+                                });
+                                showDialog(
+                                    context: context,
+                                    builder: (BuildContext context) =>
+                                        AlertDialog(
+                                          title: const Text(
+                                            'Error',
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                          content: const Text(
+                                              'Failed to register, please try again later'),
+                                          actions: <Widget>[
+                                            TextButton(
+                                              onPressed: () =>
+                                                  Navigator.pop(context, 'OK'),
+                                              child: const Text('OK'),
+                                            ),
+                                          ],
+                                        ));
                               }
                             } else {
-                              showAlert(
+                              // Reset _saving to false on error
+                              setState(() {
+                                _saving = false; // Reset loading state
+                              });
+
+                              showDialog(
                                   context: context,
-                                  title: 'PASSWORD MISMATCH',
-                                  desc: 'Ensure both passwords match.',
-                                  onPressed: () {
-                                    Navigator.pop(context);
-                                  }).show();
+                                  builder: (BuildContext context) =>
+                                      AlertDialog(
+                                        title: const Text(
+                                          'Error',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        content: const Text(
+                                            'Ensure password and confirm password is match'),
+                                        actions: <Widget>[
+                                          TextButton(
+                                            onPressed: () =>
+                                                Navigator.pop(context, 'OK'),
+                                            child: const Text('OK'),
+                                          ),
+                                        ],
+                                      ));
                             }
                           },
                           questionPressed: () {
