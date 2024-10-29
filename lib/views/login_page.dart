@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:tripify/services/auth_service.dart';
 import 'package:tripify/components/components.dart';
 import 'package:tripify/constants.dart';
 import 'package:tripify/views/welcome_page.dart';
@@ -87,44 +89,86 @@ class _LoginScreenState extends State<LoginPage> {
                             setState(() {
                               _saving = true;
                             });
-                            try {
-                              await _auth.signInWithEmailAndPassword(
-                                  email: _email, password: _password);
 
-                              if (context.mounted) {
-                                setState(() {
-                                  _saving = false;
-                                  Navigator.popAndPushNamed(
-                                      context, LoginPage.id);
-                                });
-                                Navigator.pushNamed(context, WelcomePage.id);
-                              }
-                            } catch (e) {
-                              // Reset _saving to false on error
+                            // Basic email format validation
+                            if (_email.isEmpty || !_email.contains('@')) {
                               setState(() {
-                                _saving = false; // Reset loading state
+                                _saving = false;
+                              });
+                              showDialog(
+                                context: context,
+                                builder: (context) => AlertDialog(
+                                  title: const Text('Error',
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.bold)),
+                                  content: const Text(
+                                      'Please enter a valid email address.'),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () =>
+                                          Navigator.pop(context, 'OK'),
+                                      child: const Text('OK'),
+                                    ),
+                                  ],
+                                ),
+                              );
+                              return;
+                            }
+
+                            try {
+                              await Provider.of<AuthService>(context,
+                                      listen: false)
+                                  .signIn(_email, _password);
+
+                              Navigator.popAndPushNamed(context, HomePage.id);
+                            } on FirebaseAuthException catch (e) {
+                              setState(() {
+                                _saving = false;
                               });
 
-                              showDialog(
-                                  context: context,
-                                  builder: (BuildContext context) =>
-                                      AlertDialog(
-                                        title: const Text(
-                                          'Error',
+                              switch (e.code) {
+                                case 'invalid-credential':
+                                  showDialog(
+                                    context: context,
+                                    builder: (context) => AlertDialog(
+                                      title: const Text('Error',
                                           style: TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                          ),
+                                              fontWeight: FontWeight.bold)),
+                                      content: const Text(
+                                          'Incorrect email or password. Please try again.'),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () =>
+                                              Navigator.pop(context, 'OK'),
+                                          child: const Text('OK'),
                                         ),
-                                        content: const Text(
-                                            'Confirm your email and password and try again'),
-                                        actions: <Widget>[
-                                          TextButton(
-                                            onPressed: () =>
-                                                Navigator.pop(context, 'OK'),
-                                            child: const Text('OK'),
-                                          ),
-                                        ],
-                                      ));
+                                      ],
+                                    ),
+                                  );
+                                  break;
+                                default:
+                                  // Log unexpected error code for debugging
+                                  print('Unexpected Firebase error: ${e.code}');
+
+                                  showDialog(
+                                    context: context,
+                                    builder: (context) => AlertDialog(
+                                      title: const Text('Error',
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.bold)),
+                                      content: const Text(
+                                          'An error occurred. Please try again later.'),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () =>
+                                              Navigator.pop(context, 'OK'),
+                                          child: const Text('OK'),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                  break;
+                              }
                             }
                           },
                           questionPressed: () {

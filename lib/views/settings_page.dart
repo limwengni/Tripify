@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tripify/views/about_page.dart';
+import 'package:tripify/views/login_page.dart';
+import 'package:tripify/services/auth_service.dart';
+import 'package:tripify/views/welcome_page.dart';
 import 'theme_selection_page.dart';
 import '../theme_notifier.dart';
 
@@ -145,6 +148,41 @@ class SettingsPage extends StatelessWidget {
                   );
                 },
               ),
+            );
+            break;
+
+          case "Log Out":
+            showDialog(
+              context: context,
+              builder: (BuildContext context) {
+                return AlertDialog(
+                  title: Text("Log Out"),
+                  content: Text("Are you sure you want to log out?"),
+                  actions: [
+                    TextButton(
+                      child: Text("Cancel"),
+                      onPressed: () {
+                        Navigator.of(context).pop(); // Dismiss the dialog
+                      },
+                    ),
+                    TextButton(
+                      child: Text("Log Out"),
+                      onPressed: () async {
+                        // Access the auth provider and call the logout method
+                        await Provider.of<AuthService>(context, listen: false)
+                            .logout();
+
+                        Navigator.of(context).pop(); // Dismiss the dialog
+                        Navigator.popUntil(context,
+                            (route) => route.isFirst); // Clear all routes
+                        // Optionally navigate to Login Page:
+                        Navigator.pushReplacement(context,
+                            MaterialPageRoute(builder: (_) => WelcomePage()));
+                      },
+                    ),
+                  ],
+                );
+              },
             );
             break;
 
