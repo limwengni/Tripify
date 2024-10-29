@@ -29,6 +29,16 @@ class _LoginScreenState extends State<LoginPage> {
       },
       child: Scaffold(
         backgroundColor: Colors.white,
+        appBar: AppBar(
+          leading: IconButton(
+            icon: Icon(Icons.arrow_back),
+            onPressed: () {
+              Navigator.popAndPushNamed(context, WelcomePage.id);
+            },
+          ),
+          backgroundColor: Colors.transparent,
+          elevation: 0, // Removes shadow under the AppBar
+        ),
         body: LoadingOverlay(
           isLoading: _saving,
           child: SafeArea(
@@ -39,11 +49,11 @@ class _LoginScreenState extends State<LoginPage> {
                   Expanded(
                     flex: 2,
                     child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center, // Center the content vertically
+                      mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         const ScreenTitle(title: 'Login'),
-                        const SizedBox(height: 10), // Reduced spacing between title and text field
+                        const SizedBox(height: 10),
                         CustomTextField(
                           textField: TextField(
                               onChanged: (value) {
@@ -55,7 +65,7 @@ class _LoginScreenState extends State<LoginPage> {
                               decoration: kTextInputDecoration.copyWith(
                                   hintText: 'Email')),
                         ),
-                        const SizedBox(height: 10), // Reduced spacing between email and password field
+                        const SizedBox(height: 10),
                         CustomTextField(
                           textField: TextField(
                             obscureText: true,
@@ -69,7 +79,7 @@ class _LoginScreenState extends State<LoginPage> {
                                 hintText: 'Password'),
                           ),
                         ),
-                        const SizedBox(height: 20), // Adjusted spacing before button
+                        const SizedBox(height: 20),
                         CustomBottomScreen(
                           textButton: 'Login',
                           heroTag: 'login_btn',
