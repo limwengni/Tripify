@@ -116,7 +116,7 @@ class _RegistrationScreenState extends State<RegistrationPage> {
                                     Navigator.popAndPushNamed(
                                         context, RegistrationPage.id);
                                   });
-                                  // Navigate to home page or another screen
+                                  Navigator.pushNamed(context, WelcomePage.id);
                                 }
                               } catch (e) {
                                 signUpAlert(
