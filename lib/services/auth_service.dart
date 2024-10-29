@@ -7,11 +7,9 @@ class AuthService extends ChangeNotifier {
   User? _user;
   String? _username; // New variable to hold username
 
-  User? get user => _user;
   String? get username => _username; // Getter for username
 
-  // Stream to listen to auth state changes
-  Stream<User?> get userStream => _auth.authStateChanges();
+  bool get isLoggedIn => _user != null;
 
   AuthService() {
     _auth.authStateChanges().listen((User? user) {
@@ -25,18 +23,22 @@ class AuthService extends ChangeNotifier {
 
   Future<void> signIn(String email, String password) async {
     try {
-      await _auth.signInWithEmailAndPassword(email: email, password: password);
-      // User fetching handled in constructor when state changes
-    } on FirebaseAuthException catch (e) {
-      // Handle errors more gracefully
-      print("Sign in failed: ${e.message}"); // For debugging
-      throw e; // Rethrow error if necessary
+      UserCredential userCredential = await _auth.signInWithEmailAndPassword(
+          email: email, password: password);
+      _user = userCredential.user;
+      notifyListeners();
+      // Navigator.popAndPushNamed(context, HomePage.id);
+      print('Sign in successful');
+    } catch (e) {
+      // Handle sign-in error
+      print(e);
     }
   }
 
   Future<void> register(String email, String password) async {
     try {
-      await _auth.createUserWithEmailAndPassword(email: email, password: password);
+      await _auth.createUserWithEmailAndPassword(
+          email: email, password: password);
       // Fetch user details after registration if needed
     } catch (e) {
       print("Registration failed: $e");
@@ -45,20 +47,24 @@ class AuthService extends ChangeNotifier {
   }
 
   Future<void> logout() async {
-    await _auth.signOut();
-    _username = null; // Clear username on logout
-    notifyListeners();
+    try {
+      await FirebaseAuth.instance.signOut(); // Directly sign out from Firebase
+      _username = null; // Clear username on logout
+      notifyListeners(); // Notify listeners about the state change
+    } catch (e) {
+      // Handle any errors that occur during sign out
+      print('Logout error: $e');
+    }
   }
-
-  bool get isLoggedIn => user != null;
 
   Future<void> fetchUserDetails() async {
     try {
       String uid = _user!.uid; // Using _user directly since it's not null
-      DocumentSnapshot userDoc = await FirebaseFirestore.instance.collection('User').doc(uid).get();
+      DocumentSnapshot userDoc =
+          await FirebaseFirestore.instance.collection('User').doc(uid).get();
 
       if (userDoc.exists) {
-        var userData = userDoc.data() as Map<String, dynamic>?; 
+        var userData = userDoc.data() as Map<String, dynamic>?;
 
         if (userData != null) {
           _username = userData['username']; // Store username in the state
@@ -75,4 +81,10 @@ class AuthService extends ChangeNotifier {
       throw e; // Rethrow error if necessary
     }
   }
+
+   // Getter for user state
+  User? get user => _auth.currentUser;
+
+  // Stream for user state changes
+  Stream<User?> get userStream => _auth.authStateChanges();
 }

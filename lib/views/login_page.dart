@@ -120,9 +120,8 @@ class _LoginScreenState extends State<LoginPage> {
                               await Provider.of<AuthService>(context,
                                       listen: false)
                                   .signIn(_email, _password);
-                              print('Sign in successful');
 
-                              Navigator.pop(context);
+                              Navigator.popAndPushNamed(context, HomePage.id); // Redirect to HomePage after login
                             } on FirebaseAuthException catch (e) {
                               setState(() {
                                 _saving = false;
