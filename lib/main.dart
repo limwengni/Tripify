@@ -36,60 +36,26 @@ void main() async {
   } catch (e) {
     print('Error initializing Firebase: $e');
     return;
-  }
+  } // Initialize Firebase
 
   runApp(
-    MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (context) => AuthService()),
-        ChangeNotifierProvider(create: (context) => ThemeNotifier()),
-      ],
-      child: const MyApp(),
-    ),
+    ChangeNotifierProvider(
+        create: (context) => AuthService(),
+        child: ChangeNotifierProvider(
+          create: (context) => ThemeNotifier(),
+          child: const MyApp(),
+        )),
   );
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return Consumer<ThemeNotifier>(
-      builder: (context, themeNotifier, child) {
-        return MaterialApp(
-          theme: lightTheme,
-          darkTheme: darkTheme,
-          themeMode: themeNotifier.themeMode,
-          home: AuthWrapper(),
-          debugShowCheckedModeBanner: false,
-        );
-      },
-    );
-  }
+  _MyAppState createState() => _MyAppState();
 }
 
-class AuthWrapper extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Consumer<AuthService>(
-      builder: (context, authService, child) {
-        print('AuthWrapper: ${authService.isLoggedIn}');
-        if (authService.isLoggedIn) {
-          return MainPage();
-        } else {
-          return const WelcomePage();
-        }
-      },
-    );
-  }
-}
-
-class MainPage extends StatefulWidget {
-  @override
-  _MainPageState createState() => _MainPageState();
-}
-
-class _MainPageState extends State<MainPage> {
+class _MyAppState extends State<MyApp> {
   int _currentIndex = 0;
   String _title = 'Home';
 
@@ -122,32 +88,59 @@ class _MainPageState extends State<MainPage> {
   Widget build(BuildContext context) {
     final bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(_title),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 16),
-            child: IconButton(
-              icon: SvgPicture.asset(
-                'assets/icons/message_icon.svg',
-                color: isDarkMode ? Colors.white : Colors.black,
-                width: 24,
-                height: 24,
-              ),
-              onPressed: () {
-                // Open chat messages
-              },
-            ),
+    return Consumer<ThemeNotifier>(
+      builder: (context, themeNotifier, child) {
+        return MaterialApp(
+          theme: lightTheme,
+          darkTheme: darkTheme,
+          themeMode: themeNotifier.themeMode,
+          home: StreamBuilder<User?>(
+            stream: FirebaseAuth.instance.authStateChanges(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
+
+              print('Snapshot data: ${snapshot.data}'); // Debug print
+
+              if (snapshot.hasData) {
+                // User is signed in
+                return Scaffold(
+                  appBar: AppBar(
+                    title: Text(_title),
+                    actions: [
+                      Padding(
+                        padding: const EdgeInsets.only(right: 16),
+                        child: IconButton(
+                          icon: SvgPicture.asset(
+                            'assets/icons/message_icon.svg',
+                            color: isDarkMode ? Colors.white : Colors.black,
+                            width: 24,
+                            height: 24,
+                          ),
+                          onPressed: () {
+                            // Open chat messages
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                  drawer: TripifyDrawer(onItemTapped: _onItemTapped),
+                  body: widgetItems[_currentIndex]['widget'],
+                  bottomNavigationBar: TripifyNavBar(
+                    currentIndex: (_currentIndex < 4) ? _currentIndex : 4,
+                    onItemTapped: _onItemTapped,
+                  ),
+                );
+              } else {
+                // User is not signed in, redirect to WelcomePage
+                return const WelcomePage();
+              }
+            },
           ),
-        ],
-      ),
-      drawer: TripifyDrawer(onItemTapped: _onItemTapped),
-      body: widgetItems[_currentIndex]['widget'],
-      bottomNavigationBar: TripifyNavBar(
-        currentIndex: (_currentIndex < 4) ? _currentIndex : 4,
-        onItemTapped: _onItemTapped,
-      ),
+          debugShowCheckedModeBanner: false,
+        );
+      },
     );
   }
 }

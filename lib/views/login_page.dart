@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:tripify/services/auth_service.dart';
 import 'package:tripify/components/components.dart';
 import 'package:tripify/constants.dart';
 import 'package:tripify/views/welcome_page.dart';
@@ -116,12 +114,18 @@ class _LoginScreenState extends State<LoginPage> {
                             }
 
                             try {
-                              print('Attempting to sign in...');
-                              await Provider.of<AuthService>(context,
-                                      listen: false)
-                                  .signIn(_email, _password);
+                              await _auth.signInWithEmailAndPassword(
+                                email: _email,
+                                password: _password,
+                              );
 
-                              Navigator.popAndPushNamed(context, HomePage.id); // Redirect to HomePage after login
+                              if (context.mounted) {
+                                setState(() {
+                                  _saving = false;
+                                });
+                                Navigator.pushReplacementNamed(
+                                    context, HomePage.id); // Correct navigation
+                              }
                             } on FirebaseAuthException catch (e) {
                               setState(() {
                                 _saving = false;
