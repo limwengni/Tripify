@@ -3,12 +3,13 @@ import 'package:tripify/constants.dart';
 import 'package:rflutter_alert/rflutter_alert.dart';
 
 class CustomButton extends StatelessWidget {
-  const CustomButton(
-      {super.key,
-      required this.buttonText,
-      this.isOutlined = false,
-      required this.onPressed,
-      this.width = 280});
+  const CustomButton({
+    super.key,
+    required this.buttonText,
+    this.isOutlined = false,
+    required this.onPressed,
+    this.width = 280,
+  });
 
   final String buttonText;
   final bool isOutlined;
@@ -26,7 +27,7 @@ class CustomButton extends StatelessWidget {
         elevation: 4,
         child: Container(
           width: width,
-          padding: const EdgeInsets.all(13),
+          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 15), // Adjusted padding
           decoration: BoxDecoration(
             color: isOutlined ? Colors.white : kTextColor,
             border: Border.all(color: kTextColor, width: 2.5),
@@ -47,6 +48,7 @@ class CustomButton extends StatelessWidget {
     );
   }
 }
+
 
 class TopScreenImage extends StatelessWidget {
   const TopScreenImage({super.key, required this.screenImageName});

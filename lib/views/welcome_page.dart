@@ -1,98 +1,102 @@
 import 'package:flutter/material.dart';
+import 'package:tripify/components/components.dart';
 import 'package:tripify/views/login_page.dart';
-import 'package:tripify/views/register_page.dart'; // Assuming you have a register page
+import 'package:tripify/views/register_page.dart';
 
 class WelcomePage extends StatelessWidget {
   const WelcomePage({super.key});
-  static String id = 'welcome_screen';
+  static String id = 'home_screen';
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(25),
-          child: Center(
+          child: Center( // Center the entire Column
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.center, // Center the contents vertically
+              crossAxisAlignment: CrossAxisAlignment.center, // Center horizontally
               children: [
+                // Styled ScreenTitle
                 const Text(
                   'Welcome to Tripify!',
-                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.center, // Center the text
+                  style: TextStyle(
+                    fontSize: 24, // Increased font size
+                    fontWeight: FontWeight.bold, // Bold font weight
+                    color: Colors.black, // Change color as needed
+                  ),
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 10), // Reduced height
                 const Text(
                   'Your journey begins here. Plan your trips effortlessly.',
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 16, color: Colors.grey),
-                ),
-                const SizedBox(height: 30),
-                // Login Button with Shadow
-                Container(
-                  width: 200,
-                  height: 40, // Set the desired height here
-                  decoration: BoxDecoration(
-                    color: const Color.fromARGB(255, 159, 118, 249),
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.2),
-                        spreadRadius: 1,
-                        blurRadius: 2,
-                        offset: const Offset(0, 3),
-                      ),
-                    ],
+                  style: TextStyle(
+                    color: Colors.grey,
+                    fontSize: 20,
                   ),
-                  child: TextButton(
+                ),
+                const SizedBox(height: 20), // Reduced height
+                Hero(
+                  tag: 'login_btn',
+                  child: CustomButton(
+                    buttonText: 'Login',
                     onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => const LoginPage()),
-                      );
+                      Navigator.pushNamed(context, LoginPage.id);
                     },
-                    child: const Text(
-                      'Login',
-                      style: TextStyle(
-                          color: Colors.white, fontWeight: FontWeight.bold),
-                    ),
                   ),
                 ),
-                const SizedBox(height: 20),
-                // Register Button with Outline
-                Container(
-                  width: 200,
-                  height: 40, // Set the desired height here
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: const Color.fromARGB(255, 159, 118, 249), // Outline color
-                      width: 2, // Outline width
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.2),
-                        spreadRadius: 1,
-                        blurRadius: 2,
-                        offset: const Offset(0, 3),
-                      ),
-                    ],
-                  ),
-                  child: TextButton(
+                const SizedBox(height: 15),
+                Hero(
+                  tag: 'signup_btn',
+                  child: CustomButton(
+                    buttonText: 'Sign Up',
+                    isOutlined: true,
                     onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => RegistrationPage()), // Make sure this points to your register page
-                      );
+                      Navigator.pushNamed(context, RegistrationPage.id);
                     },
-                    child: Text(
-                      'Register',
-                      style: TextStyle(
-                          color: Color.fromARGB(255, 159, 118, 249),
-                          fontWeight: FontWeight.bold),
-                    ),
                   ),
                 ),
+                const SizedBox(height: 15), // Adjusted spacing
+                // Commenting out the sign up using section
+                /*
+                const Text(
+                  'Sign up using',
+                  style: TextStyle(
+                    color: Colors.grey,
+                    fontSize: 16,
+                  ),
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    IconButton(
+                      onPressed: () {},
+                      icon: CircleAvatar(
+                        radius: 25,
+                        child: Image.asset('assets/images/icons/facebook.png'),
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () {},
+                      icon: CircleAvatar(
+                        radius: 25,
+                        backgroundColor: Colors.transparent,
+                        child: Image.asset('assets/images/icons/google.png'),
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () {},
+                      icon: CircleAvatar(
+                        radius: 25,
+                        child: Image.asset('assets/images/icons/linkedin.png'),
+                      ),
+                    ),
+                  ],
+                )
+                */
               ],
             ),
           ),
