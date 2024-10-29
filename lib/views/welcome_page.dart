@@ -60,12 +60,14 @@ class WelcomePage extends StatelessWidget {
                   tag: 'signup_btn',
                   child: CustomButton(
                     buttonText: 'Sign Up',
-             
+                    isOutlined:
+                        true, // Set this to true to make it an outlined button
                     onPressed: () {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                            builder: (context) => const RegistrationPage()),
+                          builder: (context) => const RegistrationPage(),
+                        ),
                       );
                     },
                   ),
