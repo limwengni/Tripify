@@ -38,7 +38,7 @@ class WelcomePage extends StatelessWidget {
                     fontSize: 20,
                   ),
                 ),
-                const SizedBox(height: 10), // Reduced height
+                const SizedBox(height: 20), // Reduced height
                 Hero(
                   tag: 'login_btn',
                   child: CustomButton(
@@ -48,7 +48,7 @@ class WelcomePage extends StatelessWidget {
                     },
                   ),
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 15),
                 Hero(
                   tag: 'signup_btn',
                   child: CustomButton(
