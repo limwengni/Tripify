@@ -4,7 +4,8 @@ import 'package:tripify/constants.dart';
 import 'package:tripify/views/welcome_page.dart';
 import 'package:loading_overlay/loading_overlay.dart';
 import 'package:tripify/views/home_page.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:provider/provider.dart';
+import 'package:tripify/services/auth_service.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -15,13 +16,14 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginPage> {
-  final _auth = FirebaseAuth.instance;
   late String _email;
   late String _password;
   bool _saving = false;
 
   @override
   Widget build(BuildContext context) {
+    final authService = Provider.of<AuthService>(context);
+
     return WillPopScope(
       onWillPop: () async {
         Navigator.popAndPushNamed(context, WelcomePage.id);
@@ -60,8 +62,9 @@ class _LoginScreenState extends State<LoginPage> {
                               _email = value;
                             },
                             decoration: kTextInputDecoration.copyWith(
-                                hintText: 'Email',
-                                hintStyle: const TextStyle(color: Colors.grey)),
+                              hintText: 'Email',
+                              hintStyle: const TextStyle(color: Colors.grey),
+                            ),
                           ),
                         ),
                         const SizedBox(height: 10),
@@ -72,8 +75,9 @@ class _LoginScreenState extends State<LoginPage> {
                               _password = value;
                             },
                             decoration: kTextInputDecoration.copyWith(
-                                hintText: 'Password',
-                                hintStyle: const TextStyle(color: Colors.grey)),
+                              hintText: 'Password',
+                              hintStyle: const TextStyle(color: Colors.grey),
+                            ),
                           ),
                         ),
                         const SizedBox(height: 20),
@@ -82,8 +86,7 @@ class _LoginScreenState extends State<LoginPage> {
                           heroTag: 'login_btn',
                           question: 'Forgot password?',
                           buttonPressed: () async {
-                            FocusManager.instance.primaryFocus
-                                ?.unfocus(); // dismiss the keyboard
+                            FocusManager.instance.primaryFocus?.unfocus(); // dismiss the keyboard
                             setState(() {
                               _saving = true;
                             });
@@ -103,8 +106,7 @@ class _LoginScreenState extends State<LoginPage> {
                                       'Please enter a valid email address.'),
                                   actions: [
                                     TextButton(
-                                      onPressed: () =>
-                                          Navigator.pop(context, 'OK'),
+                                      onPressed: () => Navigator.pop(context, 'OK'),
                                       child: const Text('OK'),
                                     ),
                                   ],
@@ -114,77 +116,62 @@ class _LoginScreenState extends State<LoginPage> {
                             }
 
                             try {
-                              await _auth.signInWithEmailAndPassword(
-                                email: _email,
-                                password: _password,
-                              );
-
-                              if (context.mounted) {
+                              await authService.signIn(_email, _password);
+                              if (authService.isLoggedIn) {
+                                // If login is successful, navigate to HomePage
+                                Navigator.pushReplacementNamed(context, HomePage.id);
+                              } else {
+                                // Handle the case when login fails, e.g., show error
                                 setState(() {
                                   _saving = false;
                                 });
-                                Navigator.pushReplacementNamed(
-                                    context, HomePage.id); // Correct navigation
+                                showDialog(
+                                  context: context,
+                                  builder: (context) => AlertDialog(
+                                    title: const Text('Error',
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.bold)),
+                                    content: const Text(
+                                        'Incorrect email or password. Please try again.'),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () => Navigator.pop(context, 'OK'),
+                                        child: const Text('OK'),
+                                      ),
+                                    ],
+                                  ),
+                                );
                               }
-                            } on FirebaseAuthException catch (e) {
+                            } catch (e) {
+                              // Handle unexpected errors
                               setState(() {
                                 _saving = false;
                               });
-
-                              switch (e.code) {
-                                case 'invalid-credential':
-                                  showDialog(
-                                    context: context,
-                                    builder: (context) => AlertDialog(
-                                      title: const Text('Error',
-                                          style: TextStyle(
-                                              fontWeight: FontWeight.bold)),
-                                      content: const Text(
-                                          'Incorrect email or password. Please try again.'),
-                                      actions: [
-                                        TextButton(
-                                          onPressed: () =>
-                                              Navigator.pop(context, 'OK'),
-                                          child: const Text('OK'),
-                                        ),
-                                      ],
+                              showDialog(
+                                context: context,
+                                builder: (context) => AlertDialog(
+                                  title: const Text('Error',
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.bold)),
+                                  content: const Text(
+                                      'An error occurred. Please try again later.'),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(context, 'OK'),
+                                      child: const Text('OK'),
                                     ),
-                                  );
-                                  break;
-                                default:
-                                  // Log unexpected error code for debugging
-                                  print('Unexpected Firebase error: ${e.code}');
-
-                                  showDialog(
-                                    context: context,
-                                    builder: (context) => AlertDialog(
-                                      title: const Text('Error',
-                                          style: TextStyle(
-                                              fontWeight: FontWeight.bold)),
-                                      content: const Text(
-                                          'An error occurred. Please try again later.'),
-                                      actions: [
-                                        TextButton(
-                                          onPressed: () =>
-                                              Navigator.pop(context, 'OK'),
-                                          child: const Text('OK'),
-                                        ),
-                                      ],
-                                    ),
-                                  );
-                                  break;
-                              }
+                                  ],
+                                ),
+                              );
                             }
                           },
                           questionPressed: () {
                             signUpAlert(
                               onPressed: () async {
-                                await FirebaseAuth.instance
-                                    .sendPasswordResetEmail(email: _email);
+                                // await authService.sendPasswordResetEmail(_email);
                               },
                               title: 'RESET YOUR PASSWORD',
-                              desc:
-                                  'Click on the button to reset your password',
+                              desc: 'Click on the button to reset your password',
                               btnText: 'Reset Now',
                               context: context,
                             ).show();
