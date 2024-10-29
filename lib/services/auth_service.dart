@@ -10,6 +10,9 @@ class AuthService extends ChangeNotifier {
   User? get user => _user;
   String? get username => _username; // Getter for username
 
+  // Stream to listen to auth state changes
+  Stream<User?> get userStream => _auth.authStateChanges();
+
   AuthService() {
     _auth.authStateChanges().listen((User? user) {
       _user = user;
