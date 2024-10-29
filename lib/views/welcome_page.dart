@@ -14,10 +14,13 @@ class WelcomePage extends StatelessWidget {
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(25),
-          child: Center( // Center the entire Column
+          child: Center(
+            // Center the entire Column
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center, // Center the contents vertically
-              crossAxisAlignment: CrossAxisAlignment.center, // Center horizontally
+              mainAxisAlignment:
+                  MainAxisAlignment.center, // Center the contents vertically
+              crossAxisAlignment:
+                  CrossAxisAlignment.center, // Center horizontally
               children: [
                 // Styled ScreenTitle
                 const Text(
@@ -44,7 +47,11 @@ class WelcomePage extends StatelessWidget {
                   child: CustomButton(
                     buttonText: 'Login',
                     onPressed: () {
-                      Navigator.pushNamed(context, LoginPage.id);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const LoginPage()),
+                      );
                     },
                   ),
                 ),
@@ -55,7 +62,11 @@ class WelcomePage extends StatelessWidget {
                     buttonText: 'Sign Up',
                     isOutlined: true,
                     onPressed: () {
-                      Navigator.pushNamed(context, RegistrationPage.id);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const RegistrationPage()),
+                      );
                     },
                   ),
                 ),
