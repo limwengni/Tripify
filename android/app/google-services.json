@@ -5,6 +5,7 @@
     "storage_bucket": "tripify-d8e12.appspot.com"
   },
   "client": [
+  
     {
       "client_info": {
         "mobilesdk_app_id": "1:919760503067:android:f7c8618d6362ac880293be",

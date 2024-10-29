@@ -39,37 +39,46 @@ class _LoginScreenState extends State<LoginPage> {
                   Expanded(
                     flex: 2,
                     child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center, // Center the content vertically
+                      mainAxisAlignment: MainAxisAlignment
+                          .center, // Center the content vertically
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         const ScreenTitle(title: 'Login'),
-                        const SizedBox(height: 10), // Reduced spacing between title and text field
+                        const SizedBox(
+                            height:
+                                10), // Reduced spacing between title and text field
                         CustomTextField(
                           textField: TextField(
-                              onChanged: (value) {
-                                _email = value;
-                              },
-                              style: const TextStyle(
-                                fontSize: 20,
-                              ),
-                              decoration: kTextInputDecoration.copyWith(
-                                  hintText: 'Email')),
+                            onChanged: (value) {
+                              _email = value;
+                            },
+                            // style: const TextStyle(
+                            //   fontSize: 20,
+                            // ),
+                            decoration: kTextInputDecoration.copyWith(
+                                hintText: 'Email',
+                                hintStyle: const TextStyle(color: Colors.grey)),
+                          ),
                         ),
-                        const SizedBox(height: 10), // Reduced spacing between email and password field
+                        const SizedBox(
+                            height:
+                                10), // Reduced spacing between email and password field
                         CustomTextField(
                           textField: TextField(
                             obscureText: true,
                             onChanged: (value) {
                               _password = value;
                             },
-                            style: const TextStyle(
-                              fontSize: 20,
-                            ),
+                            // style: const TextStyle(
+                            //   fontSize: 20,
+                            // ),
                             decoration: kTextInputDecoration.copyWith(
-                                hintText: 'Password'),
+                                hintText: 'Password',
+                                hintStyle: const TextStyle(color: Colors.grey)),
                           ),
                         ),
-                        const SizedBox(height: 20), // Adjusted spacing before button
+                        const SizedBox(
+                            height: 20), // Adjusted spacing before button
                         CustomBottomScreen(
                           textButton: 'Login',
                           heroTag: 'login_btn',

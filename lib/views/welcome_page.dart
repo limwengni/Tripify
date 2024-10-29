@@ -16,30 +16,30 @@ class WelcomePage extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(
+                const Text(
                   'Welcome to Tripify!',
                   style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                 ),
-                SizedBox(height: 20),
-                Text(
+                const SizedBox(height: 20),
+                const Text(
                   'Your journey begins here. Plan your trips effortlessly.',
                   textAlign: TextAlign.center,
                   style: TextStyle(fontSize: 16, color: Colors.grey),
                 ),
-                SizedBox(height: 30),
+                const SizedBox(height: 30),
                 // Login Button with Shadow
                 Container(
                   width: 200,
                   height: 40, // Set the desired height here
                   decoration: BoxDecoration(
-                    color: Color.fromARGB(255, 159, 118, 249),
+                    color: const Color.fromARGB(255, 159, 118, 249),
                     borderRadius: BorderRadius.circular(16),
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withOpacity(0.2),
                         spreadRadius: 1,
                         blurRadius: 2,
-                        offset: Offset(0, 3),
+                        offset: const Offset(0, 3),
                       ),
                     ],
                   ),
@@ -47,17 +47,17 @@ class WelcomePage extends StatelessWidget {
                     onPressed: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => LoginPage()),
+                        MaterialPageRoute(builder: (context) => const LoginPage()),
                       );
                     },
-                    child: Text(
+                    child: const Text(
                       'Login',
                       style: TextStyle(
                           color: Colors.white, fontWeight: FontWeight.bold),
                     ),
                   ),
                 ),
-                SizedBox(height: 20),
+                const SizedBox(height: 20),
                 // Register Button with Outline
                 Container(
                   width: 200,
@@ -66,7 +66,7 @@ class WelcomePage extends StatelessWidget {
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                      color: Color.fromARGB(255, 159, 118, 249), // Outline color
+                      color: const Color.fromARGB(255, 159, 118, 249), // Outline color
                       width: 2, // Outline width
                     ),
                     boxShadow: [
@@ -74,7 +74,7 @@ class WelcomePage extends StatelessWidget {
                         color: Colors.black.withOpacity(0.2),
                         spreadRadius: 1,
                         blurRadius: 2,
-                        offset: Offset(0, 3),
+                        offset: const Offset(0, 3),
                       ),
                     ],
                   ),
