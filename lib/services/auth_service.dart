@@ -17,21 +17,29 @@ class AuthService extends ChangeNotifier {
       if (_user != null) {
         fetchUserDetails(); // Fetch user details only if user is logged in
       }
-      notifyListeners(); // Notify listeners when auth state changes
+      // notifyListeners(); // Notify listeners when auth state changes
     });
   }
 
-  Future<void> signIn(String email, String password) async {
+  Future<String?> signIn(String email, String password) async {
     try {
       UserCredential userCredential = await _auth.signInWithEmailAndPassword(
-          email: email, password: password);
+        email: email,
+        password: password,
+      );
       _user = userCredential.user;
-      notifyListeners();
-      // Navigator.popAndPushNamed(context, HomePage.id);
       print('Sign in successful');
+      return 'Success'; // Return a success message
+    } on FirebaseAuthException catch (e) {
+      // Handle specific Firebase authentication exceptions
+      if (e.code == 'user-not-found' || e.code == 'invalid-credential') {
+        return 'Invalid email or password.';
+      } else {
+        return e.message; // Return any other error message
+      }
     } catch (e) {
-      // Handle sign-in error
-      print(e);
+      // Handle any other exceptions
+      return e.toString(); // Return the error message as a string
     }
   }
 
@@ -50,7 +58,7 @@ class AuthService extends ChangeNotifier {
     try {
       await FirebaseAuth.instance.signOut(); // Directly sign out from Firebase
       _username = null; // Clear username on logout
-      notifyListeners(); // Notify listeners about the state change
+      // notifyListeners(); // Notify listeners about the state change
     } catch (e) {
       // Handle any errors that occur during sign out
       print('Logout error: $e');
@@ -68,21 +76,20 @@ class AuthService extends ChangeNotifier {
 
         if (userData != null) {
           _username = userData['username']; // Store username in the state
-          print("Username: $_username");
         } else {
           print("User data is null!");
         }
       } else {
         print("User document does not exist!");
       }
-      notifyListeners(); // Notify listeners when user details are fetched
+      // notifyListeners(); // Notify listeners when user details are fetched
     } catch (e) {
       print("Failed to fetch user details: $e");
       throw e; // Rethrow error if necessary
     }
   }
 
-   // Getter for user state
+  // Getter for user state
   User? get user => _auth.currentUser;
 
   // Stream for user state changes

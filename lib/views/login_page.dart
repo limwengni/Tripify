@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:tripify/components/components.dart';
 import 'package:tripify/constants.dart';
+import 'package:tripify/main.dart';
 import 'package:tripify/views/welcome_page.dart';
 import 'package:loading_overlay/loading_overlay.dart';
 import 'package:tripify/views/home_page.dart';
@@ -59,7 +60,7 @@ class _LoginScreenState extends State<LoginPage> {
                         CustomTextField(
                           textField: TextField(
                             onChanged: (value) {
-                              _email = value;
+                              _email = value; // Ensure to handle empty cases
                             },
                             decoration: kTextInputDecoration.copyWith(
                               hintText: 'Email',
@@ -72,7 +73,7 @@ class _LoginScreenState extends State<LoginPage> {
                           textField: TextField(
                             obscureText: true,
                             onChanged: (value) {
-                              _password = value;
+                              _password = value; // Ensure to handle empty cases
                             },
                             decoration: kTextInputDecoration.copyWith(
                               hintText: 'Password',
@@ -86,15 +87,16 @@ class _LoginScreenState extends State<LoginPage> {
                           heroTag: 'login_btn',
                           question: 'Forgot password?',
                           buttonPressed: () async {
-                            FocusManager.instance.primaryFocus?.unfocus(); // dismiss the keyboard
+                            FocusManager.instance.primaryFocus
+                                ?.unfocus(); // Dismiss the keyboard
                             setState(() {
-                              _saving = true;
+                              _saving = true; // Start loading
                             });
 
                             // Basic email format validation
                             if (_email.isEmpty || !_email.contains('@')) {
                               setState(() {
-                                _saving = false;
+                                _saving = false; // Stop loading
                               });
                               showDialog(
                                 context: context,
@@ -106,7 +108,8 @@ class _LoginScreenState extends State<LoginPage> {
                                       'Please enter a valid email address.'),
                                   actions: [
                                     TextButton(
-                                      onPressed: () => Navigator.pop(context, 'OK'),
+                                      onPressed: () =>
+                                          Navigator.pop(context, 'OK'),
                                       child: const Text('OK'),
                                     ),
                                   ],
@@ -116,26 +119,35 @@ class _LoginScreenState extends State<LoginPage> {
                             }
 
                             try {
-                              await authService.signIn(_email, _password);
-                              if (authService.isLoggedIn) {
-                                // If login is successful, navigate to HomePage
-                                Navigator.pushReplacementNamed(context, HomePage.id);
+                              // Attempt to sign in and receive a message
+                              String? returnAuth =
+                                  await authService.signIn(_email, _password);
+
+                              if (returnAuth == "Success") {
+                                // Delay briefly to ensure Firebase state updates
+                                await Future.delayed(
+                                    const Duration(milliseconds: 500));
+
+                                // Navigate to HomePage if login is successful
+                                Navigator.of(context).pushReplacement(
+                                  MaterialPageRoute(
+                                    builder: (context) => const MainPage(),
+                                  ),
+                                );
                               } else {
-                                // Handle the case when login fails, e.g., show error
-                                setState(() {
-                                  _saving = false;
-                                });
+                                // Display returned error message if login failed
                                 showDialog(
                                   context: context,
                                   builder: (context) => AlertDialog(
                                     title: const Text('Error',
                                         style: TextStyle(
                                             fontWeight: FontWeight.bold)),
-                                    content: const Text(
-                                        'Incorrect email or password. Please try again.'),
+                                    content: Text(returnAuth ??
+                                        'An unknown error occurred.'),
                                     actions: [
                                       TextButton(
-                                        onPressed: () => Navigator.pop(context, 'OK'),
+                                        onPressed: () =>
+                                            Navigator.pop(context, 'OK'),
                                         child: const Text('OK'),
                                       ),
                                     ],
@@ -143,10 +155,9 @@ class _LoginScreenState extends State<LoginPage> {
                                 );
                               }
                             } catch (e) {
-                              // Handle unexpected errors
-                              setState(() {
-                                _saving = false;
-                              });
+                              print("Unexpected exception caught: $e");
+
+                              // Handle unexpected errors with a general alert
                               showDialog(
                                 context: context,
                                 builder: (context) => AlertDialog(
@@ -157,12 +168,18 @@ class _LoginScreenState extends State<LoginPage> {
                                       'An error occurred. Please try again later.'),
                                   actions: [
                                     TextButton(
-                                      onPressed: () => Navigator.pop(context, 'OK'),
+                                      onPressed: () =>
+                                          Navigator.pop(context, 'OK'),
                                       child: const Text('OK'),
                                     ),
                                   ],
                                 ),
                               );
+                            } finally {
+                              // Disable loading overlay after all actions are completed
+                              setState(() {
+                                _saving = false; // Stop loading
+                              });
                             }
                           },
                           questionPressed: () {
@@ -171,7 +188,8 @@ class _LoginScreenState extends State<LoginPage> {
                                 // await authService.sendPasswordResetEmail(_email);
                               },
                               title: 'RESET YOUR PASSWORD',
-                              desc: 'Click on the button to reset your password',
+                              desc:
+                                  'Click on the button to reset your password',
                               btnText: 'Reset Now',
                               context: context,
                             ).show();

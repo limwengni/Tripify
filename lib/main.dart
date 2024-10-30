@@ -36,15 +36,16 @@ void main() async {
   } catch (e) {
     print('Error initializing Firebase: $e');
     return;
-  } // Initialize Firebase
+  }
 
   runApp(
-    ChangeNotifierProvider(
-        create: (context) => AuthService(),
-        child: ChangeNotifierProvider(
-          create: (context) => ThemeNotifier(),
-          child: const MyApp(),
-        )),
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (context) => AuthService()),
+        ChangeNotifierProvider(create: (context) => ThemeNotifier()),
+      ],
+      child: const MyApp(),
+    ),
   );
 }
 
@@ -56,6 +57,62 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<ThemeNotifier>(
+      builder: (context, themeNotifier, child) {
+        return MaterialApp(
+          theme: lightTheme,
+          darkTheme: darkTheme,
+          themeMode: themeNotifier.themeMode,
+          // initialRoute: WelcomePage.id, // Define your initial route
+          // routes: {
+          //   WelcomePage.id: (context) => const WelcomePage(),
+          //   LoginPage.id: (context) => const LoginPage(),
+          //   MainPage.id: (context) =>
+          //       const MainPage(), // Register MainPage here
+          //   // Add other routes here as necessary
+          // },
+          home: StreamBuilder<User?>(
+            stream: FirebaseAuth.instance.authStateChanges(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
+
+              // Debug output for tracking the authentication state
+              print('Snapshot data: ${snapshot.data}');
+
+              // Debug output for tracking the authentication state
+              if (snapshot.hasError) {
+                return Center(child: Text('Error: ${snapshot.error}'));
+              }
+
+              if (snapshot.hasData) {
+                // User is signed in, show the MainPage
+                return const MainPage(); // Render MainPage for authenticated users
+              } else {
+                // User is not signed in, show WelcomePage
+                return const WelcomePage();
+              }
+            },
+          ),
+          debugShowCheckedModeBanner: false,
+        );
+      },
+    );
+  }
+}
+
+class MainPage extends StatefulWidget {
+  const MainPage({Key? key}) : super(key: key);
+  static String id = 'main_page';
+
+  @override
+  _MainPageState createState() => _MainPageState();
+}
+
+class _MainPageState extends State<MainPage> {
   int _currentIndex = 0;
   String _title = 'Home';
 
@@ -79,68 +136,42 @@ class _MyAppState extends State<MyApp> {
 
   void _onItemTapped(int index) {
     setState(() {
-      _currentIndex = index;
-      _title = widgetItems[_currentIndex]['title'];
+        _currentIndex = index;
+        _title = widgetItems[_currentIndex]['title'];
+        // print('Current Index: $_currentIndex'); // Debug statement
     });
-  }
+}
 
   @override
   Widget build(BuildContext context) {
     final bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
-    return Consumer<ThemeNotifier>(
-      builder: (context, themeNotifier, child) {
-        return MaterialApp(
-          theme: lightTheme,
-          darkTheme: darkTheme,
-          themeMode: themeNotifier.themeMode,
-          home: StreamBuilder<User?>(
-            stream: FirebaseAuth.instance.authStateChanges(),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(child: CircularProgressIndicator());
-              }
-
-              print('Snapshot data: ${snapshot.data}'); // Debug print
-
-              if (snapshot.hasData) {
-                // User is signed in
-                return Scaffold(
-                  appBar: AppBar(
-                    title: Text(_title),
-                    actions: [
-                      Padding(
-                        padding: const EdgeInsets.only(right: 16),
-                        child: IconButton(
-                          icon: SvgPicture.asset(
-                            'assets/icons/message_icon.svg',
-                            color: isDarkMode ? Colors.white : Colors.black,
-                            width: 24,
-                            height: 24,
-                          ),
-                          onPressed: () {
-                            // Open chat messages
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-                  drawer: TripifyDrawer(onItemTapped: _onItemTapped),
-                  body: widgetItems[_currentIndex]['widget'],
-                  bottomNavigationBar: TripifyNavBar(
-                    currentIndex: (_currentIndex < 4) ? _currentIndex : 4,
-                    onItemTapped: _onItemTapped,
-                  ),
-                );
-              } else {
-                // User is not signed in, redirect to WelcomePage
-                return const WelcomePage();
-              }
-            },
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(_title),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 16),
+            child: IconButton(
+              icon: SvgPicture.asset(
+                'assets/icons/message_icon.svg',
+                color: isDarkMode ? Colors.white : Colors.black,
+                width: 24,
+                height: 24,
+              ),
+              onPressed: () {
+                // Open chat messages
+              },
+            ),
           ),
-          debugShowCheckedModeBanner: false,
-        );
-      },
+        ],
+      ),
+      drawer: TripifyDrawer(onItemTapped: _onItemTapped),
+      body: widgetItems[_currentIndex]['widget'],
+      bottomNavigationBar: TripifyNavBar(
+        currentIndex: (_currentIndex < 4) ? _currentIndex : 4,
+        onItemTapped: _onItemTapped,
+      ),
     );
   }
 }

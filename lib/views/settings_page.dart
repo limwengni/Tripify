@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:tripify/views/about_page.dart';
-import 'package:tripify/views/login_page.dart';
 import 'package:tripify/services/auth_service.dart';
+import 'package:tripify/views/about_page.dart';
 import 'package:tripify/views/welcome_page.dart';
-import 'theme_selection_page.dart';
+import 'package:tripify/views/theme_selection_page.dart';
 import '../theme_notifier.dart';
 
 class SettingsPage extends StatelessWidget {
@@ -52,9 +51,7 @@ class SettingsPage extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: isDarkMode
-            ? Color(0xFF333333)
-            : Colors.white, // Change background based on theme
+        color: isDarkMode ? Color(0xFF333333) : Colors.white,
         borderRadius: BorderRadius.circular(12.0),
       ),
       child: Padding(
@@ -76,9 +73,7 @@ class SettingsPage extends StatelessWidget {
 
   Widget _buildDivider(bool isDarkMode) {
     return Divider(
-      color: isDarkMode
-          ? Colors.grey[700]
-          : Color(0xFFFBFBFB), // Change divider color based on theme
+      color: isDarkMode ? Colors.grey[700] : Color(0xFFFBFBFB),
       height: 1,
       thickness: 2,
     );
@@ -99,9 +94,8 @@ class SettingsPage extends StatelessWidget {
               PageRouteBuilder(
                 pageBuilder: (context, animation, secondaryAnimation) =>
                     ThemeSelectionPage(),
-                transitionsBuilder:
-                    (context, animation, secondaryAnimation, child) {
-                  const begin = Offset(1.0, 0.0); // Start from right
+                transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                  const begin = Offset(1.0, 0.0);
                   const end = Offset.zero;
                   const curve = Curves.easeInOut;
 
@@ -115,26 +109,16 @@ class SettingsPage extends StatelessWidget {
                   );
                 },
               ),
-            ).then((selectedTheme) {
-              if (selectedTheme != null) {
-                final themeNotifier =
-                    Provider.of<ThemeNotifier>(context, listen: false);
-                themeNotifier.setTheme(selectedTheme == 'light'
-                    ? ThemeMode.light
-                    : ThemeMode.dark);
-              }
-            });
+            );
             break;
 
           case "About":
             Navigator.push(
               context,
               PageRouteBuilder(
-                pageBuilder: (context, animation, secondaryAnimation) =>
-                    AboutPage(),
-                transitionsBuilder:
-                    (context, animation, secondaryAnimation, child) {
-                  const begin = Offset(1.0, 0.0); // Start from right
+                pageBuilder: (context, animation, secondaryAnimation) => AboutPage(),
+                transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                  const begin = Offset(1.0, 0.0);
                   const end = Offset.zero;
                   const curve = Curves.easeInOut;
 
@@ -173,9 +157,9 @@ class SettingsPage extends StatelessWidget {
                             .logout();
 
                         Navigator.of(context).pop(); // Dismiss the dialog
-                        Navigator.popUntil(context,
-                            (route) => route.isFirst); // Clear all routes
-                        // Optionally navigate to Login Page:
+                        // Clear all routes and return to the MainPage
+                        Navigator.of(context).popUntil((route) => route.isFirst);
+                        // Optionally, navigate to Welcome Page if needed
                         Navigator.pushReplacement(context,
                             MaterialPageRoute(builder: (_) => WelcomePage()));
                       },
@@ -186,11 +170,7 @@ class SettingsPage extends StatelessWidget {
             );
             break;
 
-          case "otherOpt":
-            break;
-
           default:
-            // Default case if needed
             break;
         }
       },
