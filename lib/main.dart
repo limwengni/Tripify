@@ -100,6 +100,8 @@ class _MyAppState extends State<MyApp> {
                         CircularProgressIndicator()); // Centered loading spinner
               }
               if (snapshot.hasData) {
+                // FirebaseAuth.instance.signOut();
+
                 // User is signed in
                 return Scaffold(
                   appBar: AppBar(

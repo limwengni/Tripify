@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:tripify/components/components.dart';
 import 'package:tripify/constants.dart';
+import 'package:tripify/views/login_page.dart';
 import 'package:tripify/views/welcome_page.dart';
 import 'package:loading_overlay/loading_overlay.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:provider/provider.dart';
 
 class RegistrationPage extends StatefulWidget {
   const RegistrationPage({super.key});
@@ -20,12 +22,10 @@ class _RegistrationScreenState extends State<RegistrationPage> {
   late String _confirmPassword;
   bool _saving = false;
 
-
- // Regular expression for validating email format
-  final RegExp _emailRegExp = RegExp(
-    r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
-  );
-
+  // Regular expression for validating email format
+  // final RegExp _emailRegExp = RegExp(
+  //   r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
+  // );
 
   @override
   Widget build(BuildContext context) {
@@ -106,8 +106,9 @@ class _RegistrationScreenState extends State<RegistrationPage> {
                               _saving = true;
                             });
 
-                            // Validate email format
-                            if (!_emailRegExp.hasMatch(_email)) {
+                            var validationErrMsg = signupValidation(
+                                _email, _password, _confirmPassword);
+                            if (validationErrMsg != null) {
                               setState(() {
                                 _saving = false; // Reset loading state
                               });
@@ -120,81 +121,63 @@ class _RegistrationScreenState extends State<RegistrationPage> {
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
-                                  content: const Text('Please enter a valid email address.'),
+                                  content: Text(validationErrMsg),
                                   actions: <Widget>[
                                     TextButton(
-                                      onPressed: () => Navigator.pop(context, 'OK'),
+                                      onPressed: () =>
+                                          Navigator.pop(context, 'OK'),
                                       child: const Text('OK'),
                                     ),
                                   ],
                                 ),
                               );
-                              return; // Exit the method if email is invalid
-                            }
-                            if (_password == _confirmPassword) {
+                            } else {
                               try {
                                 await _auth.createUserWithEmailAndPassword(
-                                    email: _email, password: _password);
-
-                                if (context.mounted) {
-                                  setState(() {
-                                    _saving = false;
-                                    Navigator.popAndPushNamed(
-                                        context, RegistrationPage.id);
-                                  });
-                                  Navigator.pushNamed(context, WelcomePage.id);
-                                }
+                                  email: _email,
+                                  password: _password,
+                                );
+                                setState(() {
+                                  _saving = false;
+                                });
+                                Navigator.of(context)
+                                    .popUntil((route) => route.isFirst);
                               } catch (e) {
                                 setState(() {
-                                  _saving = false; 
+                                  _saving = false;
                                 });
-                                showDialog(
-                                    context: context,
-                                    builder: (BuildContext context) =>
-                                        AlertDialog(
-                                          title: const Text(
-                                            'Error',
-                                            style: TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                          content: const Text(
-                                              'Failed to register, please try again later'),
-                                          actions: <Widget>[
-                                            TextButton(
-                                              onPressed: () =>
-                                                  Navigator.pop(context, 'OK'),
-                                              child: const Text('OK'),
-                                            ),
-                                          ],
-                                        ));
-                              }
-                            } else {
-                              // Reset _saving to false on error
-                              setState(() {
-                                _saving = false; // Reset loading state
-                              });
 
-                              showDialog(
+                                String errorMessage;
+
+                                if (e is FirebaseAuthException) {
+                                  errorMessage =
+                                      e.message ?? 'An unknown error occurred';
+                                } else {
+                                  errorMessage =
+                                      'Failed to register, please try again later';
+                                }
+
+                                showDialog(
                                   context: context,
                                   builder: (BuildContext context) =>
                                       AlertDialog(
-                                        title: const Text(
-                                          'Error',
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                        content: const Text(
-                                            'Ensure password and confirm password is match'),
-                                        actions: <Widget>[
-                                          TextButton(
-                                            onPressed: () =>
-                                                Navigator.pop(context, 'OK'),
-                                            child: const Text('OK'),
-                                          ),
-                                        ],
-                                      ));
+                                    title: const Text(
+                                      'Error',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    content: Text(errorMessage),
+                                    actions: <Widget>[
+                                      TextButton(
+                                        onPressed: () =>
+                                            Navigator.pop(context, 'OK'),
+                                        child: const Text('OK'),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              }
                             }
                           },
                           questionPressed: () {
@@ -213,4 +196,24 @@ class _RegistrationScreenState extends State<RegistrationPage> {
       ),
     );
   }
+}
+
+String? signupValidation(
+    String email, String password, String confirmPassword) {
+  if (email.isEmpty) {
+    return 'Please enter your email address.';
+  }
+
+  final RegExp emailRegExp = RegExp(
+    r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
+  );
+
+  if (!emailRegExp.hasMatch(email)) {
+    return 'Please enter a valid email address.';
+  }
+  if (password != confirmPassword) {
+    return 'Ensure password and confirm password is match';
+  }
+
+  return null;
 }
