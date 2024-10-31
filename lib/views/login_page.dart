@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:tripify/components/components.dart';
 import 'package:tripify/constants.dart';
 import 'package:tripify/main.dart';
+import 'package:tripify/views/reset_password_page.dart';
 import 'package:tripify/views/welcome_page.dart';
 import 'package:loading_overlay/loading_overlay.dart';
 import 'package:tripify/views/home_page.dart';
@@ -17,9 +18,13 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginPage> {
-  late String _email;
-  late String _password;
+  late String _email = '';
+  late String _password = '';
   bool _saving = false;
+
+  final RegExp _emailRegExp = RegExp(
+    r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -27,123 +32,181 @@ class _LoginScreenState extends State<LoginPage> {
 
     return WillPopScope(
       onWillPop: () async {
-        Navigator.popAndPushNamed(context, WelcomePage.id);
+        Navigator.pop(context); // This will go back to the previous screen
         return false;
       },
-      child: Scaffold(
-        backgroundColor: Colors.white,
-        appBar: AppBar(
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
-            onPressed: () {
-              Navigator.popAndPushNamed(context, WelcomePage.id);
-            },
+      child: Theme(
+        data: ThemeData.light(),
+        child: Scaffold(
+          backgroundColor: Colors.white,
+          appBar: AppBar(
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back),
+              onPressed: () {
+                Navigator.pop(context);
+              },
+            ),
+            backgroundColor: Colors.transparent,
+            elevation: 0, // Removes shadow under the AppBar
           ),
-          backgroundColor: Colors.transparent,
-          elevation: 0, // Removes shadow under the AppBar
-        ),
-        body: LoadingOverlay(
-          isLoading: _saving,
-          child: SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Column(
-                children: [
-                  Expanded(
-                    flex: 2,
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        const ScreenTitle(title: 'Login'),
-                        const SizedBox(height: 10),
-                        CustomTextField(
-                          textField: TextField(
-                            onChanged: (value) {
-                              _email = value; // Ensure to handle empty cases
-                            },
-                            decoration: kTextInputDecoration.copyWith(
-                              hintText: 'Email',
-                              hintStyle: const TextStyle(color: Colors.grey),
+          body: LoadingOverlay(
+            isLoading: _saving,
+            child: SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Column(
+                  children: [
+                    Expanded(
+                      flex: 2,
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          const ScreenTitle(title: 'Login'),
+                          const SizedBox(height: 10),
+                          CustomTextField(
+                            textField: TextField(
+                              onChanged: (value) {
+                                _email = value; // Ensure to handle empty cases
+                              },
+                              decoration: kTextInputDecoration.copyWith(
+                                hintText: 'Email',
+                                hintStyle: const TextStyle(color: Colors.grey),
+                              ),
                             ),
                           ),
-                        ),
-                        const SizedBox(height: 10),
-                        CustomTextField(
-                          textField: TextField(
-                            obscureText: true,
-                            onChanged: (value) {
-                              _password = value; // Ensure to handle empty cases
-                            },
-                            decoration: kTextInputDecoration.copyWith(
-                              hintText: 'Password',
-                              hintStyle: const TextStyle(color: Colors.grey),
+                          const SizedBox(height: 10),
+                          CustomTextField(
+                            textField: TextField(
+                              obscureText: true,
+                              onChanged: (value) {
+                                _password =
+                                    value; // Ensure to handle empty cases
+                              },
+                              decoration: kTextInputDecoration.copyWith(
+                                hintText: 'Password',
+                                hintStyle: const TextStyle(color: Colors.grey),
+                              ),
                             ),
                           ),
-                        ),
-                        const SizedBox(height: 20),
-                        CustomBottomScreen(
-                          textButton: 'Login',
-                          heroTag: 'login_btn',
-                          question: 'Forgot password?',
-                          buttonPressed: () async {
-                            FocusManager.instance.primaryFocus
-                                ?.unfocus(); // Dismiss the keyboard
-                            setState(() {
-                              _saving = true; // Start loading
-                            });
-
-                            // Basic email format validation
-                            if (_email.isEmpty || !_email.contains('@')) {
+                          const SizedBox(height: 20),
+                          CustomBottomScreen(
+                            textButton: 'Login',
+                            heroTag: 'login_btn',
+                            question: 'Forgot password?',
+                            buttonPressed: () async {
+                              FocusManager.instance.primaryFocus
+                                  ?.unfocus(); // Dismiss the keyboard
                               setState(() {
-                                _saving = false; // Stop loading
+                                _saving = true; // Start loading
                               });
-                              showDialog(
-                                context: context,
-                                builder: (context) => AlertDialog(
-                                  title: const Text('Error',
-                                      style: TextStyle(
-                                          fontWeight: FontWeight.bold)),
-                                  content: const Text(
-                                      'Please enter a valid email address.'),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () =>
-                                          Navigator.pop(context, 'OK'),
-                                      child: const Text('OK'),
+
+                              if (_email.isEmpty || _password.isEmpty) {
+                                setState(() {
+                                  _saving = false;
+                                });
+                                showDialog(
+                                  context: context,
+                                  builder: (context) => Theme(
+                                    data: ThemeData.light(),
+                                    child: AlertDialog(
+                                      title: const Text('Error',
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.bold)),
+                                      content: const Text(
+                                          'Please enter your email address or password.'),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () =>
+                                              Navigator.pop(context, 'OK'),
+                                          child: const Text('OK'),
+                                        ),
+                                      ],
                                     ),
-                                  ],
-                                ),
-                              );
-                              return;
-                            }
-
-                            try {
-                              // Attempt to sign in and receive a message
-                              String? returnAuth =
-                                  await authService.signIn(_email, _password);
-
-                              if (returnAuth == "Success") {
-                                // Delay briefly to ensure Firebase state updates
-                                await Future.delayed(
-                                    const Duration(milliseconds: 500));
-
-                                // Navigate to HomePage if login is successful
-                                Navigator.of(context).pushReplacement(
-                                  MaterialPageRoute(
-                                    builder: (context) => const MainPage(),
                                   ),
                                 );
-                              } else {
-                                // Display returned error message if login failed
+                                return;
+                              }
+
+                              // Basic email format validation
+                              if (!_emailRegExp.hasMatch(_email)) {
+                                setState(() {
+                                  _saving = false; // Stop loading
+                                });
+                                showDialog(
+                                  context: context,
+                                  builder: (context) => Theme(
+                                    data: ThemeData.light(),
+                                    child: AlertDialog(
+                                      title: const Text('Error',
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.bold)),
+                                      content: const Text(
+                                          'Please enter a valid email address.'),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () =>
+                                              Navigator.pop(context, 'OK'),
+                                          child: const Text('OK'),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                );
+                                return;
+                              }
+
+                              try {
+                                // Attempt to sign in and receive a message
+                                String? returnAuth =
+                                    await authService.signIn(_email, _password);
+
+                                if (returnAuth == "Success") {
+                                  // Delay briefly to ensure Firebase state updates
+                                  await Future.delayed(
+                                      const Duration(milliseconds: 500));
+
+                                  // Navigate to HomePage if login is successful
+                                  Navigator.of(context).pushReplacement(
+                                    MaterialPageRoute(
+                                      builder: (context) => const MainPage(),
+                                    ),
+                                  );
+                                } else {
+                                  // Display returned error message if login failed
+                                  showDialog(
+                                    context: context,
+                                    builder: (context) => Theme(
+                                      data: ThemeData.light(),
+                                      child: AlertDialog(
+                                        title: const Text('Error',
+                                            style: TextStyle(
+                                                fontWeight: FontWeight.bold)),
+                                        content: Text(returnAuth ??
+                                            'An unknown error occurred.'),
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () =>
+                                                Navigator.pop(context, 'OK'),
+                                            child: const Text('OK'),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  );
+                                }
+                              } catch (e) {
+                                print("Unexpected exception caught: $e");
+
+                                // Handle unexpected errors with a general alert
                                 showDialog(
                                   context: context,
                                   builder: (context) => AlertDialog(
                                     title: const Text('Error',
                                         style: TextStyle(
                                             fontWeight: FontWeight.bold)),
-                                    content: Text(returnAuth ??
-                                        'An unknown error occurred.'),
+                                    content: const Text(
+                                        'An error occurred. Please try again later.'),
                                     actions: [
                                       TextButton(
                                         onPressed: () =>
@@ -153,52 +216,27 @@ class _LoginScreenState extends State<LoginPage> {
                                     ],
                                   ),
                                 );
+                              } finally {
+                                // Disable loading overlay after all actions are completed
+                                setState(() {
+                                  _saving = false; // Stop loading
+                                });
                               }
-                            } catch (e) {
-                              print("Unexpected exception caught: $e");
-
-                              // Handle unexpected errors with a general alert
-                              showDialog(
-                                context: context,
-                                builder: (context) => AlertDialog(
-                                  title: const Text('Error',
-                                      style: TextStyle(
-                                          fontWeight: FontWeight.bold)),
-                                  content: const Text(
-                                      'An error occurred. Please try again later.'),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () =>
-                                          Navigator.pop(context, 'OK'),
-                                      child: const Text('OK'),
-                                    ),
-                                  ],
-                                ),
+                            },
+                            questionPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) =>
+                                        const ResetPasswordPage()),
                               );
-                            } finally {
-                              // Disable loading overlay after all actions are completed
-                              setState(() {
-                                _saving = false; // Stop loading
-                              });
-                            }
-                          },
-                          questionPressed: () {
-                            signUpAlert(
-                              onPressed: () async {
-                                // await authService.sendPasswordResetEmail(_email);
-                              },
-                              title: 'RESET YOUR PASSWORD',
-                              desc:
-                                  'Click on the button to reset your password',
-                              btnText: 'Reset Now',
-                              context: context,
-                            ).show();
-                          },
-                        ),
-                      ],
+                            },
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),

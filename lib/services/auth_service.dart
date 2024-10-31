@@ -28,7 +28,6 @@ class AuthService extends ChangeNotifier {
         password: password,
       );
       _user = userCredential.user;
-      print('Sign in successful');
       return 'Success'; // Return a success message
     } on FirebaseAuthException catch (e) {
       // Handle specific Firebase authentication exceptions
@@ -62,6 +61,24 @@ class AuthService extends ChangeNotifier {
     } catch (e) {
       // Handle any errors that occur during sign out
       print('Logout error: $e');
+    }
+  }
+
+  Future<String> resetPassword({required String email}) async {
+    try {
+      await _auth.sendPasswordResetEmail(email: email);
+      return 'Success';
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'user-not-found') {
+        return 'No user found for this email.'; 
+      } else if (e.code == 'invalid-email') {
+        return 'The email address is not valid.';
+      } else {
+        return 'Failed to send reset link, please try again later.';
+      }
+    } catch (e) {
+      // General error handling
+      return 'An unknown error occurred.';
     }
   }
 
