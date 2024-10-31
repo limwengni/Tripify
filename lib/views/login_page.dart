@@ -21,6 +21,7 @@ class _LoginScreenState extends State<LoginPage> {
   late String _email = '';
   late String _password = '';
   bool _saving = false;
+  bool _isPasswordVisible = false;
 
   final RegExp _emailRegExp = RegExp(
     r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
@@ -78,7 +79,7 @@ class _LoginScreenState extends State<LoginPage> {
                           const SizedBox(height: 10),
                           CustomTextField(
                             textField: TextField(
-                              obscureText: true,
+                              obscureText: !_isPasswordVisible,
                               onChanged: (value) {
                                 _password =
                                     value; // Ensure to handle empty cases
@@ -86,6 +87,21 @@ class _LoginScreenState extends State<LoginPage> {
                               decoration: kTextInputDecoration.copyWith(
                                 hintText: 'Password',
                                 hintStyle: const TextStyle(color: Colors.grey),
+                                suffixIcon: IconButton(
+                                  icon: Icon(
+                                    _isPasswordVisible
+                                        ? Icons.visibility
+                                        : Icons.visibility_off,
+                                    color: Colors.grey,
+                                  ),
+                                  onPressed: () {
+                                    setState(() {
+                                      _isPasswordVisible =
+                                          !_isPasswordVisible; // Toggle visibility
+                                    });
+                                  },
+                                ),
+                                contentPadding: const EdgeInsets.symmetric(vertical: 15.0),
                               ),
                             ),
                           ),
