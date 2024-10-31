@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:tripify/services/auth_service.dart';
+import 'package:tripify/view_models/auth_service.dart';
 import 'package:tripify/views/about_page.dart';
 import 'package:tripify/views/welcome_page.dart';
 import 'package:tripify/views/theme_selection_page.dart';

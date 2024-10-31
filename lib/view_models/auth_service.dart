@@ -1,23 +1,18 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:tripify/models/user_model.dart';
 
 class AuthService extends ChangeNotifier {
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  User? _user;
-  String? _username; // New variable to hold username
-
-  String? get username => _username; // Getter for username
+  User? _user; //for firebase one (like get their email add)
 
   bool get isLoggedIn => _user != null;
 
   AuthService() {
     _auth.authStateChanges().listen((User? user) {
       _user = user;
-      if (_user != null) {
-        fetchUserDetails(); // Fetch user details only if user is logged in
-      }
-      // notifyListeners(); // Notify listeners when auth state changes
+      notifyListeners(); // Notify listeners when auth state changes
     });
   }
 
@@ -56,8 +51,8 @@ class AuthService extends ChangeNotifier {
   Future<void> logout() async {
     try {
       await FirebaseAuth.instance.signOut(); // Directly sign out from Firebase
-      _username = null; // Clear username on logout
-      // notifyListeners(); // Notify listeners about the state change
+      _user = null;
+      notifyListeners();
     } catch (e) {
       // Handle any errors that occur during sign out
       print('Logout error: $e');
@@ -70,7 +65,7 @@ class AuthService extends ChangeNotifier {
       return 'Success';
     } on FirebaseAuthException catch (e) {
       if (e.code == 'user-not-found') {
-        return 'No user found for this email.'; 
+        return 'No user found for this email.';
       } else if (e.code == 'invalid-email') {
         return 'The email address is not valid.';
       } else {
@@ -79,30 +74,6 @@ class AuthService extends ChangeNotifier {
     } catch (e) {
       // General error handling
       return 'An unknown error occurred.';
-    }
-  }
-
-  Future<void> fetchUserDetails() async {
-    try {
-      String uid = _user!.uid; // Using _user directly since it's not null
-      DocumentSnapshot userDoc =
-          await FirebaseFirestore.instance.collection('User').doc(uid).get();
-
-      if (userDoc.exists) {
-        var userData = userDoc.data() as Map<String, dynamic>?;
-
-        if (userData != null) {
-          _username = userData['username']; // Store username in the state
-        } else {
-          print("User data is null!");
-        }
-      } else {
-        print("User document does not exist!");
-      }
-      // notifyListeners(); // Notify listeners when user details are fetched
-    } catch (e) {
-      print("Failed to fetch user details: $e");
-      throw e; // Rethrow error if necessary
     }
   }
 

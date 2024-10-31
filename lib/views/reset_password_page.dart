@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:tripify/components/components.dart';
 import 'package:tripify/constants.dart';
-import 'package:tripify/services/auth_service.dart';
+import 'package:tripify/view_models/auth_service.dart';
 import 'package:tripify/views/welcome_page.dart';
 import 'package:loading_overlay/loading_overlay.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
-import 'package:tripify/services/auth_service.dart';
+import 'package:tripify/view_models/auth_service.dart';
 
 class ResetPasswordPage extends StatefulWidget {
   const ResetPasswordPage({super.key});

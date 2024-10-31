@@ -4,7 +4,9 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'firebase_options.dart';
 
-import 'package:tripify/services/auth_service.dart';
+import 'package:tripify/models/user_model.dart';
+import 'package:tripify/view_models/auth_service.dart';
+import 'package:tripify/view_models/user_provider.dart';
 import 'package:tripify/views/login_page.dart';
 import 'package:tripify/views/accommodation_requirement_view.dart';
 import 'package:tripify/views/currency_exchange_page.dart';
@@ -43,6 +45,18 @@ void main() async {
       providers: [
         ChangeNotifierProvider(create: (context) => AuthService()),
         ChangeNotifierProvider(create: (context) => ThemeNotifier()),
+        ChangeNotifierProvider(
+            create: (context) => UserProvider(UserModel(
+                  username: 'Guest', // Default or placeholder values
+                  ssm: null,
+                  bio: 'This user has not set a bio yet.',
+                  profilePic:
+                      'https://console.firebase.google.com/project/tripify-d8e12/storage/tripify-d8e12.appspot.com/files/~2Fdefaults/default-profile.jpg',
+                  birthdate: DateTime.now(),
+                  createdAt: DateTime.now(),
+                  updatedAt: null,
+                  uid: '',
+                ))),
       ],
       child: const MyApp(),
     ),
@@ -136,11 +150,11 @@ class _MainPageState extends State<MainPage> {
 
   void _onItemTapped(int index) {
     setState(() {
-        _currentIndex = index;
-        _title = widgetItems[_currentIndex]['title'];
-        // print('Current Index: $_currentIndex'); // Debug statement
+      _currentIndex = index;
+      _title = widgetItems[_currentIndex]['title'];
+      // print('Current Index: $_currentIndex'); // Debug statement
     });
-}
+  }
 
   @override
   Widget build(BuildContext context) {

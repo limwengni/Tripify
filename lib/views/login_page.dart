@@ -7,7 +7,8 @@ import 'package:tripify/views/welcome_page.dart';
 import 'package:loading_overlay/loading_overlay.dart';
 import 'package:tripify/views/home_page.dart';
 import 'package:provider/provider.dart';
-import 'package:tripify/services/auth_service.dart';
+import 'package:tripify/view_models/auth_service.dart';
+import 'package:tripify/view_models/user_provider.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -101,7 +102,8 @@ class _LoginScreenState extends State<LoginPage> {
                                     });
                                   },
                                 ),
-                                contentPadding: const EdgeInsets.symmetric(vertical: 15.0),
+                                contentPadding:
+                                    const EdgeInsets.symmetric(vertical: 15.0),
                               ),
                             ),
                           ),
@@ -181,6 +183,12 @@ class _LoginScreenState extends State<LoginPage> {
                                   // Delay briefly to ensure Firebase state updates
                                   await Future.delayed(
                                       const Duration(milliseconds: 500));
+
+                                  String uid = authService.user!
+                                      .uid; // Get the UID of the signed-in user
+                                  await Provider.of<UserProvider>(context,
+                                          listen: false)
+                                      .fetchUserDetails(uid);
 
                                   // Navigate to HomePage if login is successful
                                   Navigator.of(context).pushReplacement(
