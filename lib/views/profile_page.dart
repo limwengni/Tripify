@@ -6,6 +6,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:intl/intl.dart';
 import 'package:tripify/models/post_model.dart';
+import 'package:tripify/views/edit_profile_page.dart';
 
 class ProfilePage extends StatefulWidget {
   @override
@@ -18,7 +19,10 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   void initState() {
     super.initState();
-    // Fetch user details when the profile page is initialized
+    _fetchUserData();
+  }
+
+  Future<void> _fetchUserData() async {
     final userProvider = Provider.of<UserProvider>(context, listen: false);
     final user = FirebaseAuth.instance.currentUser;
 
@@ -28,16 +32,23 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
+  Future<void> _refreshData() async {
+    await _fetchUserData();
+    setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
     // Access UserProvider
     final userProvider = Provider.of<UserProvider>(context);
 
     return Scaffold(
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+      body: RefreshIndicator(
+        onRefresh: _refreshData,
+        color: Colors.white,
+        backgroundColor: const Color.fromARGB(255, 159, 118, 249),
+        child: ListView(
+          padding: const EdgeInsets.all(16.0),
           children: [
             //User section
             _buildUserSection(userProvider),
@@ -88,61 +99,131 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Widget _buildShimmerPlaceholder() {
-    return Row(
-      children: [
-        Shimmer.fromColors(
-          baseColor: Colors.grey.shade300,
-          highlightColor: Colors.grey.shade100,
-          child: CircleAvatar(
-            radius: 50,
-            backgroundColor: Colors.grey.shade200,
-          ),
-        ),
-        const SizedBox(width: 16.0),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+    return Container(
+      padding: const EdgeInsets.only(top: 0.0, bottom: 16.0),
+      decoration: BoxDecoration(
+        border: Border(bottom: BorderSide(color: Colors.grey.shade300)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Row 1: Profile Picture and Username
+          Row(
             children: [
+              // Profile Picture Shimmer
               Shimmer.fromColors(
                 baseColor: Colors.grey.shade300,
                 highlightColor: Colors.grey.shade100,
-                child: Container(
-                  height: 20.0,
-                  color: Colors.grey.shade300,
-                  width: 150,
+                child: CircleAvatar(
+                  radius: 50,
+                  backgroundColor: Colors.grey.shade200,
                 ),
               ),
-              const SizedBox(height: 4.0),
-              Shimmer.fromColors(
-                baseColor: Colors.grey.shade300,
-                highlightColor: Colors.grey.shade100,
-                child: Container(
-                  height: 16.0,
-                  color: Colors.grey.shade300,
-                  width: 200,
+              const SizedBox(width: 16.0),
+              // Username and Join Date Shimmer
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Shimmer.fromColors(
+                      baseColor: Colors.grey.shade300,
+                      highlightColor: Colors.grey.shade100,
+                      child: Container(
+                        height: 20.0,
+                        width: 150,
+                        color: Colors.grey.shade300,
+                      ),
+                    ),
+                    const SizedBox(height: 4.0),
+                    Shimmer.fromColors(
+                      baseColor: Colors.grey.shade300,
+                      highlightColor: Colors.grey.shade100,
+                      child: Container(
+                        height: 16.0,
+                        width: 100,
+                        color: Colors.grey.shade300,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 4.0),
-              Shimmer.fromColors(
-                baseColor: Colors.grey.shade300,
-                highlightColor: Colors.grey.shade100,
-                child: Container(
-                  height: 14.0,
-                  color: Colors.grey.shade300,
-                  width: 100,
-                ),
+            ],
+          ),
+          const SizedBox(height: 16.0),
+
+          // Row 2: Bio Shimmer
+          Shimmer.fromColors(
+            baseColor: Colors.grey.shade300,
+            highlightColor: Colors.grey.shade100,
+            child: Container(
+              height: 16.0,
+              width: double.infinity,
+              color: Colors.grey.shade300,
+            ),
+          ),
+          const SizedBox(height: 8.0),
+          Shimmer.fromColors(
+            baseColor: Colors.grey.shade300,
+            highlightColor: Colors.grey.shade100,
+            child: Container(
+              height: 16.0,
+              width: double.infinity,
+              color: Colors.grey.shade300,
+            ),
+          ),
+          const SizedBox(height: 16.0),
+
+          // Row 3: Likes, Comments, and Saved Shimmer
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  _buildStatPlaceholder(),
+                  const SizedBox(width: 16.0),
+                  _buildStatPlaceholder(),
+                  const SizedBox(width: 16.0),
+                  _buildStatPlaceholder(),
+                ],
               ),
-              const SizedBox(height: 8.0),
+              // Edit Profile Button Shimmer
               Shimmer.fromColors(
                 baseColor: Colors.grey.shade300,
                 highlightColor: Colors.grey.shade100,
                 child: Container(
                   height: 40.0,
+                  width: 100.0,
                   color: Colors.grey.shade300,
-                  width: 100,
                 ),
               ),
             ],
+          ),
+        ],
+      ),
+    );
+  }
+
+// Create a shimmer effect for each stat (Likes, Comments, Saved)
+  Widget _buildStatPlaceholder() {
+    return Column(
+      children: [
+        Shimmer.fromColors(
+          baseColor: Colors.grey.shade300,
+          highlightColor: Colors.grey.shade100,
+          child: Container(
+            height: 16.0,
+            width: 40.0,
+            color: Colors.grey.shade300,
+          ),
+        ),
+        const SizedBox(height: 4.0),
+        Shimmer.fromColors(
+          baseColor: Colors.grey.shade300,
+          highlightColor: Colors.grey.shade100,
+          child: Container(
+            height: 14.0,
+            width: 30.0,
+            color: Colors.grey.shade300,
           ),
         ),
       ],
@@ -289,7 +370,11 @@ class _ProfilePageState extends State<ProfilePage> {
                 // Edit Profile Button
                 ElevatedButton(
                   onPressed: () {
-                    // Add your edit profile logic here
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => EditProfilePage()),
+                    );
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color.fromARGB(255, 159, 118, 249),

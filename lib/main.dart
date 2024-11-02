@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -85,14 +87,7 @@ class _MyAppState extends State<MyApp> {
           theme: lightTheme,
           darkTheme: darkTheme,
           themeMode: themeNotifier.themeMode,
-          // initialRoute: WelcomePage.id, // Define your initial route
-          // routes: {
-          //   WelcomePage.id: (context) => const WelcomePage(),
-          //   LoginPage.id: (context) => const LoginPage(),
-          //   MainPage.id: (context) =>
-          //       const MainPage(), // Register MainPage here
-          //   // Add other routes here as necessary
-          // },
+          // scrollBehavior: const MaterialScrollBehavior().copyWith(dragDevices: PointerDeviceKind.values.toSet()),
           home: StreamBuilder<User?>(
             stream: FirebaseAuth.instance.authStateChanges(),
             builder: (context, snapshot) {

@@ -1,17 +1,17 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class UserModel {
-  final String username;
+  String username;
   final String? ssm;
-  final String bio;
-  final String profilePic;
+  String bio;
+  String profilePic;
   final DateTime birthdate;
   final DateTime createdAt;
-  final DateTime? updatedAt;
+  DateTime? updatedAt;
   final String uid;
-  final int likesCount;
-  final int commentsCount;
-  final int savedCount;
+  int likesCount;
+  int commentsCount;
+  int savedCount;
 
   UserModel({
     required this.username,
