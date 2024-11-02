@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:tripify/view_models/post_provider.dart';
 import 'firebase_options.dart';
 
 import 'package:tripify/models/user_model.dart';
 import 'package:tripify/view_models/auth_service.dart';
 import 'package:tripify/view_models/user_provider.dart';
+import 'package:tripify/view_models/post_provider.dart';
 import 'package:tripify/views/login_page.dart';
 import 'package:tripify/views/accommodation_requirement_view.dart';
 import 'package:tripify/views/currency_exchange_page.dart';
@@ -56,7 +58,11 @@ void main() async {
                   createdAt: DateTime.now(),
                   updatedAt: null,
                   uid: '',
+                  likesCount: 0,
+                  commentsCount: 0,
+                  savedCount: 0,
                 ))),
+        ChangeNotifierProvider(create: (context) => PostProvider()),
       ],
       child: const MyApp(),
     ),

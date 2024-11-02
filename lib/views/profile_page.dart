@@ -5,6 +5,7 @@ import 'package:tripify/view_models/user_provider.dart'; // Adjust the import ba
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:intl/intl.dart';
+import 'package:tripify/models/post_model.dart';
 
 class ProfilePage extends StatefulWidget {
   @override
@@ -23,7 +24,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
     if (user != null) {
       userProvider.fetchUserDetails(user.uid);
-      _profileImageUrl = userProvider.userModel!.fetchProfileImageUrl();
+      _profileImageUrl = userProvider.fetchProfileImageUrl();
     }
   }
 
@@ -32,126 +33,276 @@ class _ProfilePageState extends State<ProfilePage> {
     // Access UserProvider
     final userProvider = Provider.of<UserProvider>(context);
 
-    // Color buttonColor = Theme.of(context).brightness == Brightness.light
-    //     ? const Color.fromARGB(255, 159, 118, 249) // Light theme color
-    //     : Colors.white; // Dark theme color
-
     return Scaffold(
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // First section: User details
-            Container(
-              padding: const EdgeInsets.symmetric(vertical: 16.0),
-              decoration: BoxDecoration(
-                border: Border(bottom: BorderSide(color: Colors.grey.shade300)),
-              ),
-              child: Row(
-                children: [
-                  // Profile Picture
-                  FutureBuilder<String>(
-                    future: _profileImageUrl,
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return Shimmer.fromColors(
-                          baseColor: Colors.grey.shade300,
-                          highlightColor: Colors.grey.shade100,
-                          child: CircleAvatar(
-                            radius: 50,
-                            backgroundColor: Colors.grey.shade200,
-                          ),
-                        );
-                      } else if (snapshot.hasError) {
-                        // Handle the error case
-                        return CircleAvatar(
-                          radius: 50,
-                          backgroundColor: Colors.grey.shade200,
-                          child: Icon(Icons.error), // Error icon
-                        );
-                      } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                        // Handle empty URL case
-                        return CircleAvatar(
-                          radius: 50,
-                          backgroundImage: CachedNetworkImageProvider(
-                            'https://console.firebase.google.com/project/tripify-d8e12/storage/tripify-d8e12.appspot.com/files/~2Fdefaults/default.jpg',
-                          ),
-                        );
-                      } else {
-                        // Image URL loaded successfully
-                        return CircleAvatar(
-                          radius: 50,
-                          backgroundImage:
-                              CachedNetworkImageProvider(snapshot.data!),
-                        );
-                      }
-                    },
-                  ),
-                  const SizedBox(
-                      width: 16.0), // Spacing between avatar and text
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Username with optional SSM
-                        Text(
-                          '${userProvider.userModel?.username ?? 'Username'} ${(userProvider.userModel?.ssm)}',
-                          style: const TextStyle(
-                              fontSize: 20, fontWeight: FontWeight.bold),
-                        ),
-                        const SizedBox(
-                            height: 4.0), // Spacing between username and bio
-                        // Bio
-                        Text(
-                          userProvider.userModel?.bio ??
-                              'This user has not set a bio yet.',
-                          style: const TextStyle(fontSize: 16),
-                        ),
-                        const SizedBox(
-                            height: 4.0), // Spacing between bio and joined date
-                        // Joined date
-                        Text(
-                          'Joined: ${userProvider.userModel?.createdAt != null ? DateFormat('MMMM yyyy').format(userProvider.userModel!.createdAt!.toLocal()) : 'Unknown'}',
-                          style:
-                              const TextStyle(fontSize: 14, color: Colors.grey),
-                        ),
-                        const SizedBox(
-                            height: 8.0), // Spacing before the button
-                        // Edit Profile Button
-                        ElevatedButton(
-                          onPressed: () {
-                            // Add your edit profile logic here
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor:
-                                const Color.fromARGB(255, 159, 118, 249), // Set the button color based on the theme
-                            foregroundColor:
-                                Colors.white, // Text color for the button
-                          ),
-                          child: const Text(
-                            'Edit Profile',
-                            style: TextStyle(
-                              fontSize: 16,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 20.0), // Spacing between sections
-            // Second section (leave it empty for now)
+            //User section
+            _buildUserSection(userProvider),
+
+            const SizedBox(height: 20.0),
+
+            //Posts section
             const Text(
-              'This is the second section. You can add more content here later.',
-              style: TextStyle(fontSize: 16),
+              'Posts',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
-            // Add more widgets for the second section as needed
+            const SizedBox(height: 10.0), // Spacing below title
+
+            // Grid for displaying user posts
+            // Expanded(
+            //   child: FutureBuilder<List<Post>>(
+            //     future: userProvider.fetchUserPosts(), // Replace with your actual method
+            //     builder: (context, snapshot) {
+            //       if (snapshot.connectionState == ConnectionState.waiting) {
+            //         return Center(child: CircularProgressIndicator());
+            //       } else if (snapshot.hasError) {
+            //         return Center(child: Text('Error: ${snapshot.error}'));
+            //       } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            //         return Center(child: Text('No posts available.'));
+            //       }
+
+            //       final posts = snapshot.data!;
+
+            //       return GridView.builder(
+            //         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            //           crossAxisCount: 2, // Two posts per row
+            //           childAspectRatio: 0.75, // Adjust this for post aspect ratio
+            //           crossAxisSpacing: 8.0,
+            //           mainAxisSpacing: 8.0,
+            //         ),
+            //         itemCount: posts.length,
+            //         itemBuilder: (context, index) {
+            //           return _buildPostUi(posts[index]); // Pass actual post object
+            //         },
+            //       );
+            //     },
+            //   ),
+            // ),
           ],
         ),
       ),
     );
+  }
+
+  Widget _buildShimmerPlaceholder() {
+    return Row(
+      children: [
+        Shimmer.fromColors(
+          baseColor: Colors.grey.shade300,
+          highlightColor: Colors.grey.shade100,
+          child: CircleAvatar(
+            radius: 50,
+            backgroundColor: Colors.grey.shade200,
+          ),
+        ),
+        const SizedBox(width: 16.0),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Shimmer.fromColors(
+                baseColor: Colors.grey.shade300,
+                highlightColor: Colors.grey.shade100,
+                child: Container(
+                  height: 20.0,
+                  color: Colors.grey.shade300,
+                  width: 150,
+                ),
+              ),
+              const SizedBox(height: 4.0),
+              Shimmer.fromColors(
+                baseColor: Colors.grey.shade300,
+                highlightColor: Colors.grey.shade100,
+                child: Container(
+                  height: 16.0,
+                  color: Colors.grey.shade300,
+                  width: 200,
+                ),
+              ),
+              const SizedBox(height: 4.0),
+              Shimmer.fromColors(
+                baseColor: Colors.grey.shade300,
+                highlightColor: Colors.grey.shade100,
+                child: Container(
+                  height: 14.0,
+                  color: Colors.grey.shade300,
+                  width: 100,
+                ),
+              ),
+              const SizedBox(height: 8.0),
+              Shimmer.fromColors(
+                baseColor: Colors.grey.shade300,
+                highlightColor: Colors.grey.shade100,
+                child: Container(
+                  height: 40.0,
+                  color: Colors.grey.shade300,
+                  width: 100,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPostUi(String postId) {
+    return Card(
+      elevation: 2,
+      child: Container(
+        padding: EdgeInsets.all(8.0),
+        child: Column(
+          children: [
+            // Example content for the post
+            Image.network(
+                'https://example.com/post_image/$postId'), // Replace with your image URL
+            SizedBox(height: 8.0),
+            Text('Post Title for $postId'),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildUserSection(UserProvider userProvider) {
+    if (userProvider.isLoading) {
+      return _buildShimmerPlaceholder(); // Show shimmer while loading
+    }
+
+    return Container(
+        padding: const EdgeInsets.only(top: 0.0, bottom: 16.0),
+        decoration: BoxDecoration(
+          border: Border(bottom: BorderSide(color: Colors.grey.shade300)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Row 1: Profile Picture and Username
+            Row(
+              children: [
+                // Profile Picture
+                FutureBuilder<String>(
+                  future: _profileImageUrl,
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return Shimmer.fromColors(
+                        baseColor: Colors.grey.shade300,
+                        highlightColor: Colors.grey.shade100,
+                        child: CircleAvatar(
+                          radius: 50,
+                          backgroundColor: Colors.grey.shade200,
+                        ),
+                      );
+                    } else if (snapshot.hasError) {
+                      // Handle the error case
+                      return CircleAvatar(
+                        radius: 50,
+                        backgroundColor: Colors.grey.shade200,
+                        child: Icon(Icons.error), // Error icon
+                      );
+                    } else {
+                      // Image URL loaded successfully
+                      return CircleAvatar(
+                        radius: 50,
+                        backgroundImage:
+                            CachedNetworkImageProvider(snapshot.data!),
+                      );
+                    }
+                  },
+                ),
+                const SizedBox(width: 16.0),
+                // Username and Join Date
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '${userProvider.userModel?.username ?? 'Username'} ${(userProvider.userModel?.ssm)}',
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 4.0),
+                      Text(
+                        'Joined: ${userProvider.userModel?.createdAt != null ? DateFormat('MMMM yyyy').format(userProvider.userModel!.createdAt!.toLocal()) : 'Unknown'}',
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16.0),
+
+            // Row 2: Bio
+            Text(
+              userProvider.userModel?.bio ?? 'This user has not set a bio yet.',
+              style: const TextStyle(fontSize: 16),
+            ),
+            const SizedBox(height: 16.0),
+
+            // Row 3: Likes, Comments, and Edit Profile Button
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                // Likes and Comments (Placeholder example)
+                Row(
+                  children: [
+                    Column(
+                      children: [
+                        Text(
+                          'Likes',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        Text('${userProvider.userModel?.likesCount}'),
+                      ],
+                    ),
+                    const SizedBox(width: 16.0),
+                    Column(
+                      children: [
+                        Text(
+                          'Comments',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        Text('${userProvider.userModel?.commentsCount}'),
+                      ],
+                    ),
+                    const SizedBox(width: 16.0),
+                    Column(
+                      children: [
+                        Text(
+                          'Saved',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        Text('${userProvider.userModel?.savedCount}'),
+                      ],
+                    )
+                  ],
+                ),
+                // Edit Profile Button
+                ElevatedButton(
+                  onPressed: () {
+                    // Add your edit profile logic here
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color.fromARGB(255, 159, 118, 249),
+                    foregroundColor: Colors.white,
+                  ),
+                  child: const Text(
+                    'Edit Profile',
+                    style: TextStyle(fontSize: 16),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ));
   }
 }
