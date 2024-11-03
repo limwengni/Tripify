@@ -395,7 +395,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
     // Check if the result indicates that the profile was updated
     if (result == true) {
-      _refreshData();
+      _fetchUserData();
     }
   }
 }

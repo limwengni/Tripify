@@ -18,12 +18,25 @@ class _EditProfilePageState extends State<EditProfilePage> {
   final TextEditingController _bioController = TextEditingController();
   late Future<String> _profileImageUrl;
   String? _newProfilePicPath;
+  final int _maxBioLength = 100;
 
   @override
   void initState() {
     super.initState();
     _profileImageUrl = Future.value('');
     _fetchUserData();
+
+    // Add listener to the controller to track changes
+    _bioController.addListener(() {
+      // If the bio exceeds the maximum length, we trim it
+      if (_bioController.text.length > _maxBioLength) {
+        _bioController.text = _bioController.text.substring(0, _maxBioLength);
+        // Move the cursor to the end of the text
+        _bioController.selection = TextSelection.fromPosition(
+            TextPosition(offset: _bioController.text.length));
+      }
+      setState(() {}); // Trigger a rebuild to show the character count
+    });
   }
 
   Future<void> _fetchUserData() async {
@@ -65,9 +78,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
     final user = FirebaseAuth.instance.currentUser;
 
     if (user != null) {
-      final resolvedProfileImageUrl = _newProfilePicPath?.isNotEmpty == true 
-      ? await _profileImageUrl 
-      : null;
+      final resolvedProfileImageUrl = _newProfilePicPath?.isNotEmpty == true
+          ? await _profileImageUrl
+          : null;
 
       userProvider.updateUserDetails(
         userId: user.uid,
@@ -131,12 +144,16 @@ class _EditProfilePageState extends State<EditProfilePage> {
                     } else {
                       return CircleAvatar(
                         radius: 65,
-                        backgroundImage: _newProfilePicPath != null && _newProfilePicPath!.isNotEmpty
-              ? FileImage(File(_newProfilePicPath!)) // Display the local file if available
-              : (snapshot.data != null && snapshot.data!.isNotEmpty
-                  ? CachedNetworkImageProvider(snapshot.data!) 
-                  : AssetImage('assets/default_profile.png') // Network image
-              ) as ImageProvider,
+                        backgroundImage: _newProfilePicPath != null &&
+                                _newProfilePicPath!.isNotEmpty
+                            ? FileImage(File(
+                                _newProfilePicPath!)) // Display the local file if available
+                            : (snapshot.data != null &&
+                                        snapshot.data!.isNotEmpty
+                                    ? CachedNetworkImageProvider(snapshot.data!)
+                                    : AssetImage(
+                                        'assets/default_profile.png') // Network image
+                                ) as ImageProvider,
                         child: Align(
                           alignment: Alignment.bottomRight,
                           child: CircleAvatar(
@@ -177,7 +194,19 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   border: OutlineInputBorder(),
                 ),
               ),
-              const SizedBox(height: 24),
+              // Remaining characters display
+              Padding(
+                padding: const EdgeInsets.only(top: 8.0),
+                child: Text(
+                  '${_maxBioLength - _bioController.text.length} characters remaining',
+                  style: TextStyle(
+                    color: _bioController.text.length > _maxBioLength
+                        ? Colors.red
+                        : Colors.grey,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 18),
 
               // Save Button
               ElevatedButton(
