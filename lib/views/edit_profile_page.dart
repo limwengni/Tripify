@@ -82,10 +82,13 @@ class _EditProfilePageState extends State<EditProfilePage> {
           ? await _profileImageUrl
           : null;
 
+      String bioWithEscapedNewlines = _bioController.text.replaceAll('\n', '\\n');
+      final trimmedBio = bioWithEscapedNewlines.trim();
+
       userProvider.updateUserDetails(
         userId: user.uid,
         username: _usernameController.text,
-        bio: _bioController.text,
+        bio: trimmedBio,
         newProfilePicPath: resolvedProfileImageUrl,
       );
       ScaffoldMessenger.of(context).showSnackBar(

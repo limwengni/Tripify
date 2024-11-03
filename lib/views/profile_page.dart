@@ -1,3 +1,5 @@
+import 'dart:ffi';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shimmer/shimmer.dart';
@@ -7,6 +9,8 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:intl/intl.dart';
 import 'package:tripify/models/post_model.dart';
 import 'package:tripify/views/edit_profile_page.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter/gestures.dart';
 
 class ProfilePage extends StatefulWidget {
   @override
@@ -253,6 +257,9 @@ class _ProfilePageState extends State<ProfilePage> {
       return _buildShimmerPlaceholder(); // Show shimmer while loading
     }
 
+    String userBio =
+        userProvider.userModel?.bio ?? 'This user has not set a bio yet.';
+
     return Container(
         padding: const EdgeInsets.only(top: 0.0, bottom: 16.0),
         decoration: BoxDecoration(
@@ -323,9 +330,15 @@ class _ProfilePageState extends State<ProfilePage> {
             const SizedBox(height: 16.0),
 
             // Row 2: Bio
-            Text(
-              userProvider.userModel?.bio ?? 'This user has not set a bio yet.',
-              style: const TextStyle(fontSize: 16),
+            Container(
+              alignment: Alignment.centerLeft,
+              padding: EdgeInsets.zero,
+              child: RichText(
+                text: TextSpan(
+                  style: TextStyle(fontSize: 16, color: Theme.of(context).brightness == Brightness.light ? Color(0xFF3B3B3B) : Colors.white),
+                  children: _buildBioTextSpans(userBio),
+                ),
+              ),
             ),
             const SizedBox(height: 16.0),
 
@@ -387,13 +400,63 @@ class _ProfilePageState extends State<ProfilePage> {
         ));
   }
 
+  List<TextSpan> _buildBioTextSpans(String bio) {
+    // Split the bio into lines based on `\\n`
+    final lines = bio.split('\\n');
+    final List<TextSpan> textSpans = [];
+
+    for (var line in lines) {
+      // Split each line into words
+      final words = line.split(' ');
+
+      for (var word in words) {
+        if (_isLink(word)) {
+          // Prepare the link with "http://" prefix if needed
+          final link = word.startsWith('http') ? word : 'http://$word';
+
+          // Display only the domain name (remove "www." and "http://" for display)
+          final displayText =
+              word.replaceAll(RegExp(r'^(https?:\/\/)?(www\.)?'), '');
+
+          textSpans.add(
+            TextSpan(
+              text: '$displayText ',
+              style: TextStyle(
+                color: Colors.blue,
+                decoration: TextDecoration.underline,
+              ),
+              recognizer: TapGestureRecognizer()
+                ..onTap = () {
+                  launchUrl(Uri.parse(link));
+                },
+            ),
+          );
+        } else {
+          textSpans.add(TextSpan(text: '$word ')); // Regular text
+        }
+      }
+
+      // Add a newline TextSpan after each line, except the last one
+      if (line != lines.last) {
+        textSpans.add(TextSpan(text: '\n'));
+      }
+    }
+
+    return textSpans;
+  }
+
+  bool _isLink(String text) {
+    // Regular expression to identify links
+    final regex = RegExp(r'^(https?:\/\/|www\.)[^\s]+$', caseSensitive: false);
+    return regex.hasMatch(text);
+  }
+
   void _navigateToEditProfile() async {
     final result = await Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => EditProfilePage()),
     );
 
-    // Check if the result indicates that the profile was updated
     if (result == true) {
       _fetchUserData();
     }
