@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shimmer/shimmer.dart';
 import 'package:tripify/view_models/user_provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:image_picker/image_picker.dart';
 
 class EditProfilePage extends StatefulWidget {
   @override
@@ -13,11 +15,13 @@ class _EditProfilePageState extends State<EditProfilePage> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _bioController = TextEditingController();
-  String _profileImageUrl = '';
+  late Future<String> _profileImageUrl;
+  String? _newProfilePicPath;
 
   @override
   void initState() {
     super.initState();
+    _profileImageUrl = Future.value('');
     _fetchUserData();
   }
 
@@ -30,30 +34,45 @@ class _EditProfilePageState extends State<EditProfilePage> {
       setState(() {
         _usernameController.text = userProvider.userModel?.username ?? '';
         _bioController.text = userProvider.userModel?.bio ?? '';
-        _profileImageUrl = userProvider.userModel?.profilePic ?? '';
+        _profileImageUrl = userProvider.fetchProfileImageUrl();
       });
     }
   }
 
   // This would be the function to update the profile picture
   Future<void> _pickImage() async {
-    // Here, you would implement image picking logic
-    // For now, we’ll just simulate an update
-    setState(() {
-      _profileImageUrl = 'https://example.com/new-image-url.jpg';
-    });
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+
+    if (pickedFile != null) {
+      setState(() {
+        _newProfilePicPath =
+            pickedFile.path; // Store the path for the new profile picture
+        _profileImageUrl = Future.value(
+            _newProfilePicPath); // Store as future for the profile image URL
+      });
+    } else {
+      setState(() {
+        _newProfilePicPath = null;
+        _profileImageUrl = Future.value('');
+      });
+    }
   }
 
-  void _saveProfile() {
+  void _saveProfile() async {
     final userProvider = Provider.of<UserProvider>(context, listen: false);
     final user = FirebaseAuth.instance.currentUser;
 
     if (user != null) {
+      final resolvedProfileImageUrl = _newProfilePicPath?.isNotEmpty == true 
+      ? await _profileImageUrl 
+      : null;
+
       userProvider.updateUserDetails(
-        user.uid,
+        userId: user.uid,
         username: _usernameController.text,
         bio: _bioController.text,
-        profileImageUrl: _profileImageUrl,
+        newProfilePicPath: resolvedProfileImageUrl,
       );
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Profile updated successfully!')),
@@ -90,20 +109,43 @@ class _EditProfilePageState extends State<EditProfilePage> {
               // Profile Picture Section
               GestureDetector(
                 onTap: _pickImage,
-                child: CircleAvatar(
-                  radius: 50,
-                  backgroundImage: _profileImageUrl.isNotEmpty
-                      ? CachedNetworkImageProvider(_profileImageUrl)
-                      : AssetImage('assets/default_profile.png')
-                          as ImageProvider,
-                  child: Align(
-                    alignment: Alignment.bottomRight,
-                    child: CircleAvatar(
-                      radius: 16,
-                      backgroundColor: Colors.grey.shade200,
-                      child: Icon(Icons.camera_alt, size: 18),
-                    ),
-                  ),
+                child: FutureBuilder<String>(
+                  future: _profileImageUrl,
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return Shimmer.fromColors(
+                        baseColor: Colors.grey.shade300,
+                        highlightColor: Colors.grey.shade100,
+                        child: CircleAvatar(
+                          radius: 65,
+                          backgroundColor: Colors.grey.shade200,
+                        ),
+                      );
+                    } else if (snapshot.hasError) {
+                      return CircleAvatar(
+                        radius: 65,
+                        backgroundColor: Colors.grey.shade200,
+                        child: Icon(Icons.error),
+                      );
+                    } else {
+                      return CircleAvatar(
+                        radius: 65,
+                        backgroundImage:
+                            snapshot.data != null && snapshot.data!.isNotEmpty
+                                ? CachedNetworkImageProvider(snapshot.data!)
+                                : AssetImage('assets/default_profile.png')
+                                    as ImageProvider,
+                        child: Align(
+                          alignment: Alignment.bottomRight,
+                          child: CircleAvatar(
+                            radius: 18,
+                            backgroundColor: Colors.grey.shade200,
+                            child: Icon(Icons.camera_alt, size: 18),
+                          ),
+                        ),
+                      );
+                    }
+                  },
                 ),
               ),
               const SizedBox(height: 16),
@@ -113,7 +155,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 controller: _usernameController,
                 decoration: InputDecoration(
                   labelText: 'Username',
-                  border: OutlineInputBorder(),
+                  border: OutlineInputBorder(), // Default border color
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {

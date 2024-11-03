@@ -47,6 +47,7 @@ class ThemeSelectionPage extends StatelessWidget {
                   ),
                   Switch(
                     value: themeNotifier.themeMode == ThemeMode.dark,
+                    activeColor: Color.fromARGB(255, 159, 118, 249),
                     onChanged: (value) {
                       // Toggle the theme
                       if (value) {
