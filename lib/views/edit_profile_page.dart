@@ -5,6 +5,7 @@ import 'package:tripify/view_models/user_provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 
 class EditProfilePage extends StatefulWidget {
   @override
@@ -77,7 +78,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Profile updated successfully!')),
       );
-      Navigator.pop(context);
+      Navigator.pop(context, true);
     }
   }
 
@@ -130,11 +131,12 @@ class _EditProfilePageState extends State<EditProfilePage> {
                     } else {
                       return CircleAvatar(
                         radius: 65,
-                        backgroundImage:
-                            snapshot.data != null && snapshot.data!.isNotEmpty
-                                ? CachedNetworkImageProvider(snapshot.data!)
-                                : AssetImage('assets/default_profile.png')
-                                    as ImageProvider,
+                        backgroundImage: _newProfilePicPath != null && _newProfilePicPath!.isNotEmpty
+              ? FileImage(File(_newProfilePicPath!)) // Display the local file if available
+              : (snapshot.data != null && snapshot.data!.isNotEmpty
+                  ? CachedNetworkImageProvider(snapshot.data!) 
+                  : AssetImage('assets/default_profile.png') // Network image
+              ) as ImageProvider,
                         child: Align(
                           alignment: Alignment.bottomRight,
                           child: CircleAvatar(

@@ -370,11 +370,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 // Edit Profile Button
                 ElevatedButton(
                   onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => EditProfilePage()),
-                    );
+                    _navigateToEditProfile();
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color.fromARGB(255, 159, 118, 249),
@@ -389,5 +385,17 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
           ],
         ));
+  }
+
+  void _navigateToEditProfile() async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => EditProfilePage()),
+    );
+
+    // Check if the result indicates that the profile was updated
+    if (result == true) {
+      _refreshData();
+    }
   }
 }
