@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:tripify/services/auth_service.dart';
 import 'package:tripify/views/about_page.dart';
-import 'theme_selection_page.dart';
+import 'package:tripify/views/welcome_page.dart';
+import 'package:tripify/views/theme_selection_page.dart';
 import '../theme_notifier.dart';
 
 class SettingsPage extends StatelessWidget {
@@ -49,9 +51,7 @@ class SettingsPage extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: isDarkMode
-            ? Color(0xFF333333)
-            : Colors.white, // Change background based on theme
+        color: isDarkMode ? Color(0xFF333333) : Colors.white,
         borderRadius: BorderRadius.circular(12.0),
       ),
       child: Padding(
@@ -73,9 +73,7 @@ class SettingsPage extends StatelessWidget {
 
   Widget _buildDivider(bool isDarkMode) {
     return Divider(
-      color: isDarkMode
-          ? Colors.grey[700]
-          : Color(0xFFFBFBFB), // Change divider color based on theme
+      color: isDarkMode ? Colors.grey[700] : Color(0xFFFBFBFB),
       height: 1,
       thickness: 2,
     );
@@ -96,42 +94,8 @@ class SettingsPage extends StatelessWidget {
               PageRouteBuilder(
                 pageBuilder: (context, animation, secondaryAnimation) =>
                     ThemeSelectionPage(),
-                transitionsBuilder:
-                    (context, animation, secondaryAnimation, child) {
-                  const begin = Offset(1.0, 0.0); // Start from right
-                  const end = Offset.zero;
-                  const curve = Curves.easeInOut;
-
-                  var tween = Tween(begin: begin, end: end)
-                      .chain(CurveTween(curve: curve));
-                  var offsetAnimation = animation.drive(tween);
-
-                  return SlideTransition(
-                    position: offsetAnimation,
-                    child: child,
-                  );
-                },
-              ),
-            ).then((selectedTheme) {
-              if (selectedTheme != null) {
-                final themeNotifier =
-                    Provider.of<ThemeNotifier>(context, listen: false);
-                themeNotifier.setTheme(selectedTheme == 'light'
-                    ? ThemeMode.light
-                    : ThemeMode.dark);
-              }
-            });
-            break;
-
-          case "About":
-            Navigator.push(
-              context,
-              PageRouteBuilder(
-                pageBuilder: (context, animation, secondaryAnimation) =>
-                    AboutPage(),
-                transitionsBuilder:
-                    (context, animation, secondaryAnimation, child) {
-                  const begin = Offset(1.0, 0.0); // Start from right
+                transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                  const begin = Offset(1.0, 0.0);
                   const end = Offset.zero;
                   const curve = Curves.easeInOut;
 
@@ -148,11 +112,65 @@ class SettingsPage extends StatelessWidget {
             );
             break;
 
-          case "otherOpt":
+          case "About":
+            Navigator.push(
+              context,
+              PageRouteBuilder(
+                pageBuilder: (context, animation, secondaryAnimation) => AboutPage(),
+                transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                  const begin = Offset(1.0, 0.0);
+                  const end = Offset.zero;
+                  const curve = Curves.easeInOut;
+
+                  var tween = Tween(begin: begin, end: end)
+                      .chain(CurveTween(curve: curve));
+                  var offsetAnimation = animation.drive(tween);
+
+                  return SlideTransition(
+                    position: offsetAnimation,
+                    child: child,
+                  );
+                },
+              ),
+            );
+            break;
+
+          case "Log Out":
+            showDialog(
+              context: context,
+              builder: (BuildContext context) {
+                return AlertDialog(
+                  title: Text("Log Out"),
+                  content: Text("Are you sure you want to log out?"),
+                  actions: [
+                    TextButton(
+                      child: Text("Cancel"),
+                      onPressed: () {
+                        Navigator.of(context).pop(); // Dismiss the dialog
+                      },
+                    ),
+                    TextButton(
+                      child: Text("Log Out"),
+                      onPressed: () async {
+                        // Access the auth provider and call the logout method
+                        await Provider.of<AuthService>(context, listen: false)
+                            .logout();
+
+                        Navigator.of(context).pop(); // Dismiss the dialog
+                        // Clear all routes and return to the MainPage
+                        Navigator.of(context).popUntil((route) => route.isFirst);
+                        // Optionally, navigate to Welcome Page if needed
+                        Navigator.pushReplacement(context,
+                            MaterialPageRoute(builder: (_) => WelcomePage()));
+                      },
+                    ),
+                  ],
+                );
+              },
+            );
             break;
 
           default:
-            // Default case if needed
             break;
         }
       },

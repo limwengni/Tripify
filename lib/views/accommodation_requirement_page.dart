@@ -2,17 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:tripify/widgets/accommodation_requirement_card_list.dart';
 import 'package:tripify/widgets/tripify_drawer.dart';
 
-class AccommodationRequirementView extends StatefulWidget {
-  const AccommodationRequirementView({super.key});
+class AccommodationRequirementPage extends StatefulWidget {
+  const AccommodationRequirementPage({super.key});
 
   @override
   State<StatefulWidget> createState() {
-    return _AccommodationRequirementViewState();
+    return _AccommodationRequirementPageState();
   }
 }
 
-class _AccommodationRequirementViewState
-    extends State<AccommodationRequirementView> {
+class _AccommodationRequirementPageState
+    extends State<AccommodationRequirementPage> {
 
   @override
   Widget build(BuildContext context) {

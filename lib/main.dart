@@ -4,8 +4,9 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'firebase_options.dart';
 
+import 'package:tripify/services/auth_service.dart';
 import 'package:tripify/views/login_page.dart';
-import 'package:tripify/views/accommodation_requirement_view.dart';
+import 'package:tripify/views/accommodation_requirement_page.dart';
 import 'package:tripify/views/currency_exchange_page.dart';
 import 'package:tripify/views/document_repository_page.dart';
 import 'package:tripify/views/emergency_call_page.dart';
@@ -35,11 +36,14 @@ void main() async {
   } catch (e) {
     print('Error initializing Firebase: $e');
     return;
-  } // Initialize Firebase
+  }
 
   runApp(
-    ChangeNotifierProvider(
-      create: (context) => ThemeNotifier(),
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (context) => AuthService()),
+        ChangeNotifierProvider(create: (context) => ThemeNotifier()),
+      ],
       child: const MyApp(),
     ),
   );
@@ -53,6 +57,63 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<ThemeNotifier>(
+      builder: (context, themeNotifier, child) {
+        return MaterialApp(
+          theme: lightTheme,
+          darkTheme: darkTheme,
+          themeMode: themeNotifier.themeMode,
+          // initialRoute: WelcomePage.id, // Define your initial route
+          // routes: {
+          //   WelcomePage.id: (context) => const WelcomePage(),
+          //   LoginPage.id: (context) => const LoginPage(),
+          //   MainPage.id: (context) =>
+          //       const MainPage(), // Register MainPage here
+          //   // Add other routes here as necessary
+          // },
+          home: StreamBuilder<User?>(
+            stream: FirebaseAuth.instance.authStateChanges(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
+
+              // Debug output for tracking the authentication state
+              print('Snapshot data: ${snapshot.data}');
+
+              // Debug output for tracking the authentication state
+              if (snapshot.hasError) {
+                return Center(child: Text('Error: ${snapshot.error}'));
+              }
+
+              if (snapshot.hasData) {
+                // User is signed in, show the MainPage
+                return const MainPage(); // Render MainPage for authenticated users
+
+              } else {
+                // User is not signed in, show WelcomePage
+                return const WelcomePage();
+              }
+            },
+          ),
+          debugShowCheckedModeBanner: false,
+        );
+      },
+    );
+  }
+}
+
+class MainPage extends StatefulWidget {
+  const MainPage({Key? key}) : super(key: key);
+  static String id = 'main_page';
+
+  @override
+  _MainPageState createState() => _MainPageState();
+}
+
+class _MainPageState extends State<MainPage> {
   int _currentIndex = 0;
   String _title = 'Home';
 
@@ -60,7 +121,7 @@ class _MyAppState extends State<MyApp> {
     {'title': 'Home', 'widget': HomePage()},
     {'title': 'Market', 'widget': MarketplacePage()},
     {'title': 'Itinerary', 'widget': ItineraryPage()},
-    {'title': 'Request', 'widget': const AccommodationRequirementView()},
+    {'title': 'Request', 'widget': const AccommodationRequirementPage()},
     {'title': 'Profile', 'widget': ProfilePage()},
     {'title': 'AI Chat', 'widget': TravelAssistantPage()},
     {'title': 'Emergency Call', 'widget': const EmergencyCallPage()},
@@ -76,10 +137,11 @@ class _MyAppState extends State<MyApp> {
 
   void _onItemTapped(int index) {
     setState(() {
-      _currentIndex = index;
-      _title = widgetItems[_currentIndex]['title'];
+        _currentIndex = index;
+        _title = widgetItems[_currentIndex]['title'];
+        // print('Current Index: $_currentIndex'); // Debug statement
     });
-  }
+}
 
   @override
   Widget build(BuildContext context) {

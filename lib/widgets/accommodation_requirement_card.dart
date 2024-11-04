@@ -16,11 +16,6 @@ class _AccommodationRequirementCardState
   @override
   Widget build(BuildContext context) {
     return Card(
-      child: Container(
-        width: double.infinity,
-        decoration: BoxDecoration(
-          border: Border.all(color: Colors.black),
-        ),
         child: SizedBox(
           child: Padding(
             padding: const EdgeInsets.all(12.0),
@@ -32,7 +27,7 @@ class _AccommodationRequirementCardState
                   children: [
                     Text(
                       widget.accommodationRequirement.title,
-                      style: const TextStyle(fontWeight: FontWeight.bold),
+                      style: Theme.of(context).textTheme.titleMedium,
                     ),
                     IconButton(
                         onPressed: () {},
@@ -52,8 +47,7 @@ class _AccommodationRequirementCardState
               ],
             ),
           ),
-        ),
-      ),
+        )
     );
   }
 }

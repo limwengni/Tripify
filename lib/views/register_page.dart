@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:tripify/components/components.dart';
 import 'package:tripify/constants.dart';
+import 'package:tripify/main.dart';
 import 'package:tripify/views/login_page.dart';
 import 'package:tripify/views/welcome_page.dart';
 import 'package:loading_overlay/loading_overlay.dart';
@@ -140,8 +141,12 @@ class _RegistrationScreenState extends State<RegistrationPage> {
                                 setState(() {
                                   _saving = false;
                                 });
-                                Navigator.of(context)
-                                    .popUntil((route) => route.isFirst);
+                                //  Navigator.of(context).pushReplacement(
+                                //   MaterialPageRoute(
+                                //     builder: (context) => const MainPage(),
+                                //   ),
+                                // );
+                                Navigator.pop(context);
                               } catch (e) {
                                 setState(() {
                                   _saving = false;
