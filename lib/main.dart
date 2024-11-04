@@ -1,10 +1,15 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'firebase_options.dart';
 
-import 'package:tripify/services/auth_service.dart';
+import 'package:tripify/models/user_model.dart';
+import 'package:tripify/view_models/auth_service.dart';
+import 'package:tripify/view_models/user_provider.dart';
+import 'package:tripify/view_models/post_provider.dart';
 import 'package:tripify/views/login_page.dart';
 import 'package:tripify/views/accommodation_requirement_page.dart';
 import 'package:tripify/views/currency_exchange_page.dart';
@@ -43,6 +48,22 @@ void main() async {
       providers: [
         ChangeNotifierProvider(create: (context) => AuthService()),
         ChangeNotifierProvider(create: (context) => ThemeNotifier()),
+        ChangeNotifierProvider(
+            create: (context) => UserProvider(UserModel(
+                  username: 'Guest', // Default or placeholder values
+                  ssm: null,
+                  bio: 'This user has not set a bio yet.',
+                  profilePic:
+                      'https://console.firebase.google.com/project/tripify-d8e12/storage/tripify-d8e12.appspot.com/files/~2Fdefaults/default-profile.jpg',
+                  birthdate: DateTime.now(),
+                  createdAt: DateTime.now(),
+                  updatedAt: null,
+                  uid: '',
+                  likesCount: 0,
+                  commentsCount: 0,
+                  savedCount: 0,
+                ))),
+        ChangeNotifierProvider(create: (context) => PostProvider()),
       ],
       child: const MyApp(),
     ),
@@ -65,14 +86,7 @@ class _MyAppState extends State<MyApp> {
           theme: lightTheme,
           darkTheme: darkTheme,
           themeMode: themeNotifier.themeMode,
-          // initialRoute: WelcomePage.id, // Define your initial route
-          // routes: {
-          //   WelcomePage.id: (context) => const WelcomePage(),
-          //   LoginPage.id: (context) => const LoginPage(),
-          //   MainPage.id: (context) =>
-          //       const MainPage(), // Register MainPage here
-          //   // Add other routes here as necessary
-          // },
+          // scrollBehavior: const MaterialScrollBehavior().copyWith(dragDevices: PointerDeviceKind.values.toSet()),
           home: StreamBuilder<User?>(
             stream: FirebaseAuth.instance.authStateChanges(),
             builder: (context, snapshot) {
@@ -137,11 +151,11 @@ class _MainPageState extends State<MainPage> {
 
   void _onItemTapped(int index) {
     setState(() {
-        _currentIndex = index;
-        _title = widgetItems[_currentIndex]['title'];
-        // print('Current Index: $_currentIndex'); // Debug statement
+      _currentIndex = index;
+      _title = widgetItems[_currentIndex]['title'];
+      // print('Current Index: $_currentIndex'); // Debug statement
     });
-}
+  }
 
   @override
   Widget build(BuildContext context) {

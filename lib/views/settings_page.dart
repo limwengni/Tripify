@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:tripify/services/auth_service.dart';
+import 'package:tripify/view_models/auth_service.dart';
 import 'package:tripify/views/about_page.dart';
 import 'package:tripify/views/welcome_page.dart';
 import 'package:tripify/views/theme_selection_page.dart';
@@ -94,7 +94,8 @@ class SettingsPage extends StatelessWidget {
               PageRouteBuilder(
                 pageBuilder: (context, animation, secondaryAnimation) =>
                     ThemeSelectionPage(),
-                transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                transitionsBuilder:
+                    (context, animation, secondaryAnimation, child) {
                   const begin = Offset(1.0, 0.0);
                   const end = Offset.zero;
                   const curve = Curves.easeInOut;
@@ -116,8 +117,10 @@ class SettingsPage extends StatelessWidget {
             Navigator.push(
               context,
               PageRouteBuilder(
-                pageBuilder: (context, animation, secondaryAnimation) => AboutPage(),
-                transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                pageBuilder: (context, animation, secondaryAnimation) =>
+                    AboutPage(),
+                transitionsBuilder:
+                    (context, animation, secondaryAnimation, child) {
                   const begin = Offset(1.0, 0.0);
                   const end = Offset.zero;
                   const curve = Curves.easeInOut;
@@ -139,27 +142,30 @@ class SettingsPage extends StatelessWidget {
             showDialog(
               context: context,
               builder: (BuildContext context) {
+                final bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
+                final textColor =
+                    isDarkMode ? Colors.white : Colors.black; // Adapts to dark/light theme
+
                 return AlertDialog(
                   title: Text("Log Out"),
                   content: Text("Are you sure you want to log out?"),
                   actions: [
                     TextButton(
-                      child: Text("Cancel"),
+                      child: Text("Cancel", style: TextStyle(color: textColor)),
                       onPressed: () {
                         Navigator.of(context).pop(); // Dismiss the dialog
                       },
                     ),
                     TextButton(
-                      child: Text("Log Out"),
+                      child:
+                          Text("Log Out", style: TextStyle(color: textColor)),
                       onPressed: () async {
-                        // Access the auth provider and call the logout method
                         await Provider.of<AuthService>(context, listen: false)
                             .logout();
 
                         Navigator.of(context).pop(); // Dismiss the dialog
-                        // Clear all routes and return to the MainPage
-                        Navigator.of(context).popUntil((route) => route.isFirst);
-                        // Optionally, navigate to Welcome Page if needed
+                        Navigator.of(context)
+                            .popUntil((route) => route.isFirst);
                         Navigator.pushReplacement(context,
                             MaterialPageRoute(builder: (_) => WelcomePage()));
                       },

@@ -15,6 +15,11 @@ final ThemeData lightTheme = ThemeData(
   textTheme: const TextTheme(
     bodyMedium: TextStyle(color: Color(0xFF3B3B3B)), // Updated for light mode text color
   ),
+  inputDecorationTheme: InputDecorationTheme(
+    focusedBorder: OutlineInputBorder(
+      borderSide: BorderSide(color: Color.fromARGB(255, 159, 118, 249), width: 2.0),
+    ),
+  ),
 );
 
 final ThemeData darkTheme = ThemeData(
@@ -30,5 +35,11 @@ final ThemeData darkTheme = ThemeData(
   ),
   textTheme: const TextTheme(
     bodyMedium: TextStyle(color: Colors.white), // Updated for dark mode text color
+  ),
+  inputDecorationTheme: InputDecorationTheme(
+    labelStyle: TextStyle(color: Colors.white), // Label color
+    focusedBorder: OutlineInputBorder(
+      borderSide: BorderSide(color: Color.fromARGB(255, 159, 118, 249), width: 2.0),
+    ),
   ),
 );

@@ -11,6 +11,12 @@ class AboutPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text("About Tripify"),
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.pop(context); // Goes back to the previous screen
+          },
+        ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),

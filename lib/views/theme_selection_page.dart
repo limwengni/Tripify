@@ -11,16 +11,27 @@ class ThemeSelectionPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text("Select Theme"),
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.pop(context); // Goes back to the previous screen
+          },
+        ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0), // Add padding around the body
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start, // Align items to the start
+          crossAxisAlignment:
+              CrossAxisAlignment.start, // Align items to the start
           children: [
             Container(
-              padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 16.0), // Adjust padding for a more compact look
+              padding: const EdgeInsets.symmetric(
+                  vertical: 10.0,
+                  horizontal: 16.0), // Adjust padding for a more compact look
               decoration: BoxDecoration(
-                color: isDarkMode ? Color(0xFF333333) : Colors.white, // Background color based on theme
+                color: isDarkMode
+                    ? Color(0xFF333333)
+                    : Colors.white, // Background color based on theme
                 borderRadius: BorderRadius.circular(12.0),
               ),
               child: Row(
@@ -28,10 +39,15 @@ class ThemeSelectionPage extends StatelessWidget {
                 children: [
                   Text(
                     "Theme Mode: ${themeNotifier.themeMode == ThemeMode.light ? 'Light' : 'Dark'}",
-                    style: TextStyle(fontSize: 18.0, color: isDarkMode ? Colors.white : Colors.black), // Text color based on theme
+                    style: TextStyle(
+                        fontSize: 18.0,
+                        color: isDarkMode
+                            ? Colors.white
+                            : Colors.black), // Text color based on theme
                   ),
                   Switch(
                     value: themeNotifier.themeMode == ThemeMode.dark,
+                    activeColor: Color.fromARGB(255, 159, 118, 249),
                     onChanged: (value) {
                       // Toggle the theme
                       if (value) {
