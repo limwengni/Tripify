@@ -76,6 +76,14 @@ class TripifyDrawer extends StatelessWidget {
               Navigator.pop(context);
             },
           ),
+             ListTile(
+            title: const Text('On Shelves Travel Package'),
+            onTap: () {
+              onItemTapped(12);
+              Navigator.pop(context);
+            },
+          ),
+          
         ],
       ),
     );

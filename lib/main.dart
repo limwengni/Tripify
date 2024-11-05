@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:tripify/views/chat_list_page.dart';
+import 'package:tripify/views/travel_package_create_page.dart';
 import 'firebase_options.dart';
 
 import 'package:tripify/models/user_model.dart';
@@ -105,7 +107,6 @@ class _MyAppState extends State<MyApp> {
               if (snapshot.hasData) {
                 // User is signed in, show the MainPage
                 return const MainPage(); // Render MainPage for authenticated users
-
               } else {
                 // User is not signed in, show WelcomePage
                 return const WelcomePage();
@@ -147,6 +148,10 @@ class _MainPageState extends State<MainPage> {
       'widget': const CurrencyExchangePage()
     },
     {'title': 'Settings', 'widget': SettingsPage()},
+    {
+      'title': 'On Shelves Travel Package',
+      'widget': const TravelPackageCreatePage()
+    }
   ];
 
   void _onItemTapped(int index) {
@@ -193,7 +198,7 @@ class _MainPageState extends State<MainPage> {
                             height: 24,
                           ),
                           onPressed: () {
-                            // Open chat messages
+                            Navigator.push(context, MaterialPageRoute(builder: (context)=> ChatListPage()));
                           },
                         ),
                       ),
@@ -205,6 +210,14 @@ class _MainPageState extends State<MainPage> {
                     currentIndex: (_currentIndex < 4) ? _currentIndex : 4,
                     onItemTapped: _onItemTapped,
                   ),
+                  floatingActionButton: _currentIndex == 1
+                      ? FloatingActionButton(
+                          onPressed: () {
+                            //do somethings 
+                          },
+                          child: const Icon(Icons.add),
+                        )
+                      : null,
                 );
               } else {
                 // User is not signed in, redirect to login page
