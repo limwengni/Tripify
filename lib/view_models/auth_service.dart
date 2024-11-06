@@ -36,6 +36,29 @@ class AuthService extends ChangeNotifier {
       return e.toString(); // Return the error message as a string
     }
   }
+Future<void> signUp(String email, String password) async {
+  try {
+    // Create the user
+    UserCredential userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+      email: email,
+      password: password,
+    );
+
+    // Get the current user
+    // User? user = userCredential.user;
+
+    // if (user != null) {
+    //   // Send verification email
+    //   await user.sendEmailVerification();
+    //   print("Verification email sent to ${user.email}");
+      
+    //   // Optionally, sign out the user to force them to verify their email
+    //   // await FirebaseAuth.instance.signOut();
+    // }
+  } catch (e) {
+    print("Failed to register user: $e");
+  }
+}
 
   Future<void> register(String email, String password) async {
     try {
@@ -77,12 +100,14 @@ class AuthService extends ChangeNotifier {
     }
   }
 
+  Future sendVerificationEmail() async {
+    final user = FirebaseAuth.instance.currentUser!;
+    await user.sendEmailVerification();
+  }
+
   // Getter for user state
   User? get user => _auth.currentUser;
 
   // Stream for user state changes
   Stream<User?> get userStream => _auth.authStateChanges();
-
-
-
 }

@@ -3,6 +3,7 @@ import 'package:tripify/components/components.dart';
 import 'package:tripify/constants.dart';
 import 'package:tripify/main.dart';
 import 'package:tripify/views/reset_password_page.dart';
+import 'package:tripify/views/verify_email_page.dart';
 import 'package:tripify/views/welcome_page.dart';
 import 'package:loading_overlay/loading_overlay.dart';
 import 'package:tripify/views/home_page.dart';
@@ -193,7 +194,7 @@ class _LoginScreenState extends State<LoginPage> {
                                   // Navigate to HomePage if login is successful
                                   Navigator.of(context).pushReplacement(
                                     MaterialPageRoute(
-                                      builder: (context) => const MainPage(),
+                                      builder: (context) => VerifyEmailPage(),
                                     ),
                                   );
                                 } else {

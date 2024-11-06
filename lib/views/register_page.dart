@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:tripify/components/components.dart';
 import 'package:tripify/constants.dart';
 import 'package:tripify/main.dart';
+import 'package:tripify/view_models/auth_service.dart';
 import 'package:tripify/views/login_page.dart';
+import 'package:tripify/views/verify_email_page.dart';
 import 'package:tripify/views/welcome_page.dart';
 import 'package:loading_overlay/loading_overlay.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -17,7 +19,8 @@ class RegistrationPage extends StatefulWidget {
 }
 
 class _RegistrationScreenState extends State<RegistrationPage> {
-  final _auth = FirebaseAuth.instance;
+  // final _auth = FirebaseAuth.instance;
+
   late String _email;
   late String _password;
   late String _confirmPassword;
@@ -30,6 +33,8 @@ class _RegistrationScreenState extends State<RegistrationPage> {
 
   @override
   Widget build(BuildContext context) {
+    final authService = Provider.of<AuthService>(context);
+
     return WillPopScope(
       onWillPop: () async {
         Navigator.popAndPushNamed(context, WelcomePage.id);
@@ -112,48 +117,82 @@ class _RegistrationScreenState extends State<RegistrationPage> {
                                 _saving = true;
                               });
 
-                            // Validate email format
-                            if (!_emailRegExp.hasMatch(_email)) {
-                              setState(() {
-                                _saving = false; // Reset loading state
-                              });
-                              showDialog(
-                                context: context,
-                                builder: (BuildContext context) => AlertDialog(
-                                  title: const Text(
-                                    'Error',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
+                              // Validate email format
+                              if (!_emailRegExp.hasMatch(_email)) {
+                                setState(() {
+                                  _saving = false; // Reset loading state
+                                });
+                                showDialog(
+                                  context: context,
+                                  builder: (BuildContext context) =>
+                                      AlertDialog(
+                                    title: const Text(
+                                      'Error',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                     ),
+                                    content: const Text(
+                                        'Please enter a valid email address.'),
+                                    actions: <Widget>[
+                                      TextButton(
+                                        onPressed: () =>
+                                            Navigator.pop(context, 'OK'),
+                                        child: const Text('OK'),
+                                      ),
+                                    ],
                                   ),
-                                  content: const Text('Please enter a valid email address.'),
-                                  actions: <Widget>[
-                                    TextButton(
-                                      onPressed: () => Navigator.pop(context, 'OK'),
-                                      child: const Text('OK'),
-                                    ),
-                                  ],
-                                ),
-                              );
-                              return; // Exit the method if email is invalid
-                            }
-                            if (_password == _confirmPassword) {
-                              try {
-                                await _auth.createUserWithEmailAndPassword(
-                                    email: _email, password: _password);
+                                );
+                                return; // Exit the method if email is invalid
+                              }
+                              if (_password == _confirmPassword) {
+                                try {
+                                  await authService.signUp(_email,_password);
 
-                                if (context.mounted) {
+                                  Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (builder) => VerifyEmailPage()));
+
+                                  // if (context.mounted) {
+                                  //   setState(() {
+                                  //     _saving = false;
+                                  //     Navigator.popAndPushNamed(
+                                  //         context, RegistrationPage.id);
+                                  //   });
+                                  //   Navigator.pushNamed(context, WelcomePage.id);
+                                  // }
+                                } catch (e) {
                                   setState(() {
                                     _saving = false;
-                                    Navigator.popAndPushNamed(
-                                        context, RegistrationPage.id);
                                   });
-                                  Navigator.pushNamed(context, WelcomePage.id);
+                                  showDialog(
+                                      context: context,
+                                      builder: (BuildContext context) =>
+                                          AlertDialog(
+                                            title: const Text(
+                                              'Error',
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                            content: const Text(
+                                                'Failed to register, please try again later'),
+                                            actions: <Widget>[
+                                              TextButton(
+                                                onPressed: () => Navigator.pop(
+                                                    context, 'OK'),
+                                                child: const Text('OK'),
+                                              ),
+                                            ],
+                                          ));
                                 }
-                              } catch (e) {
+                              } else {
+                                // Reset _saving to false on error
                                 setState(() {
-                                  _saving = false; 
+                                  _saving = false; // Reset loading state
                                 });
+
                                 showDialog(
                                     context: context,
                                     builder: (BuildContext context) =>
@@ -165,7 +204,7 @@ class _RegistrationScreenState extends State<RegistrationPage> {
                                             ),
                                           ),
                                           content: const Text(
-                                              'Failed to register, please try again later'),
+                                              'Ensure password and confirm password is match'),
                                           actions: <Widget>[
                                             TextButton(
                                               onPressed: () =>
@@ -175,49 +214,22 @@ class _RegistrationScreenState extends State<RegistrationPage> {
                                           ],
                                         ));
                               }
-                            } else {
-                              // Reset _saving to false on error
-                              setState(() {
-                                _saving = false; // Reset loading state
-                              });
-
-                              showDialog(
-                                  context: context,
-                                  builder: (BuildContext context) =>
-                                      AlertDialog(
-                                        title: const Text(
-                                          'Error',
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                        content: const Text(
-                                            'Ensure password and confirm password is match'),
-                                        actions: <Widget>[
-                                          TextButton(
-                                            onPressed: () =>
-                                                Navigator.pop(context, 'OK'),
-                                            child: const Text('OK'),
-                                          ),
-                                        ],
-                                      ));
-                            }
-                          },
-                          questionPressed: () {
-                            Navigator.popAndPushNamed(
-                                context, RegistrationPage.id);
-                          },
-                        ),
-                      ],
+                            },
+                            questionPressed: () {
+                              Navigator.popAndPushNamed(
+                                  context, RegistrationPage.id);
+                            },
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
         ),
       ),
-    ),
     );
   }
 }

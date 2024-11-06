@@ -6,6 +6,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:tripify/views/chat_list_page.dart';
 import 'package:tripify/views/travel_package_create_page.dart';
+import 'package:tripify/views/verify_email_page.dart';
 import 'firebase_options.dart';
 
 import 'package:tripify/models/user_model.dart';
@@ -106,7 +107,9 @@ class _MyAppState extends State<MyApp> {
 
               if (snapshot.hasData) {
                 // User is signed in, show the MainPage
-                return const MainPage(); // Render MainPage for authenticated users
+                
+                return VerifyEmailPage(); // Render MainPage for authenticated users
+                
               } else {
                 // User is not signed in, show WelcomePage
                 return const WelcomePage();
