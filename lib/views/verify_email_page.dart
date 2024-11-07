@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:tripify/main.dart';
 import 'package:tripify/views/home_page.dart';
+import 'package:tripify/views/signup_details_page1.dart';
 
 class VerifyEmailPage extends StatefulWidget {
   @override
@@ -84,7 +85,7 @@ class _VerifyEmailPageState extends State<VerifyEmailPage> {
   @override
   Widget build(BuildContext context) {
     return isEmailVerified
-        ? const MainPage()
+        ? const SignupDetailsPage1()
         : Scaffold(
             body: Center(
             child: Padding(
@@ -119,7 +120,10 @@ class _VerifyEmailPageState extends State<VerifyEmailPage> {
                     ),
                   ),
                   TextButton(
-                    onPressed: () => FirebaseAuth.instance.signOut(),
+                    onPressed: () {
+                      FirebaseAuth.instance.signOut();
+                      Navigator.pop(context);
+                    },
                     child: const Text('Cancel'),
                   ),
                 ],
@@ -128,9 +132,3 @@ class _VerifyEmailPageState extends State<VerifyEmailPage> {
           ));
   }
 }
-// ScaffoldMessenger.of(context).showSnackBar(
-//         const SnackBar(
-//           content: Text('Verification email resent!'),
-//           duration: Duration(seconds: 2),
-//         ),
-//       );

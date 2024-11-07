@@ -107,9 +107,8 @@ class _MyAppState extends State<MyApp> {
 
               if (snapshot.hasData) {
                 // User is signed in, show the MainPage
-                
+
                 return VerifyEmailPage(); // Render MainPage for authenticated users
-                
               } else {
                 // User is not signed in, show WelcomePage
                 return const WelcomePage();
@@ -201,7 +200,10 @@ class _MainPageState extends State<MainPage> {
                             height: 24,
                           ),
                           onPressed: () {
-                            Navigator.push(context, MaterialPageRoute(builder: (context)=> ChatListPage()));
+                            Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) => ChatListPage()));
                           },
                         ),
                       ),
@@ -216,7 +218,7 @@ class _MainPageState extends State<MainPage> {
                   floatingActionButton: _currentIndex == 1
                       ? FloatingActionButton(
                           onPressed: () {
-                            //do somethings 
+                            //do somethings
                           },
                           child: const Icon(Icons.add),
                         )
