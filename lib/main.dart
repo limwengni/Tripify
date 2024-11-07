@@ -97,7 +97,6 @@ class _MyAppState extends State<MyApp> {
                 return const Center(child: CircularProgressIndicator());
               }
 
-              // Debug output for tracking the authentication state
               print('Snapshot data: ${snapshot.data}');
 
               // Debug output for tracking the authentication state

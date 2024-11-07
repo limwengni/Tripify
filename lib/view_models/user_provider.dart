@@ -61,7 +61,8 @@ class UserProvider with ChangeNotifier {
         returnUrl = url;
       } catch (e) {
         print('Error fetching profile image URL: $e');
-        returnUrl = "https://firebasestorage.googleapis.com/v0/b/tripify-d8e12.appspot.com/o/defaults%2Fdefault.jpg?alt=media&token=8e1189e2-ea22-4bdd-952f-e9d711307251";
+        returnUrl =
+            "https://firebasestorage.googleapis.com/v0/b/tripify-d8e12.appspot.com/o/defaults%2Fdefault.jpg?alt=media&token=8e1189e2-ea22-4bdd-952f-e9d711307251";
         // return 'https://firebasestorage.googleapis.com/v0/b/tripify-d8e12.appspot.com/o/defaults%2Fdefault.jpg?alt=media&token=8e1189e2-ea22-4bdd-952f-e9d711307251';
       }
     }
@@ -101,19 +102,20 @@ class UserProvider with ChangeNotifier {
       }
 
       // Update username
-      if (username != null && username.isNotEmpty && username != _userModel?.username) {
+      if (username != null &&
+          username.isNotEmpty &&
+          username != _userModel?.username) {
         _userModel?.username = username;
         await userRef.update({'username': username});
       }
 
       // Update the bio if it’s changed
-      if (bio != null && bio.isNotEmpty &&  bio != _userModel?.bio) {
+      if (bio != null && bio.isNotEmpty && bio != _userModel?.bio) {
         _userModel?.bio = bio;
         await userRef.update({'bio': bio});
       }
 
       notifyListeners(); // Notify listeners about the change
-      
     } catch (error) {
       print('Error updating user details: $error');
       throw error; // Rethrow the error or handle it as needed
