@@ -3,6 +3,7 @@ import 'package:tripify/components/components.dart';
 import 'package:tripify/constants.dart';
 import 'package:tripify/main.dart';
 import 'package:tripify/view_models/auth_service.dart';
+import 'package:tripify/view_models/firestore_service.dart';
 import 'package:tripify/views/login_page.dart';
 import 'package:tripify/views/verify_email_page.dart';
 import 'package:tripify/views/welcome_page.dart';
@@ -26,7 +27,6 @@ class _RegistrationScreenState extends State<RegistrationPage> {
   late String _confirmPassword;
   bool _saving = false;
 
-  // Regular expression for validating email format
   final RegExp _emailRegExp = RegExp(
     r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
   );
@@ -34,7 +34,7 @@ class _RegistrationScreenState extends State<RegistrationPage> {
   @override
   Widget build(BuildContext context) {
     final authService = Provider.of<AuthService>(context);
-
+    final firestoreService = FirestoreService();
     return WillPopScope(
       onWillPop: () async {
         Navigator.popAndPushNamed(context, WelcomePage.id);
@@ -116,8 +116,6 @@ class _RegistrationScreenState extends State<RegistrationPage> {
                               setState(() {
                                 _saving = true;
                               });
-
-                              // Validate email format
                               if (!_emailRegExp.hasMatch(_email)) {
                                 setState(() {
                                   _saving = false; // Reset loading state
@@ -148,20 +146,18 @@ class _RegistrationScreenState extends State<RegistrationPage> {
                               if (_password == _confirmPassword) {
                                 try {
                                   await authService.signUp(_email,_password);
-
+                                  Map<String, dynamic> user = {
+                                    "email": _email,
+                                    "password": _password
+                                  };
+                                  // await firestoreService.insertData('User', user);
+                                  setState(() {
+                                    _saving = false;
+                                  });
                                   Navigator.push(
                                       context,
                                       MaterialPageRoute(
                                           builder: (builder) => VerifyEmailPage()));
-
-                                  // if (context.mounted) {
-                                  //   setState(() {
-                                  //     _saving = false;
-                                  //     Navigator.popAndPushNamed(
-                                  //         context, RegistrationPage.id);
-                                  //   });
-                                  //   Navigator.pushNamed(context, WelcomePage.id);
-                                  // }
                                 } catch (e) {
                                   setState(() {
                                     _saving = false;
@@ -188,11 +184,10 @@ class _RegistrationScreenState extends State<RegistrationPage> {
                                           ));
                                 }
                               } else {
-                                // Reset _saving to false on error
+                                
                                 setState(() {
-                                  _saving = false; // Reset loading state
+                                  _saving = false;
                                 });
-
                                 showDialog(
                                     context: context,
                                     builder: (BuildContext context) =>
@@ -234,12 +229,10 @@ class _RegistrationScreenState extends State<RegistrationPage> {
   }
 }
 
-String? signupValidation(
-    String email, String password, String confirmPassword) {
+String? signupValidation(String email, String password, String confirmPassword) {
   if (email.isEmpty) {
     return 'Please enter your email address.';
   }
-
   final RegExp emailRegExp = RegExp(
     r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
   );
@@ -250,6 +243,5 @@ String? signupValidation(
   if (password != confirmPassword) {
     return 'Ensure password and confirm password is match';
   }
-
   return null;
 }
