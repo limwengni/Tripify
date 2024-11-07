@@ -157,7 +157,7 @@ class _RegistrationScreenState extends State<RegistrationPage> {
                                   Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                          builder: (builder) => VerifyEmailPage()));
+                                          builder: (builder) => const MainPage()));
                                 } catch (e) {
                                   setState(() {
                                     _saving = false;
