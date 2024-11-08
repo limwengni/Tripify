@@ -15,14 +15,15 @@ class FirestoreService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
   // Insert Data
-  Future<void> insertData(String collection, Map<String, dynamic> data) async {
-    try {
-      await _db.collection(collection).add(data);
-      print("Data inserted successfully.");
-    } catch (e) {
-      print("Error inserting data: $e");
-    }
+ Future<void> insertData(String collection, String documentId, Map<String, dynamic> data) async {
+  try {
+    await _db.collection(collection).doc(documentId).set(data);
+    print("Data inserted successfully.");
+  } catch (e) {
+    print("Error inserting data: $e");
   }
+}
+
 
   // Update Data
   Future<void> updateData(String collection, String documentId, Map<String, dynamic> data) async {

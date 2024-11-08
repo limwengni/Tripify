@@ -16,7 +16,7 @@ class _VerifyEmailPageState extends State<VerifyEmailPage> {
   bool isEmailVerified = false;
   bool isFirstVisit = true;
   bool isLoading = true; // Added to manage loading state
-  List<Map<String, dynamic>>? userData;
+  Map<String, dynamic>? userData;
   Timer? timer;
   final firestoreService = FirestoreService();
 
@@ -36,17 +36,18 @@ class _VerifyEmailPageState extends State<VerifyEmailPage> {
       );
     }
     setState(() {
-        isLoading = false; // Set loading to false after data is fetched
-      });
+      isLoading = false; // Set loading to false after data is fetched
+    });
   }
 
   Future<void> _initializeUserData() async {
     try {
-      userData = await firestoreService.getDataByField(
-          'User', 'email', FirebaseAuth.instance.currentUser!.email);
+      userData = await firestoreService.getDataById(
+          'User', FirebaseAuth.instance.currentUser!.uid);
+      print("User data fetched: $userData");
     } catch (e) {
       print("Error fetching user data: $e");
-    } 
+    }
   }
 
   @override
@@ -106,9 +107,9 @@ class _VerifyEmailPageState extends State<VerifyEmailPage> {
           child: CircularProgressIndicator(),
         ),
       );
-   } else if (isEmailVerified && userData != null && userData!.isNotEmpty) {
-    return const MainPage();
-  } else if (isEmailVerified && (userData == null || userData!.isEmpty)) {
+    } else if (isEmailVerified && userData != null && userData!.isNotEmpty) {
+      return const MainPage();
+    } else if (isEmailVerified && (userData == null || userData!.isEmpty)) {
       return const SignupDetailsPage1();
     } else {
       return Scaffold(
