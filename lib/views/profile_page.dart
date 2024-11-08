@@ -293,11 +293,20 @@ class _ProfilePageState extends State<ProfilePage> {
                       );
                     } else {
                       // Image URL loaded successfully
-                      return CircleAvatar(
-                        radius: 50,
-                        backgroundImage:
-                            CachedNetworkImageProvider(snapshot.data!),
-                      );
+                      // return CircleAvatar(
+                      //   radius: 50,
+                      //   backgroundImage:
+                      //       CachedNetworkImageProvider(snapshot.data!),
+                      // );
+                      return ClipOval(
+                          child: Image.network(
+                        'https://firebasestorage.googleapis.com/v0/b/tripify-d8e12.appspot.com/o/AD9FpoxYM1XgY9h5JIV2QQaOouU2%2Fpfp%2Fpfp.jpg?alt=media&token=812a109f-05a2-4535-84ce-79666b652c60',
+                        width:
+                            60, // Set width and height to match the CircleAvatar size
+                        height: 60,
+                        fit: BoxFit
+                            .cover, // Crop the image to fit inside the circle
+                      ));
                     }
                   },
                 ),
@@ -308,7 +317,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        '${userProvider.userModel?.username ?? 'Username'} ${(userProvider.userModel?.ssm)}',
+                        '${userProvider.userModel?.username ?? 'Username'} ${(userProvider.userModel?.ssm ?? '')}',
                         style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
@@ -335,7 +344,11 @@ class _ProfilePageState extends State<ProfilePage> {
               padding: EdgeInsets.zero,
               child: RichText(
                 text: TextSpan(
-                  style: TextStyle(fontSize: 16, color: Theme.of(context).brightness == Brightness.light ? Color(0xFF3B3B3B) : Colors.white),
+                  style: TextStyle(
+                      fontSize: 16,
+                      color: Theme.of(context).brightness == Brightness.light
+                          ? Color(0xFF3B3B3B)
+                          : Colors.white),
                   children: _buildBioTextSpans(userBio),
                 ),
               ),

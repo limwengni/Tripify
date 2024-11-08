@@ -37,9 +37,11 @@ class UserProvider with ChangeNotifier {
           notifyListeners();
         } else {
           print("User data is null!");
+          _userModel = null;
         }
       } else {
         print("User document does not exist!");
+        _userModel = null;
       }
     } catch (e) {
       print("Failed to fetch user details: $e");

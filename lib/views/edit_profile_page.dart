@@ -47,7 +47,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
       await userProvider.fetchUserDetails(user.uid);
       setState(() {
         _usernameController.text = userProvider.userModel?.username ?? '';
-        _bioController.text = userProvider.userModel?.bio ?? '';
+
+        String bioFromFirebase = userProvider.userModel?.bio ?? '';
+        _bioController.text = bioFromFirebase.replaceAll(r'\n', '\n');
+        
         _profileImageUrl = userProvider.fetchProfileImageUrl();
       });
     }

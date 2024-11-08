@@ -54,7 +54,6 @@ void main() async {
         ChangeNotifierProvider(
             create: (context) => UserProvider(UserModel(
                   username: 'Guest', // Default or placeholder values
-                  email: '',
                   role: '',
                   ssm: null,
                   bio: 'This user has not set a bio yet.',

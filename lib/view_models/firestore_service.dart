@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class FirestoreService {
   static final FirestoreService _instance = FirestoreService._internal();
@@ -14,16 +15,28 @@ class FirestoreService {
   // Get the Firestore instance
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
-  // Insert Data
- Future<void> insertData(String collection, String documentId, Map<String, dynamic> data) async {
+  // Insert Data (General)
+  Future<void> insertData(String collection, Map<String, dynamic> data) async {
+    try {
+      await _db.collection(collection).add(data);
+      print("Data inserted successfully.");
+    } catch (e) {
+      print("Error inserting data: $e");
+    }
+  }
+
+  // Insert user data
+  Future<void> insertUserData(Map<String, dynamic> data) async {
   try {
-    await _db.collection(collection).doc(documentId).set(data);
-    print("Data inserted successfully.");
+    String uid = FirebaseAuth.instance.currentUser!.uid;
+
+    // Use the UID as the document ID in Firestore
+    await _db.collection('User').doc(uid).set(data);
+    print("User data inserted successfully.");
   } catch (e) {
     print("Error inserting data: $e");
   }
 }
-
 
   // Update Data
   Future<void> updateData(String collection, String documentId, Map<String, dynamic> data) async {

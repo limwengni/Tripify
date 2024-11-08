@@ -12,17 +12,20 @@ import 'package:tripify/models/user_model.dart';
 import 'package:tripify/view_models/auth_service.dart';
 import 'package:tripify/view_models/firesbase_storage_service.dart';
 import 'package:tripify/view_models/firestore_service.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class SignupDetailsPage2 extends StatefulWidget {
   final String username;
   final DateTime birthDate;
   final File profilePic;
+  final String profilePicFilename;
 
   const SignupDetailsPage2({
     super.key,
     required this.username,
     required this.birthDate,
     required this.profilePic,
+    required this.profilePicFilename,
   });
 
   @override
@@ -61,7 +64,7 @@ class _SignupDetailsPage2State extends State<SignupDetailsPage2> {
                         initialValue:
                             selectedOption, // Set the initial selected option
                         decoration: const InputDecoration(
-                          labelText: 'Who you are',
+                          labelText: 'Who are you?',
                           labelStyle: TextStyle(
                             fontSize: 25,
                             fontWeight: FontWeight.bold,
@@ -168,24 +171,25 @@ class _SignupDetailsPage2State extends State<SignupDetailsPage2> {
                                 file: pdf!,
                                 storagePath:
                                     '${FirebaseAuth.instance.currentUser!.uid}/ssm');
+
                         final user = UserModel(
                             username: widget.username,
-                            email: FirebaseAuth.instance.currentUser!.email!,
                             role: selectedOption!,
                             ssm: '',
                             ssmDownloadUrl: pdfDownloadUrl,
                             bio: '',
-                            profilePic: imgDownloadUrl!,
+                            profilePic: widget.profilePicFilename,
                             birthdate: widget.birthDate,
                             createdAt: DateTime.now(),
+                            updatedAt: null,
                             uid: FirebaseAuth.instance.currentUser!.uid,
                             likesCount: 0,
                             commentsCount: 0,
                             savedCount: 0);
-                        firestoreService.insertData(
-                            'User',
-                            FirebaseAuth.instance.currentUser!.uid,
-                            user.toMap());
+                        // firestoreService.insertData(
+                        //     'User',
+                        //     FirebaseAuth.instance.currentUser!.uid,
+                        //     user.toMap());
                       } else if (selectedOption == 'Normal User') {
                         selectedOption =
                             _formKey.currentState?.fields['role']?.value;
@@ -196,20 +200,20 @@ class _SignupDetailsPage2State extends State<SignupDetailsPage2> {
                                     '${FirebaseAuth.instance.currentUser!.uid}/pfp');
                         final user = UserModel(
                             username: widget.username,
-                            email: FirebaseAuth.instance.currentUser!.email!,
                             role: selectedOption!,
                             bio: '',
-                            profilePic: imgDownloadUrl!,
+                            profilePic: widget.profilePicFilename,
                             birthdate: widget.birthDate,
                             createdAt: DateTime.now(),
+                            updatedAt: null,
                             uid: FirebaseAuth.instance.currentUser!.uid,
                             likesCount: 0,
                             commentsCount: 0,
                             savedCount: 0);
-                        firestoreService.insertData(
-                            'User',
-                            FirebaseAuth.instance.currentUser!.uid,
-                            user.toMap());
+                        // firestoreService.insertData(
+                        //     'User',
+                        //     FirebaseAuth.instance.currentUser!.uid,
+                        //     user.toMap());
                       } else {
                         print('No PDF file selected');
                         return;

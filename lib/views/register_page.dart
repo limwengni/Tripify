@@ -31,6 +31,10 @@ class _RegistrationScreenState extends State<RegistrationPage> {
     r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
   );
 
+  final RegExp passwordRegExp = RegExp(
+    r'^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)[A-Za-z\d@$!%*?&]{8,}$',
+  );
+
   @override
   Widget build(BuildContext context) {
     final authService = Provider.of<AuthService>(context);
@@ -140,11 +144,38 @@ class _RegistrationScreenState extends State<RegistrationPage> {
                                     ],
                                   ),
                                 );
-                                return; 
+                                return;
+                              }
+                              if (!passwordRegExp.hasMatch(_password)) {
+                                setState(() {
+                                  _saving = false; // Reset loading state
+                                });
+                                showDialog(
+                                  context: context,
+                                  builder: (BuildContext context) =>
+                                      AlertDialog(
+                                    title: const Text(
+                                      'Error',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    content: const Text(
+                                        'Password must be at least 8 characters long, include an uppercase letter, a lowercase letter, and a number.'),
+                                    actions: <Widget>[
+                                      TextButton(
+                                        onPressed: () =>
+                                            Navigator.pop(context, 'OK'),
+                                        child: const Text('OK'),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                                return;
                               }
                               if (_password == _confirmPassword) {
                                 try {
-                                  await authService.signUp(_email,_password);
+                                  await authService.signUp(_email, _password);
                                   Map<String, dynamic> user = {
                                     "email": _email,
                                     "password": _password
@@ -155,11 +186,29 @@ class _RegistrationScreenState extends State<RegistrationPage> {
                                   Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                          builder: (builder) =>  VerifyEmailPage()));
+                                          builder: (builder) =>
+                                              VerifyEmailPage()));
                                 } catch (e) {
                                   setState(() {
                                     _saving = false;
                                   });
+
+                                  // Check for specific Firebase Auth error
+                                  String errorMessage =
+                                      'Failed to register, please try again later';
+                                  if (e is FirebaseAuthException) {
+                                    if (e.code == 'email-already-in-use') {
+                                      errorMessage =
+                                          'The email address is already in use by another account.';
+                                    } else if (e.code == 'invalid-email') {
+                                      errorMessage =
+                                          'The email address is not valid.';
+                                    } else if (e.code == 'weak-password') {
+                                      errorMessage =
+                                          'The password is too weak.';
+                                    }
+                                  }
+
                                   showDialog(
                                       context: context,
                                       builder: (BuildContext context) =>
@@ -170,8 +219,8 @@ class _RegistrationScreenState extends State<RegistrationPage> {
                                                 fontWeight: FontWeight.bold,
                                               ),
                                             ),
-                                            content: const Text(
-                                                'Failed to register, please try again later'),
+                                            content: Text(
+                                                errorMessage),
                                             actions: <Widget>[
                                               TextButton(
                                                 onPressed: () => Navigator.pop(
@@ -226,7 +275,8 @@ class _RegistrationScreenState extends State<RegistrationPage> {
   }
 }
 
-String? signupValidation(String email, String password, String confirmPassword) {
+String? signupValidation(
+    String email, String password, String confirmPassword) {
   if (email.isEmpty) {
     return 'Please enter your email address.';
   }
