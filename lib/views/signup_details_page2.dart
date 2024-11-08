@@ -160,10 +160,10 @@ class _SignupDetailsPage2State extends State<SignupDetailsPage2> {
                             _formKey.currentState?.fields['role']?.value;
                         String? imgDownloadUrl =
                             await firebaseStorageService.saveImageToFirestore(
-                                file: widget.profilePic, storagePath: 'pfp');
+                                file: widget.profilePic, storagePath: '${FirebaseAuth.instance.currentUser!.uid}/pfp');
                         String? pdfDownloadUrl =
                             await firebaseStorageService.saveFileToFirestore(
-                                file: pdf!, storagePath: 'ssm');
+                                file: pdf!, storagePath: '${FirebaseAuth.instance.currentUser!.uid}/ssm');
                         final user = UserModel(
                             username: widget.username,
                             email: FirebaseAuth.instance.currentUser!.email!,
@@ -174,7 +174,7 @@ class _SignupDetailsPage2State extends State<SignupDetailsPage2> {
                             profilePic: imgDownloadUrl!,
                             birthdate: widget.birthDate,
                             createdAt: DateTime.now(),
-                            uid: '',
+                            uid: FirebaseAuth.instance.currentUser!.uid,
                             likesCount: 0,
                             commentsCount: 0,
                             savedCount: 0);
@@ -184,7 +184,7 @@ class _SignupDetailsPage2State extends State<SignupDetailsPage2> {
                             _formKey.currentState?.fields['role']?.value;
                         String? imgDownloadUrl =
                             await firebaseStorageService.saveImageToFirestore(
-                                file: widget.profilePic, storagePath: 'pfp');
+                                file: widget.profilePic, storagePath: '${FirebaseAuth.instance.currentUser!.uid}/pfp');
                         final user = UserModel(
                             username: widget.username,
                             email: FirebaseAuth.instance.currentUser!.email!,
@@ -193,7 +193,7 @@ class _SignupDetailsPage2State extends State<SignupDetailsPage2> {
                             profilePic: imgDownloadUrl!,
                             birthdate: widget.birthDate,
                             createdAt: DateTime.now(),
-                            uid: '',
+                            uid: FirebaseAuth.instance.currentUser!.uid,
                             likesCount: 0,
                             commentsCount: 0,
                             savedCount: 0);
