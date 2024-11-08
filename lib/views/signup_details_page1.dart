@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:tripify/views/signup_details_page2.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
 import 'dart:io';
 
@@ -23,6 +24,7 @@ class _SignupDetailsPage1State extends State<SignupDetailsPage1> {
   String? _username;
   DateTime? _birthDate;
   XFile? _imageSelected = null;
+  String? fileName;
 
   @override
   Widget build(BuildContext context) {
@@ -49,10 +51,11 @@ class _SignupDetailsPage1State extends State<SignupDetailsPage1> {
                           final XFile? imageFile = await picker.pickImage(
                               source: ImageSource.gallery);
 
-                          if (_imageSelected == null) {
+                          if (imageFile != null) {
                             setState(() {
                               _imageSelected =
                                   imageFile; // Store selected image
+                              fileName = imageFile.path.split('/').last;
                             });
                           }
                         },
@@ -70,16 +73,15 @@ class _SignupDetailsPage1State extends State<SignupDetailsPage1> {
                               : null, // Only show the icon if no image is selected
                         ),
                       ),
+                      const SizedBox(height: 20),
                       FormBuilderTextField(
                         name: 'username',
                         decoration:
                             const InputDecoration(labelText: 'Username'),
-                        onChanged: (val) {
-                          print(val);
-                        },
-                        validator: FormBuilderValidators.compose([
-                          FormBuilderValidators.required(),
-                        ]),
+                        // onChanged: (val) {
+                        //   print(val);
+                        // },
+                        validator: FormBuilderValidators.required(),
                       ),
                       const SizedBox(
                         height: 15,
@@ -88,6 +90,23 @@ class _SignupDetailsPage1State extends State<SignupDetailsPage1> {
                         name: 'Birth date',
                         validator: FormBuilderValidators.compose([
                           FormBuilderValidators.required(),
+                          (value) {
+                            if (value == null)
+                              return 'Please select a valid date.';
+
+                            final today = DateTime.now();
+                            final age = today.year - value.year;
+
+                            // Check if the user has already had their birthday this year
+                            final isUnderage = today.isBefore(
+                                DateTime(today.year, value.month, value.day));
+
+                            if (age < 18 || (age == 18 && isUnderage)) {
+                              return 'You must be at least 18 years old.';
+                            }
+
+                            return null; // Return null if the validation passes
+                          },
                         ]),
                         inputType: InputType.date,
                         decoration: const InputDecoration(
@@ -114,11 +133,8 @@ class _SignupDetailsPage1State extends State<SignupDetailsPage1> {
                   child: MaterialButton(
                     padding: const EdgeInsets.all(14.0),
                     onPressed: () {
-                                                FirebaseAuth.instance.signOut();
-
+                      FirebaseAuth.instance.signOut();
                       Navigator.pop(context);
-
-
                     },
                     color: Colors.blue,
                     child: const Text(
@@ -165,6 +181,7 @@ class _SignupDetailsPage1State extends State<SignupDetailsPage1> {
                               username: _username!,
                               birthDate: _birthDate!,
                               profilePic: File(_imageSelected!.path),
+                              profilePicFilename: fileName!,
                             ),
                           ),
                         );

@@ -308,7 +308,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        '${userProvider.userModel?.username ?? 'Username'} ${(userProvider.userModel?.ssm)}',
+                        '${userProvider.userModel?.username ?? 'Username'} ${(userProvider.userModel?.ssm ?? '')}',
                         style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,

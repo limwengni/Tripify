@@ -2,7 +2,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 class UserModel {
   String username;
-  final String email;
   final String role;
   final String? ssm;
   final String? ssmDownloadUrl;
@@ -18,7 +17,6 @@ class UserModel {
 
   UserModel({
     required this.username,
-    required this.email,
     required this.role,
     this.ssm,
     this.ssmDownloadUrl,
@@ -37,15 +35,14 @@ class UserModel {
   Map<String, dynamic> toMap() {
     return {
       'username': username,
-      'email': email,
       'role': role,
       'SSM': ssm,
       'SSM_URL': ssmDownloadUrl,
       'bio': bio,
       'profile_picture': profilePic,
-      'birthdate': birthdate.toIso8601String(),
-      'created_at': createdAt.toIso8601String(),
-      'updated_at': updatedAt?.toIso8601String(),
+      'birthdate': Timestamp.fromDate(birthdate),
+      'created_at': Timestamp.fromDate(createdAt),
+      'updated_at': null,
       'likes_count': likesCount,
       'comments_count': commentsCount,
       'saved_count': savedCount,
@@ -56,10 +53,9 @@ class UserModel {
   factory UserModel.fromMap(Map<String, dynamic> data, String uid) {
     return UserModel(
       username: data['username'] ?? 'Unknown User',
-      email: data['email'],
       role: data['role'],
-      ssm: data['SSM'] ?? '',
-      ssmDownloadUrl: data['SSM_URL']??'',
+      ssm: data['SSM'],
+      ssmDownloadUrl: data['SSM_URL'] ?? '',
       bio: data['bio'] ?? 'No bio available.',
       profilePic: data['profile_picture'] ?? '',
       birthdate: (data['birthdate'] as Timestamp).toDate(),
