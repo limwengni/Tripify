@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:tripify/main.dart';
+import 'package:tripify/view_models/firestore_service.dart';
 import 'package:tripify/views/home_page.dart';
 import 'package:tripify/views/signup_details_page1.dart';
 
@@ -13,24 +14,39 @@ class VerifyEmailPage extends StatefulWidget {
 
 class _VerifyEmailPageState extends State<VerifyEmailPage> {
   bool isEmailVerified = false;
-  bool isFirstVisit = true; // Track whether it's the first visit
-
-  // bool canResendEmail = true;
+  bool isFirstVisit = true;
+  bool isLoading = true; // Added to manage loading state
+  List<Map<String, dynamic>>? userData;
   Timer? timer;
+  final firestoreService = FirestoreService();
 
   @override
   void initState() {
     super.initState();
 
+    // Fetch user data asynchronously and set loading state
+    _initializeUserData();
     isEmailVerified = FirebaseAuth.instance.currentUser!.emailVerified;
+
     if (!isEmailVerified) {
       sendVerificationEmail();
-
       timer = Timer.periodic(
         const Duration(seconds: 3),
         (_) => checkEmailVerified(),
       );
     }
+    setState(() {
+        isLoading = false; // Set loading to false after data is fetched
+      });
+  }
+
+  Future<void> _initializeUserData() async {
+    try {
+      userData = await firestoreService.getDataByField(
+          'User', 'email', FirebaseAuth.instance.currentUser!.email);
+    } catch (e) {
+      print("Error fetching user data: $e");
+    } 
   }
 
   @override
@@ -61,7 +77,7 @@ class _VerifyEmailPageState extends State<VerifyEmailPage> {
           ),
         );
         setState(() {
-          isFirstVisit = false; // Mark the first visit as done
+          isFirstVisit = false;
         });
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -74,7 +90,7 @@ class _VerifyEmailPageState extends State<VerifyEmailPage> {
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Too many request, please try it later!'),
+          content: Text('Too many requests, please try again later!'),
           duration: Duration(seconds: 2),
           backgroundColor: Colors.red,
         ),
@@ -84,51 +100,59 @@ class _VerifyEmailPageState extends State<VerifyEmailPage> {
 
   @override
   Widget build(BuildContext context) {
-    return isEmailVerified
-        ? const SignupDetailsPage1()
-        : Scaffold(
-            body: Center(
-            child: Padding(
-              padding: const EdgeInsets.all(10.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    'A verification email has been sent to your email',
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                  const SizedBox(
-                    height: 10,
-                  ),
-                  MaterialButton(
-                    onPressed: sendVerificationEmail,
-                    color: Colors.blue,
-                    textColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                        vertical: 10.0, horizontal: 15.0),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8.0),
-                    ),
-                    child: const Row(
-                      mainAxisSize: MainAxisSize.max,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.email, color: Colors.white),
-                        SizedBox(width: 8),
-                        Text('Resend Email'),
-                      ],
-                    ),
-                  ),
-                  TextButton(
-                    onPressed: () {
-                      FirebaseAuth.instance.signOut();
-                      Navigator.pop(context);
-                    },
-                    child: const Text('Cancel'),
-                  ),
-                ],
+    if (isLoading) {
+      return const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+   } else if (isEmailVerified && userData != null && userData!.isNotEmpty) {
+    return const MainPage();
+  } else if (isEmailVerified && (userData == null || userData!.isEmpty)) {
+      return const SignupDetailsPage1();
+    } else {
+      return Scaffold(
+          body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(10.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                'A verification email has been sent to your email',
+                style: Theme.of(context).textTheme.titleMedium,
               ),
-            ),
-          ));
+              const SizedBox(height: 10),
+              MaterialButton(
+                onPressed: sendVerificationEmail,
+                color: Colors.blue,
+                textColor: Colors.white,
+                padding: const EdgeInsets.symmetric(
+                    vertical: 10.0, horizontal: 15.0),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8.0),
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.max,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.email, color: Colors.white),
+                    SizedBox(width: 8),
+                    Text('Resend Email'),
+                  ],
+                ),
+              ),
+              TextButton(
+                onPressed: () {
+                  FirebaseAuth.instance.signOut();
+                  Navigator.pop(context);
+                },
+                child: const Text('Cancel'),
+              ),
+            ],
+          ),
+        ),
+      ));
+    }
   }
 }

@@ -34,7 +34,6 @@ class _RegistrationScreenState extends State<RegistrationPage> {
   @override
   Widget build(BuildContext context) {
     final authService = Provider.of<AuthService>(context);
-    final firestoreService = FirestoreService();
     return WillPopScope(
       onWillPop: () async {
         Navigator.popAndPushNamed(context, WelcomePage.id);
@@ -141,7 +140,7 @@ class _RegistrationScreenState extends State<RegistrationPage> {
                                     ],
                                   ),
                                 );
-                                return; // Exit the method if email is invalid
+                                return; 
                               }
                               if (_password == _confirmPassword) {
                                 try {
@@ -150,14 +149,13 @@ class _RegistrationScreenState extends State<RegistrationPage> {
                                     "email": _email,
                                     "password": _password
                                   };
-                                  // await firestoreService.insertData('User', user);
                                   setState(() {
                                     _saving = false;
                                   });
                                   Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                          builder: (builder) => const MainPage()));
+                                          builder: (builder) =>  VerifyEmailPage()));
                                 } catch (e) {
                                   setState(() {
                                     _saving = false;
@@ -184,7 +182,6 @@ class _RegistrationScreenState extends State<RegistrationPage> {
                                           ));
                                 }
                               } else {
-                                
                                 setState(() {
                                   _saving = false;
                                 });

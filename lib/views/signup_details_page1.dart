@@ -8,6 +8,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
 import 'dart:io';
 
+import 'package:tripify/views/welcome_page.dart';
+
 class SignupDetailsPage1 extends StatefulWidget {
   const SignupDetailsPage1({super.key});
 
@@ -112,7 +114,11 @@ class _SignupDetailsPage1State extends State<SignupDetailsPage1> {
                   child: MaterialButton(
                     padding: const EdgeInsets.all(14.0),
                     onPressed: () {
+                                                FirebaseAuth.instance.signOut();
+
                       Navigator.pop(context);
+
+
                     },
                     color: Colors.blue,
                     child: const Text(

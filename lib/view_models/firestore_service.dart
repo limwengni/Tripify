@@ -74,6 +74,21 @@ class FirestoreService {
       return null;
     }
   }
-
+// Select Data (Get by Field Value)
+  Future<List<Map<String, dynamic>>> getDataByField(
+      String collection, String field, dynamic value) async {
+    try {
+      final querySnapshot =
+          await _db.collection(collection).where(field, isEqualTo: value).get();
+      List<Map<String, dynamic>> dataList = [];
+      for (var doc in querySnapshot.docs) {
+        dataList.add(doc.data() as Map<String, dynamic>);
+      }
+      return dataList;
+    } catch (e) {
+      print("Error fetching data by field: $e");
+      return [];
+    }
+  }
 
 }

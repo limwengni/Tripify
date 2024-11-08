@@ -54,6 +54,8 @@ void main() async {
         ChangeNotifierProvider(
             create: (context) => UserProvider(UserModel(
                   username: 'Guest', // Default or placeholder values
+                  email: '',
+                  role: '',
                   ssm: null,
                   bio: 'This user has not set a bio yet.',
                   profilePic:
@@ -106,7 +108,6 @@ class _MyAppState extends State<MyApp> {
 
               if (snapshot.hasData) {
                 // User is signed in, show the MainPage
-
                 return VerifyEmailPage(); // Render MainPage for authenticated users
               } else {
                 // User is not signed in, show WelcomePage

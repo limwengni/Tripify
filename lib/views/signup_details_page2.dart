@@ -8,6 +8,7 @@ import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:tripify/main.dart';
+import 'package:tripify/models/user_model.dart';
 import 'package:tripify/view_models/auth_service.dart';
 import 'package:tripify/view_models/firesbase_storage_service.dart';
 import 'package:tripify/view_models/firestore_service.dart';
@@ -163,35 +164,49 @@ class _SignupDetailsPage2State extends State<SignupDetailsPage2> {
                         String? pdfDownloadUrl =
                             await firebaseStorageService.saveFileToFirestore(
                                 file: pdf!, storagePath: 'ssm');
-
-                        firestoreService.insertData('User', {
-                          'email': FirebaseAuth.instance.currentUser?.email,
-                          'username': widget.username,
-                          'birth_date': DateFormat('yyyy-MM-dd').format(widget.birthDate),
-                          'role': selectedOption,
-                          'pfp': imgDownloadUrl,
-                          'ssm': pdfDownloadUrl,
-                        });
+                        final user = UserModel(
+                            username: widget.username,
+                            email: FirebaseAuth.instance.currentUser!.email!,
+                            role: selectedOption!,
+                            ssm: '',
+                            ssmDownloadUrl: pdfDownloadUrl,
+                            bio: '',
+                            profilePic: imgDownloadUrl!,
+                            birthdate: widget.birthDate,
+                            createdAt: DateTime.now(),
+                            uid: '',
+                            likesCount: 0,
+                            commentsCount: 0,
+                            savedCount: 0);
+                        firestoreService.insertData('User', user.toMap());
                       } else if (selectedOption == 'Normal User') {
                         selectedOption =
                             _formKey.currentState?.fields['role']?.value;
-
                         String? imgDownloadUrl =
                             await firebaseStorageService.saveImageToFirestore(
                                 file: widget.profilePic, storagePath: 'pfp');
-                        firestoreService.insertData('User', {
-                          'email': FirebaseAuth.instance.currentUser?.email,
-                          'username': widget.username,
-                          'birth_date': DateFormat('yyyy-MM-dd').format(widget.birthDate),
-                          'role': selectedOption,
-                          'pfp': imgDownloadUrl,
-                        });
+                        final user = UserModel(
+                            username: widget.username,
+                            email: FirebaseAuth.instance.currentUser!.email!,
+                            role: selectedOption!,
+                            bio: '',
+                            profilePic: imgDownloadUrl!,
+                            birthdate: widget.birthDate,
+                            createdAt: DateTime.now(),
+                            uid: '',
+                            likesCount: 0,
+                            commentsCount: 0,
+                            savedCount: 0);
+                        firestoreService.insertData('User', user.toMap());
                       } else {
                         print('No PDF file selected');
                         return;
                       }
 
-                      Navigator.push(context, MaterialPageRoute(builder: (builder)=>const MainPage()));
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (builder) => const MainPage()));
                     },
                     color: Colors.blue,
                     child: const Text(
