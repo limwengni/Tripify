@@ -53,23 +53,31 @@ class UserProvider with ChangeNotifier {
   }
 
   Future<String> fetchProfileImageUrl() async {
-    String returnUrl = "";
     if (_userModel?.profilePic != null && _userModel!.profilePic.isNotEmpty) {
-      try {
-        final storageRef = FirebaseStorage.instance
-            .ref('${_userModel!.uid}/pfp/${_userModel!.profilePic}');
-
-        final url = await storageRef.getDownloadURL();
-        returnUrl = url;
-      } catch (e) {
-        print('Error fetching profile image URL: $e');
-        returnUrl =
-            "https://firebasestorage.googleapis.com/v0/b/tripify-d8e12.appspot.com/o/defaults%2Fdefault.jpg?alt=media&token=8e1189e2-ea22-4bdd-952f-e9d711307251";
-        // return 'https://firebasestorage.googleapis.com/v0/b/tripify-d8e12.appspot.com/o/defaults%2Fdefault.jpg?alt=media&token=8e1189e2-ea22-4bdd-952f-e9d711307251';
-      }
+      return _userModel!.profilePic;
+    } else {
+      return "https://firebasestorage.googleapis.com/v0/b/tripify-d8e12.appspot.com/o/defaults%2Fdefault.jpg?alt=media&token=8e1189e2-ea22-4bdd-952f-e9d711307251";
     }
-    return returnUrl;
   }
+
+  // Future<String> fetchProfileImageUrl() async {
+  //   String returnUrl = "";
+  //   if (_userModel?.profilePic != null && _userModel!.profilePic.isNotEmpty) {
+  //     try {
+  //       final storageRef = FirebaseStorage.instance
+  //           .ref('${_userModel!.uid}/pfp/${_userModel!.profilePic}');
+
+  //       final url = await storageRef.getDownloadURL();
+  //       returnUrl = url;
+  //     } catch (e) {
+  //       print('Error fetching profile image URL: $e');
+  //       returnUrl =
+  //           "https://firebasestorage.googleapis.com/v0/b/tripify-d8e12.appspot.com/o/defaults%2Fdefault.jpg?alt=media&token=8e1189e2-ea22-4bdd-952f-e9d711307251";
+  //       // return 'https://firebasestorage.googleapis.com/v0/b/tripify-d8e12.appspot.com/o/defaults%2Fdefault.jpg?alt=media&token=8e1189e2-ea22-4bdd-952f-e9d711307251';
+  //     }
+  //   }
+  //   return returnUrl;
+  // }
 
   Future<void> updateUserDetails({
     required String userId,
@@ -84,11 +92,23 @@ class UserProvider with ChangeNotifier {
       if (newProfilePicPath != null && newProfilePicPath.isNotEmpty) {
         // Delete old pfp from firebase storage
         if (_userModel!.profilePic.isNotEmpty) {
-          final oldProfilePicRef = FirebaseStorage.instance
-              .ref()
-              .child('${userId}/pfp/${_userModel!.profilePic}');
+          try {
+            // Extract the file path from the URL
+            final fileName = _userModel!.profilePic
+                .split('/')
+                .last
+                .split('?')
+                .first; // Get filename from URL
 
-          await oldProfilePicRef.delete();
+            // Reference the file to delete it
+            final oldProfilePicRef = FirebaseStorage.instance.ref().child(
+                '${userId}/pfp/$fileName'); // Construct path based on the userId and filename
+
+            // Delete the file
+            await oldProfilePicRef.delete();
+          } catch (e) {
+            print('Error deleting old profile picture: $e');
+          }
         }
 
         // Upload the new profile picture
@@ -96,11 +116,20 @@ class UserProvider with ChangeNotifier {
             newProfilePicPath.split('/').last; // Extract file name
         final newProfilePicRef =
             FirebaseStorage.instance.ref().child('${userId}/pfp/$newFileName');
-        await newProfilePicRef.putFile(File(newProfilePicPath));
 
-        // Update the user model and Firestore with the new picture filename
-        _userModel?.profilePic = newFileName;
-        await userRef.update({'profile_picture': newFileName});
+        // Upload the new profile picture to Firebase Storage
+        try {
+          await newProfilePicRef.putFile(File(newProfilePicPath));
+
+          final downloadUrl = await newProfilePicRef.getDownloadURL();
+
+          _userModel?.profilePic = downloadUrl;
+
+          await userRef.update({'profile_picture': downloadUrl});
+        } catch (e) {
+          print('Error uploading new profile picture: $e');
+          throw e;
+        }
       }
 
       // Update username

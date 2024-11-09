@@ -32,8 +32,7 @@ class _VerifyEmailPageState extends State<VerifyEmailPage> {
         const Duration(seconds: 3),
         (_) => checkEmailVerified(),
       );
-    } 
-   
+    }
   }
 
   Future<void> _initializeUserData() async {
@@ -42,15 +41,15 @@ class _VerifyEmailPageState extends State<VerifyEmailPage> {
           'User', FirebaseAuth.instance.currentUser!.uid);
       print("User data fetched: $userData");
       if (userData != null) {
-    print("Data retrieved successfully: $userData");
-    // Handle the data (e.g., map it to a model or display it in the UI)
-  } else {
-    print("No data found for the given document ID.");
-  }
+        print("Data retrieved successfully: $userData");
+        // Handle the data (e.g., map it to a model or display it in the UI)
+      } else {
+        print("No data found for the given document ID.");
+      }
     } catch (e) {
       print("Error fetching user data: $e");
     }
-     setState(() {
+    setState(() {
       isLoading = false; // Set loading to false after data is fetched
     });
   }
@@ -138,59 +137,67 @@ class _VerifyEmailPageState extends State<VerifyEmailPage> {
 
   @override
   Widget build(BuildContext context) {
-    if (isLoading) {
-      return const Scaffold(
-        body: Center(
-          child: CircularProgressIndicator(),
-        ),
-      );
-    } else if (isEmailVerified && userData != null) {
-      return const MainPage();
-    } else if (isEmailVerified && userData == null ) {
-      return const SignupDetailsPage1();
-    } else {
-      return Scaffold(
-          body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(10.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                'A verification email has been sent to your email',
-                style: Theme.of(context).textTheme.titleMedium,
+    return Theme(
+      data: ThemeData.light(), // Set light theme here
+      child: Builder(
+        builder: (context) {
+          if (isLoading) {
+            return const Scaffold(
+              body: Center(
+                child: CircularProgressIndicator(),
               ),
-              const SizedBox(height: 10),
-              MaterialButton(
-                onPressed: sendVerificationEmail,
-                color: Colors.blue,
-                textColor: Colors.white,
-                padding: const EdgeInsets.symmetric(
-                    vertical: 10.0, horizontal: 15.0),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8.0),
+            );
+          } else if (isEmailVerified && userData != null) {
+            return const MainPage();
+          } else if (isEmailVerified && userData == null) {
+            return const SignupDetailsPage1();
+          } else {
+            return Scaffold(
+              body: Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(10.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        'A verification email has been sent to your email',
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                      const SizedBox(height: 10),
+                      MaterialButton(
+                        onPressed: sendVerificationEmail,
+                        color: Color.fromARGB(255, 159, 118, 249),
+                        textColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 10.0, horizontal: 15.0),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8.0),
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.max,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.email, color: Colors.white),
+                            SizedBox(width: 8),
+                            Text('Resend Email'),
+                          ],
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          FirebaseAuth.instance.signOut();
+                          Navigator.pop(context);
+                        },
+                        child: const Text('Cancel'),
+                      ),
+                    ],
+                  ),
                 ),
-                child: const Row(
-                  mainAxisSize: MainAxisSize.max,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.email, color: Colors.white),
-                    SizedBox(width: 8),
-                    Text('Resend Email'),
-                  ],
-                ),
               ),
-              TextButton(
-                onPressed: () {
-                  FirebaseAuth.instance.signOut();
-                  Navigator.pop(context);
-                },
-                child: const Text('Cancel'),
-              ),
-            ],
-          ),
-        ),
-      ));
-    }
+            );
+          }
+        },
+      ),
+    );
   }
 }

@@ -74,6 +74,7 @@ class _RegistrationScreenState extends State<RegistrationPage> {
                           const SizedBox(height: 10),
                           CustomTextField(
                             textField: TextField(
+                              cursorColor: Color(0xFF3B3B3B),
                               onChanged: (value) {
                                 _email = value;
                               },
@@ -86,6 +87,7 @@ class _RegistrationScreenState extends State<RegistrationPage> {
                           const SizedBox(height: 10),
                           CustomTextField(
                             textField: TextField(
+                              cursorColor: Color(0xFF3B3B3B),
                               obscureText: true,
                               onChanged: (value) {
                                 _password = value;
@@ -99,6 +101,7 @@ class _RegistrationScreenState extends State<RegistrationPage> {
                           const SizedBox(height: 10),
                           CustomTextField(
                             textField: TextField(
+                              cursorColor: Color(0xFF3B3B3B),
                               obscureText: true,
                               onChanged: (value) {
                                 _confirmPassword = value;
@@ -124,26 +127,27 @@ class _RegistrationScreenState extends State<RegistrationPage> {
                                   _saving = false; // Reset loading state
                                 });
                                 showDialog(
-                                  context: context,
-                                  builder: (BuildContext context) =>
-                                      AlertDialog(
-                                    title: const Text(
-                                      'Error',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    content: const Text(
-                                        'Please enter a valid email address.'),
-                                    actions: <Widget>[
-                                      TextButton(
-                                        onPressed: () =>
-                                            Navigator.pop(context, 'OK'),
-                                        child: const Text('OK'),
-                                      ),
-                                    ],
-                                  ),
-                                );
+                                    context: context,
+                                    builder: (BuildContext context) => Theme(
+                                          data: ThemeData.light(),
+                                          child: AlertDialog(
+                                            title: const Text(
+                                              'Error',
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                            content: const Text(
+                                                'Please enter a valid email address.'),
+                                            actions: <Widget>[
+                                              TextButton(
+                                                onPressed: () => Navigator.pop(
+                                                    context, 'OK'),
+                                                child: const Text('OK'),
+                                              ),
+                                            ],
+                                          ),
+                                        ));
                                 return;
                               }
                               if (!passwordRegExp.hasMatch(_password)) {
@@ -151,26 +155,27 @@ class _RegistrationScreenState extends State<RegistrationPage> {
                                   _saving = false; // Reset loading state
                                 });
                                 showDialog(
-                                  context: context,
-                                  builder: (BuildContext context) =>
-                                      AlertDialog(
-                                    title: const Text(
-                                      'Error',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    content: const Text(
-                                        'Password must be at least 8 characters long, include an uppercase letter, a lowercase letter, and a number.'),
-                                    actions: <Widget>[
-                                      TextButton(
-                                        onPressed: () =>
-                                            Navigator.pop(context, 'OK'),
-                                        child: const Text('OK'),
-                                      ),
-                                    ],
-                                  ),
-                                );
+                                    context: context,
+                                    builder: (BuildContext context) => Theme(
+                                          data: ThemeData.light(),
+                                          child: AlertDialog(
+                                            title: const Text(
+                                              'Error',
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                            content: const Text(
+                                                'Password must be at least 8 characters long, include an uppercase letter, a lowercase letter, and a number.'),
+                                            actions: <Widget>[
+                                              TextButton(
+                                                onPressed: () => Navigator.pop(
+                                                    context, 'OK'),
+                                                child: const Text('OK'),
+                                              ),
+                                            ],
+                                          ),
+                                        ));
                                 return;
                               }
                               if (_password == _confirmPassword) {
@@ -211,16 +216,16 @@ class _RegistrationScreenState extends State<RegistrationPage> {
 
                                   showDialog(
                                       context: context,
-                                      builder: (BuildContext context) =>
-                                          AlertDialog(
+                                      builder: (BuildContext context) => Theme(
+                                          data: ThemeData.light(),
+                                          child: AlertDialog(
                                             title: const Text(
                                               'Error',
                                               style: TextStyle(
                                                 fontWeight: FontWeight.bold,
                                               ),
                                             ),
-                                            content: Text(
-                                                errorMessage),
+                                            content: Text(errorMessage),
                                             actions: <Widget>[
                                               TextButton(
                                                 onPressed: () => Navigator.pop(
@@ -228,7 +233,7 @@ class _RegistrationScreenState extends State<RegistrationPage> {
                                                 child: const Text('OK'),
                                               ),
                                             ],
-                                          ));
+                                          )));
                                 }
                               } else {
                                 setState(() {
@@ -236,8 +241,9 @@ class _RegistrationScreenState extends State<RegistrationPage> {
                                 });
                                 showDialog(
                                     context: context,
-                                    builder: (BuildContext context) =>
-                                        AlertDialog(
+                                    builder: (BuildContext context) => Theme(
+                                        data: ThemeData.light(),
+                                        child: AlertDialog(
                                           title: const Text(
                                             'Error',
                                             style: TextStyle(
@@ -253,7 +259,7 @@ class _RegistrationScreenState extends State<RegistrationPage> {
                                               child: const Text('OK'),
                                             ),
                                           ],
-                                        ));
+                                        )));
                               }
                             },
                             questionPressed: () {

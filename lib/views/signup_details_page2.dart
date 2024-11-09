@@ -43,199 +43,209 @@ class _SignupDetailsPage2State extends State<SignupDetailsPage2> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Column(
-        children: [
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(15.0, 65.0, 15.0, 15.0),
-              child: Center(
-                child: FormBuilder(
-                  key: _formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      FormBuilderRadioGroup<String>(
-                        name: 'role',
-                        validator: FormBuilderValidators.compose([
-                          FormBuilderValidators.required(),
-                        ]),
-                        initialValue:
-                            selectedOption, // Set the initial selected option
-                        decoration: const InputDecoration(
-                          labelText: 'Who are you?',
-                          labelStyle: TextStyle(
-                            fontSize: 25,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        options: const [
-                          FormBuilderFieldOption(
-                              value: 'Normal User', child: Text('Normal User')),
-                          FormBuilderFieldOption(
-                              value: 'Travel Company',
-                              child: Text('Travel Company')),
-                          FormBuilderFieldOption(
-                              value: 'Accommodation Rental Company',
-                              child: Text('Accommodation Rental Company')),
-                          FormBuilderFieldOption(
-                              value: 'Car Rental Company',
-                              child: Text('Car Rental Company')),
-                        ],
-                        onChanged: (value) {
-                          setState(() {
-                            selectedOption = value;
-                          });
-                        },
-                      ),
-                      const SizedBox(
-                        height: 15,
-                      ),
-                      if (selectedOption != 'Normal User') ...[
-                        const Text(
-                          'SSM',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(
-                          height: 5,
-                        ),
-                        SizedBox(
-                          width: 120,
-                          child: FloatingActionButton.extended(
-                            onPressed: () async {
-                              FilePickerResult? result =
-                                  await FilePicker.platform.pickFiles(
-                                type: FileType.custom,
-                                allowedExtensions: ['pdf'],
-                              );
-
-                              if (result != null) {
-                                setState(() {
-                                  pdf = result;
-                                });
-                              }
+    return Theme(
+        data: ThemeData.light(),
+        child: Scaffold(
+          body: Column(
+            children: [
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(15.0, 65.0, 15.0, 15.0),
+                  child: Center(
+                    child: FormBuilder(
+                      key: _formKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          FormBuilderRadioGroup<String>(
+                            name: 'role',
+                            validator: FormBuilderValidators.compose([
+                              FormBuilderValidators.required(),
+                            ]),
+                            initialValue:
+                                selectedOption, // Set the initial selected option
+                            decoration: const InputDecoration(
+                              labelText: 'Who are you?',
+                              labelStyle: TextStyle(
+                                fontSize: 25,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            options: const [
+                              FormBuilderFieldOption(
+                                  value: 'Normal User',
+                                  child: Text('Normal User')),
+                              FormBuilderFieldOption(
+                                  value: 'Travel Company',
+                                  child: Text('Travel Company')),
+                              FormBuilderFieldOption(
+                                  value: 'Accommodation Rental Company',
+                                  child: Text('Accommodation Rental Company')),
+                              FormBuilderFieldOption(
+                                  value: 'Car Rental Company',
+                                  child: Text('Car Rental Company')),
+                            ],
+                            onChanged: (value) {
+                              setState(() {
+                                selectedOption = value;
+                              });
                             },
-                            label: Text(
-                                pdf != null ? pdf!.files.single.name : 'PDF'),
-                            icon: const Icon(Icons.description),
-                            backgroundColor:
-                                Colors.blue, // Set background color to blue
                           ),
-                        ),
-                        const SizedBox(height: 15),
-                      ],
-                    ],
+                          const SizedBox(
+                            height: 15,
+                          ),
+                          if (selectedOption != 'Normal User') ...[
+                            const Text(
+                              'SSM',
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(
+                              height: 5,
+                            ),
+                            SizedBox(
+                              width: 120,
+                              child: FloatingActionButton.extended(
+                                onPressed: () async {
+                                  FilePickerResult? result =
+                                      await FilePicker.platform.pickFiles(
+                                    type: FileType.custom,
+                                    allowedExtensions: ['pdf'],
+                                  );
+
+                                  if (result != null) {
+                                    setState(() {
+                                      pdf = result;
+                                    });
+                                  }
+                                },
+                                label: Text(pdf != null
+                                    ? pdf!.files.single.name
+                                    : 'PDF'),
+                                icon: const Icon(Icons.description),
+                                backgroundColor:
+                                    Colors.blue, // Set background color to blue
+                              ),
+                            ),
+                            const SizedBox(height: 15),
+                          ],
+                        ],
+                      ),
+                    ),
                   ),
                 ),
               ),
-            ),
-          ),
-          Padding(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 15.0, vertical: 20.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                Expanded(
-                  child: MaterialButton(
-                    padding: const EdgeInsets.all(14.0),
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
-                    color: Colors.blue, // Set background color to blue
-                    child: const Text(
-                      'Back',
-                      style: TextStyle(color: Colors.white), // Text color
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 15.0, vertical: 20.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    Expanded(
+                      child: MaterialButton(
+                        padding: const EdgeInsets.all(14.0),
+                        onPressed: () {
+                          Navigator.pop(context);
+                        },
+                        color: Color.fromARGB(
+                            255, 159, 118, 249), // Set background color to blue
+                        child: const Text(
+                          'Back',
+                          style: TextStyle(color: Colors.white), // Text color
+                        ),
+                      ),
                     ),
-                  ),
-                ),
-                const SizedBox(width: 10), // Space between the buttons
-                Expanded(
-                  child: MaterialButton(
-                    padding: const EdgeInsets.all(14.0),
-                    onPressed: () async {
-                      if (selectedOption != 'Normal User' && pdf != null) {
-                        selectedOption =
-                            _formKey.currentState?.fields['role']?.value;
-                        String? imgDownloadUrl =
-                            await firebaseStorageService.saveImageToFirestore(
-                                file: widget.profilePic,
-                                storagePath:
-                                    '${FirebaseAuth.instance.currentUser!.uid}/pfp');
-                        String? pdfDownloadUrl =
-                            await firebaseStorageService.saveFileToFirestore(
-                                file: pdf!,
-                                storagePath:
-                                    '${FirebaseAuth.instance.currentUser!.uid}/ssm');
+                    const SizedBox(width: 10), // Space between the buttons
+                    Expanded(
+                      child: MaterialButton(
+                        padding: const EdgeInsets.all(14.0),
+                        onPressed: () async {
+                          if (selectedOption != 'Normal User' && pdf != null) {
+                            selectedOption =
+                                _formKey.currentState?.fields['role']?.value;
+                            String? imgDownloadUrl = await firebaseStorageService
+                                .saveImageToFirestore(
+                                    file: widget.profilePic,
+                                    storagePath:
+                                        '${FirebaseAuth.instance.currentUser!.uid}/pfp');
+                            String? pdfDownloadUrl =
+                                await firebaseStorageService.saveFileToFirestore(
+                                    file: pdf!,
+                                    storagePath:
+                                        '${FirebaseAuth.instance.currentUser!.uid}/ssm');
 
-                        final user = UserModel(
-                            username: widget.username,
-                            role: selectedOption!,
-                            ssm: '',
-                            ssmDownloadUrl: pdfDownloadUrl,
-                            bio: '',
-                            profilePic: widget.profilePicFilename,
-                            birthdate: widget.birthDate,
-                            createdAt: DateTime.now(),
-                            updatedAt: null,
-                            uid: FirebaseAuth.instance.currentUser!.uid,
-                            likesCount: 0,
-                            commentsCount: 0,
-                            savedCount: 0);
-                        // firestoreService.insertData(
-                        //     'User',
-                        //     FirebaseAuth.instance.currentUser!.uid,
-                        //     user.toMap());
-                      } else if (selectedOption == 'Normal User') {
-                        selectedOption =
-                            _formKey.currentState?.fields['role']?.value;
-                        String? imgDownloadUrl =
-                            await firebaseStorageService.saveImageToFirestore(
-                                file: widget.profilePic,
-                                storagePath:
-                                    '${FirebaseAuth.instance.currentUser!.uid}/pfp');
-                        final user = UserModel(
-                            username: widget.username,
-                            role: selectedOption!,
-                            bio: '',
-                            profilePic: widget.profilePicFilename,
-                            birthdate: widget.birthDate,
-                            createdAt: DateTime.now(),
-                            updatedAt: null,
-                            uid: FirebaseAuth.instance.currentUser!.uid,
-                            likesCount: 0,
-                            commentsCount: 0,
-                            savedCount: 0);
-                        // firestoreService.insertData(
-                        //     'User',
-                        //     FirebaseAuth.instance.currentUser!.uid,
-                        //     user.toMap());
-                      } else {
-                        print('No PDF file selected');
-                        return;
-                      }
+                            final user = UserModel(
+                                username: widget.username,
+                                role: selectedOption!,
+                                ssm: '',
+                                ssmDownloadUrl: pdfDownloadUrl,
+                                bio: '',
+                                profilePic: imgDownloadUrl!,
+                                birthdate: widget.birthDate,
+                                createdAt: DateTime.now(),
+                                updatedAt: null,
+                                uid: FirebaseAuth.instance.currentUser!.uid,
+                                likesCount: 0,
+                                commentsCount: 0,
+                                savedCount: 0);
+                            // firestoreService.insertData(
+                            //     'User',
+                            //     FirebaseAuth.instance.currentUser!.uid,
+                            //     user.toMap());
+                          } else if (selectedOption == 'Normal User') {
+                            selectedOption =
+                                _formKey.currentState?.fields['role']?.value;
+                            String? imgDownloadUrl = await firebaseStorageService
+                                .saveImageToFirestore(
+                                    file: widget.profilePic,
+                                    storagePath:
+                                        '${FirebaseAuth.instance.currentUser!.uid}/pfp');
+                            final user = UserModel(
+                                username: widget.username,
+                                role: selectedOption!,
+                                bio: '',
+                                profilePic: imgDownloadUrl!,
+                                birthdate: widget.birthDate,
+                                createdAt: DateTime.now(),
+                                updatedAt: null,
+                                uid: FirebaseAuth.instance.currentUser!.uid,
+                                likesCount: 0,
+                                commentsCount: 0,
+                                savedCount: 0);
+                            // firestoreService.insertData(
+                            //     'User',
+                            //     FirebaseAuth.instance.currentUser!.uid,
+                            //     user.toMap());
 
-                      Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (builder) => const MainPage()));
-                    },
-                    color: Colors.blue,
-                    child: const Text(
-                      'Next',
-                      style: TextStyle(color: Colors.white),
+                            // For creating a user document where the uid is the current user's uid
+                            await firestoreService.insertUserData(
+                                "User", user.toMap());
+                          } else {
+                            print('No PDF file selected');
+                            return;
+                          }
+
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (builder) => const MainPage()));
+                        },
+                        color: Color.fromARGB(
+                            255, 159, 118, 249),
+                        child: const Text(
+                          'Next',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                      ),
                     ),
-                  ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-        ],
-      ),
-    );
+        ));
   }
 }
