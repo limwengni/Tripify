@@ -19,6 +19,7 @@ class AccommodationViewModel extends ChangeNotifier {
         bedNum: 1,
         budget: 150.0,
         additionalRequirement: 'Wi-Fi included',
+        houseType: HouseType.banglow,
       ),
       AccommodationRequirement(
         id: '2',
@@ -30,8 +31,8 @@ class AccommodationViewModel extends ChangeNotifier {
         bedNum: 2,
         budget: 300.0,
         additionalRequirement: 'Ocean view',
+        houseType: HouseType.banglow,
       ),
-      
     ];
 
     notifyListeners(); // Notify listeners to update the UI

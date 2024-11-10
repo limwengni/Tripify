@@ -23,67 +23,66 @@ class TripifyDrawer extends StatelessWidget {
           ListTile(
             title: const Text('Profile'),
             onTap: () {
-              onItemTapped(4);
+              onItemTapped(6);
               Navigator.pop(context);
             },
           ),
           ListTile(
             title: const Text('AI Chat'),
             onTap: () {
-              onItemTapped(5);
+              onItemTapped(7);
               Navigator.pop(context);
             },
           ),
           ListTile(
             title: const Text('Emergency Call'),
             onTap: () {
-              onItemTapped(6);
+              onItemTapped(8);
               Navigator.pop(context);
             },
           ),
           ListTile(
             title: const Text('Favorites'),
             onTap: () {
-              onItemTapped(7);
+              onItemTapped(9);
               Navigator.pop(context);
             },
           ),
           ListTile(
             title: const Text('Document Repository'),
             onTap: () {
-              onItemTapped(8);
+              onItemTapped(10);
               Navigator.pop(context);
             },
           ),
           ListTile(
             title: const Text('Language Translator'),
             onTap: () {
-              onItemTapped(9);
+              onItemTapped(11);
               Navigator.pop(context);
             },
           ),
           ListTile(
             title: const Text('Currency Exchange Calculator'),
             onTap: () {
-              onItemTapped(10);
+              onItemTapped(12);
               Navigator.pop(context);
             },
           ),
           ListTile(
             title: const Text('Settings'),
             onTap: () {
-              onItemTapped(11);
+              onItemTapped(13);
               Navigator.pop(context);
             },
           ),
-             ListTile(
+          ListTile(
             title: const Text('On Shelves Travel Package'),
             onTap: () {
-              onItemTapped(12);
+              onItemTapped(14);
               Navigator.pop(context);
             },
           ),
-          
         ],
       ),
     );

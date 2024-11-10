@@ -4,7 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:tripify/views/accommodation_requirement_create_page.dart';
 import 'package:tripify/views/chat_list_page.dart';
+import 'package:tripify/views/request_selection_page.dart';
 import 'package:tripify/views/travel_package_create_page.dart';
 import 'package:tripify/views/verify_email_page.dart';
 import 'firebase_options.dart';
@@ -126,18 +128,30 @@ class MainPage extends StatefulWidget {
   static String id = 'main_page';
 
   @override
-  _MainPageState createState() => _MainPageState();
+  MainPageState createState() => MainPageState();
 }
 
-class _MainPageState extends State<MainPage> {
+class MainPageState extends State<MainPage> {
   int _currentIndex = 0;
+  int _btmNavIndex = 0;
   String _title = 'Home';
 
   List<Map<String, dynamic>> widgetItems = [
     {'title': 'Home', 'widget': HomePage()},
     {'title': 'Market', 'widget': MarketplacePage()},
     {'title': 'Itinerary', 'widget': ItineraryPage()},
-    {'title': 'Request', 'widget': const AccommodationRequirementPage()},
+    {'title': 'Request', 'widget': const RequestSelectionPage()},
+    {
+      'title': 'Accommodation Request',
+      'widget': const AccommodationRequirementPage()
+    },
+    {'title': 'Car Rental Request', 'widget': const RequestSelectionPage()},
+    {
+      'title': 'Accommodation Request Create',
+      'widget':  AccommodationRequirementCreatePage()
+    },
+       {'title': 'Car Rental Request Create', 'widget': const RequestSelectionPage()},
+
     {'title': 'Profile', 'widget': ProfilePage()},
     {'title': 'AI Chat', 'widget': TravelAssistantPage()},
     {'title': 'Emergency Call', 'widget': const EmergencyCallPage()},
@@ -155,12 +169,32 @@ class _MainPageState extends State<MainPage> {
     }
   ];
 
-  void _onItemTapped(int index) {
+  void onItemTapped(int index) {
     setState(() {
       _currentIndex = index;
       _title = widgetItems[_currentIndex]['title'];
+      if (_currentIndex > 3 && _currentIndex < 6) {
+        _btmNavIndex = 3;
+      } else if (_currentIndex > 5) {
+        _btmNavIndex = 4;
+      } else {
+        _btmNavIndex = _currentIndex;
+      }
       // print('Current Index: $_currentIndex'); // Debug statement
     });
+  }
+
+  Widget? floatingButtonReturn(int index) {
+    if (index == 4) {
+      return FloatingActionButton(
+        onPressed: () {
+          onItemTapped(6);
+        },
+        child: const Icon(Icons.add),
+      );
+    }
+
+    return null;
   }
 
   @override
@@ -186,43 +220,35 @@ class _MainPageState extends State<MainPage> {
 
                 // User is signed in
                 return Scaffold(
-                  appBar: AppBar(
-                    title: Text(_title),
-                    actions: [
-                      Padding(
-                        padding: const EdgeInsets.only(right: 16),
-                        child: IconButton(
-                          icon: SvgPicture.asset(
-                            'assets/icons/message_icon.svg', // Adjusted path
-                            color: isDarkMode ? Colors.white : Colors.black,
-                            width: 24,
-                            height: 24,
+                    appBar: AppBar(
+                      title: Text(_title),
+                      actions: [
+                        Padding(
+                          padding: const EdgeInsets.only(right: 16),
+                          child: IconButton(
+                            icon: SvgPicture.asset(
+                              'assets/icons/message_icon.svg', // Adjusted path
+                              color: isDarkMode ? Colors.white : Colors.black,
+                              width: 24,
+                              height: 24,
+                            ),
+                            onPressed: () {
+                              Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) => ChatListPage()));
+                            },
                           ),
-                          onPressed: () {
-                            Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) => ChatListPage()));
-                          },
                         ),
-                      ),
-                    ],
-                  ),
-                  drawer: TripifyDrawer(onItemTapped: _onItemTapped),
-                  body: widgetItems[_currentIndex]['widget'],
-                  bottomNavigationBar: TripifyNavBar(
-                    currentIndex: (_currentIndex < 4) ? _currentIndex : 4,
-                    onItemTapped: _onItemTapped,
-                  ),
-                  floatingActionButton: _currentIndex == 1
-                      ? FloatingActionButton(
-                          onPressed: () {
-                            //do somethings
-                          },
-                          child: const Icon(Icons.add),
-                        )
-                      : null,
-                );
+                      ],
+                    ),
+                    drawer: TripifyDrawer(onItemTapped: onItemTapped),
+                    body: widgetItems[_currentIndex]['widget'],
+                    bottomNavigationBar: TripifyNavBar(
+                      currentIndex: _btmNavIndex,
+                      onItemTapped: onItemTapped,
+                    ),
+                    floatingActionButton: floatingButtonReturn(_currentIndex));
               } else {
                 // User is not signed in, redirect to login page
                 return const WelcomePage();
