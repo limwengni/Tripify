@@ -31,13 +31,16 @@ class _ProfilePageState extends State<ProfilePage> {
     final user = FirebaseAuth.instance.currentUser;
 
     if (user != null) {
-      userProvider.fetchUserDetails(user.uid);
-      String url = await userProvider.fetchProfileImageUrl();
-      setState(
-        () {
-          _profileImageUrl = url;
-        },
-      );
+      await userProvider.fetchUserDetails(user.uid);
+
+      // After fetching user details, the _profileImageUrl is updated in the provider
+      setState(() {
+        // Fetching the profile image URL directly from the provider after details are fetched
+        _profileImageUrl = userProvider.userModel?.profilePic ??
+            "https://firebasestorage.googleapis.com/v0/b/tripify-d8e12.appspot.com/o/defaults%2Fdefault.jpg?alt=media&token=8e1189e2-ea22-4bdd-952f-e9d711307251";
+      });
+
+      // print(_profileImageUrl);
     }
   }
 
@@ -277,7 +280,7 @@ class _ProfilePageState extends State<ProfilePage> {
               children: [
                 // Profile Picture
                 CachedNetworkImage(
-                  imageUrl: _profileImageUrl??'', // Use your image URL
+                  imageUrl: _profileImageUrl ?? '', // Use your image URL
                   placeholder: (context, url) => Shimmer.fromColors(
                     baseColor: Colors.grey.shade300,
                     highlightColor: Colors.grey.shade100,

@@ -19,7 +19,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
   final TextEditingController _bioController = TextEditingController();
   late Future<String> _profileImageUrl;
   String? _newProfilePicPath;
-  final int _maxBioLength = 100;
+  final int _maxBioLength = 150;
 
   @override
   void initState() {

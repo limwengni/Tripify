@@ -3,6 +3,7 @@ import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
+import 'package:tripify/theme.dart';
 import 'package:tripify/views/signup_details_page2.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
@@ -29,7 +30,7 @@ class _SignupDetailsPage1State extends State<SignupDetailsPage1> {
   @override
   Widget build(BuildContext context) {
     return Theme(
-        data: ThemeData.light(),
+        data: lightTheme,
         child: Scaffold(
           body: Column(
             children: [

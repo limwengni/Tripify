@@ -47,5 +47,22 @@ class ThemeNotifier with ChangeNotifier {
   Future<void> setTheme(ThemeMode mode) async {
     _themeMode = mode;
     notifyListeners();
+
+    // Save the selected theme to Firestore
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      try {
+        await FirebaseFirestore.instance
+            .collection('User')
+            .doc(user.uid)
+            .update({
+          'theme': mode == ThemeMode.dark ? 'dark' : 'light',
+        });
+        print(
+            "Theme saved to Firestore: ${mode == ThemeMode.dark ? 'dark' : 'light'}");
+      } catch (e) {
+        print("Error saving theme to Firestore: $e");
+      }
+    }
   }
 }

@@ -8,6 +8,7 @@ import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:tripify/main.dart';
+import 'package:tripify/theme.dart';
 import 'package:tripify/models/user_model.dart';
 import 'package:tripify/view_models/auth_service.dart';
 import 'package:tripify/view_models/firesbase_storage_service.dart';
@@ -44,7 +45,7 @@ class _SignupDetailsPage2State extends State<SignupDetailsPage2> {
   @override
   Widget build(BuildContext context) {
     return Theme(
-        data: ThemeData.light(),
+        data: lightTheme,
         child: Scaffold(
           body: Column(
             children: [

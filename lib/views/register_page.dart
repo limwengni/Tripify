@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:tripify/components/components.dart';
 import 'package:tripify/constants.dart';
 import 'package:tripify/main.dart';
+import 'package:tripify/theme.dart';
 import 'package:tripify/view_models/auth_service.dart';
 import 'package:tripify/view_models/firestore_service.dart';
 import 'package:tripify/views/login_page.dart';
@@ -22,10 +23,11 @@ class RegistrationPage extends StatefulWidget {
 class _RegistrationScreenState extends State<RegistrationPage> {
   // final _auth = FirebaseAuth.instance;
 
-  late String _email;
-  late String _password;
-  late String _confirmPassword;
+  late String _email = '';
+  late String _password = '';
+  late String _confirmPassword = '';
   bool _saving = false;
+  bool _isPasswordVisible = false;
 
   final RegExp _emailRegExp = RegExp(
     r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
@@ -88,28 +90,60 @@ class _RegistrationScreenState extends State<RegistrationPage> {
                           CustomTextField(
                             textField: TextField(
                               cursorColor: Color(0xFF3B3B3B),
-                              obscureText: true,
+                              obscureText: !_isPasswordVisible,
                               onChanged: (value) {
                                 _password = value;
                               },
                               decoration: kTextInputDecoration.copyWith(
-                                  hintText: 'Password',
-                                  hintStyle:
-                                      const TextStyle(color: Colors.grey)),
+                                hintText: 'Password',
+                                hintStyle: const TextStyle(color: Colors.grey),
+                                suffixIcon: IconButton(
+                                  icon: Icon(
+                                    _isPasswordVisible
+                                        ? Icons.visibility
+                                        : Icons.visibility_off,
+                                    color: Colors.grey,
+                                  ),
+                                  onPressed: () {
+                                    setState(() {
+                                      _isPasswordVisible =
+                                          !_isPasswordVisible; // Toggle visibility
+                                    });
+                                  },
+                                ),
+                                contentPadding:
+                                    const EdgeInsets.symmetric(vertical: 15.0),
+                              ),
                             ),
                           ),
                           const SizedBox(height: 10),
                           CustomTextField(
                             textField: TextField(
                               cursorColor: Color(0xFF3B3B3B),
-                              obscureText: true,
+                              obscureText: !_isPasswordVisible,
                               onChanged: (value) {
                                 _confirmPassword = value;
                               },
                               decoration: kTextInputDecoration.copyWith(
-                                  hintText: 'Confirm Password',
-                                  hintStyle:
-                                      const TextStyle(color: Colors.grey)),
+                                hintText: 'Confirm Password',
+                                hintStyle: const TextStyle(color: Colors.grey),
+                                suffixIcon: IconButton(
+                                  icon: Icon(
+                                    _isPasswordVisible
+                                        ? Icons.visibility
+                                        : Icons.visibility_off,
+                                    color: Colors.grey,
+                                  ),
+                                  onPressed: () {
+                                    setState(() {
+                                      _isPasswordVisible =
+                                          !_isPasswordVisible; // Toggle visibility
+                                    });
+                                  },
+                                ),
+                                contentPadding:
+                                    const EdgeInsets.symmetric(vertical: 15.0),
+                              ),
                             ),
                           ),
                           const SizedBox(height: 20),
@@ -122,6 +156,34 @@ class _RegistrationScreenState extends State<RegistrationPage> {
                               setState(() {
                                 _saving = true;
                               });
+
+                              if (_email.isEmpty || _password.isEmpty || _confirmPassword.isEmpty) {
+                                setState(() {
+                                  _saving = false;
+                                });
+                                showDialog(
+                                  context: context,
+                                  builder: (context) => Theme(
+                                    data: lightTheme,
+                                    child: AlertDialog(
+                                      title: const Text('Error',
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.bold)),
+                                      content: const Text(
+                                          'Please enter your email address or password.'),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () =>
+                                              Navigator.pop(context, 'OK'),
+                                          child: const Text('OK'),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                );
+                                return;
+                              }
+
                               if (!_emailRegExp.hasMatch(_email)) {
                                 setState(() {
                                   _saving = false; // Reset loading state
@@ -129,7 +191,7 @@ class _RegistrationScreenState extends State<RegistrationPage> {
                                 showDialog(
                                     context: context,
                                     builder: (BuildContext context) => Theme(
-                                          data: ThemeData.light(),
+                                          data: lightTheme,
                                           child: AlertDialog(
                                             title: const Text(
                                               'Error',
@@ -157,7 +219,7 @@ class _RegistrationScreenState extends State<RegistrationPage> {
                                 showDialog(
                                     context: context,
                                     builder: (BuildContext context) => Theme(
-                                          data: ThemeData.light(),
+                                          data: lightTheme,
                                           child: AlertDialog(
                                             title: const Text(
                                               'Error',
@@ -217,7 +279,7 @@ class _RegistrationScreenState extends State<RegistrationPage> {
                                   showDialog(
                                       context: context,
                                       builder: (BuildContext context) => Theme(
-                                          data: ThemeData.light(),
+                                          data: lightTheme,
                                           child: AlertDialog(
                                             title: const Text(
                                               'Error',
@@ -242,7 +304,7 @@ class _RegistrationScreenState extends State<RegistrationPage> {
                                 showDialog(
                                     context: context,
                                     builder: (BuildContext context) => Theme(
-                                        data: ThemeData.light(),
+                                        data: lightTheme,
                                         child: AlertDialog(
                                           title: const Text(
                                             'Error',
@@ -295,6 +357,9 @@ String? signupValidation(
   }
   if (password != confirmPassword) {
     return 'Ensure password and confirm password is match';
+  }
+  if (email.isEmpty || password.isEmpty || confirmPassword.isEmpty) {
+    return 'Please enter your email and password.';
   }
   return null;
 }

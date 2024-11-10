@@ -56,9 +56,9 @@ void main() async {
                   username: 'Guest', // Default or placeholder values
                   role: '',
                   ssm: null,
-                  bio: 'This user has not set a bio yet.',
+                  bio: '',
                   profilePic:
-                      'https://console.firebase.google.com/project/tripify-d8e12/storage/tripify-d8e12.appspot.com/files/~2Fdefaults/default-profile.jpg',
+                      'https://firebasestorage.googleapis.com/v0/b/tripify-d8e12.appspot.com/o/defaults%2Fdefault.jpg?alt=media&token=8e1189e2-ea22-4bdd-952f-e9d711307251',
                   birthdate: DateTime.now(),
                   createdAt: DateTime.now(),
                   updatedAt: null,
@@ -106,10 +106,17 @@ class _MyAppState extends State<MyApp> {
               }
 
               if (snapshot.hasData) {
-                // User is signed in, show the MainPage
-                return VerifyEmailPage(); // Render MainPage for authenticated users
+                User? user = snapshot.data;
+                // Check if the email is verified
+                if (user != null && user.emailVerified) {
+                  // If email is verified, show the MainPage
+                  return const MainPage();
+                } else {
+                  // If the email is not verified, show the VerifyEmailPage
+                  return VerifyEmailPage();
+                }
               } else {
-                // User is not signed in, show WelcomePage
+                // If the user is not signed in, show the WelcomePage
                 return const WelcomePage();
               }
             },

@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tripify/main.dart';
+import 'package:tripify/theme.dart';
 import 'package:tripify/view_models/firestore_service.dart';
 import 'package:tripify/views/signup_details_page1.dart';
 import 'package:tripify/view_models/user_provider.dart';
@@ -18,6 +19,7 @@ class _VerifyEmailPageState extends State<VerifyEmailPage> {
   bool isLoading = true; // Added to manage loading state
   Map<String, dynamic>? userData;
   Timer? timer;
+  DateTime? _lastEmailSentTime;
 
   FirestoreService firestoreService = FirestoreService();
 
@@ -107,6 +109,7 @@ class _VerifyEmailPageState extends State<VerifyEmailPage> {
   Future<void> sendVerificationEmail() async {
     try {
       final user = FirebaseAuth.instance.currentUser!;
+
       if (user.emailVerified) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -117,7 +120,22 @@ class _VerifyEmailPageState extends State<VerifyEmailPage> {
         return;
       }
 
+      // Check if there's a recent email verification sent
+      if (_lastEmailSentTime != null &&
+          DateTime.now().difference(_lastEmailSentTime!).inMinutes < 5) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Please wait a few minutes before requesting again.'),
+            duration: Duration(seconds: 2),
+            backgroundColor: Colors.orange,
+          ),
+        );
+        return;
+      }
+
       await user.sendEmailVerification();
+      _lastEmailSentTime = DateTime.now();
+      
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('A verification email has been sent to your email.'),
@@ -138,7 +156,7 @@ class _VerifyEmailPageState extends State<VerifyEmailPage> {
   @override
   Widget build(BuildContext context) {
     return Theme(
-      data: ThemeData.light(), // Set light theme here
+      data: lightTheme, // Set light theme here
       child: Builder(
         builder: (context) {
           if (isLoading) {

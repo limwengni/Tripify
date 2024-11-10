@@ -8,7 +8,7 @@ class ThemeSelectionPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final themeNotifier = Provider.of<ThemeNotifier>(context);
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final isDarkMode = themeNotifier.themeMode == ThemeMode.dark;
 
     return Scaffold(
       appBar: AppBar(
