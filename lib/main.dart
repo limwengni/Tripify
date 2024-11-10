@@ -90,7 +90,7 @@ class _MyAppState extends State<MyApp> {
           theme: lightTheme,
           darkTheme: darkTheme,
           themeMode: themeNotifier.themeMode,
-          // scrollBehavior: const MaterialScrollBehavior().copyWith(dragDevices: PointerDeviceKind.values.toSet()),
+          debugShowCheckedModeBanner: false,
           home: StreamBuilder<User?>(
             stream: FirebaseAuth.instance.authStateChanges(),
             builder: (context, snapshot) {
@@ -98,30 +98,18 @@ class _MyAppState extends State<MyApp> {
                 return const Center(child: CircularProgressIndicator());
               }
 
-              print('Snapshot data: ${snapshot.data}');
-
-              // Debug output for tracking the authentication state
-              if (snapshot.hasError) {
-                return Center(child: Text('Error: ${snapshot.error}'));
-              }
-
               if (snapshot.hasData) {
                 User? user = snapshot.data;
-                // Check if the email is verified
                 if (user != null && user.emailVerified) {
-                  // If email is verified, show the MainPage
-                  return const MainPage();
+                  return const MainPage(); // MainPage for authenticated users
                 } else {
-                  // If the email is not verified, show the VerifyEmailPage
-                  return VerifyEmailPage();
+                  return VerifyEmailPage(); // VerifyEmailPage for unverified users
                 }
               } else {
-                // If the user is not signed in, show the WelcomePage
-                return const WelcomePage();
+                return const WelcomePage(); // WelcomePage for guests
               }
             },
           ),
-          debugShowCheckedModeBanner: false,
         );
       },
     );
@@ -151,94 +139,58 @@ class _MainPageState extends State<MainPage> {
     {'title': 'Favorites', 'widget': const FavoritesPage()},
     {'title': 'Document Repository', 'widget': const DocumentRepositoryPage()},
     {'title': 'Language Translator', 'widget': const LanguageTranslatorPage()},
-    {
-      'title': 'Currency Exchange Calculator',
-      'widget': const CurrencyExchangePage()
-    },
+    {'title': 'Currency Exchange Calculator', 'widget': const CurrencyExchangePage()},
     {'title': 'Settings', 'widget': SettingsPage()},
-    {
-      'title': 'On Shelves Travel Package',
-      'widget': const TravelPackageCreatePage()
-    }
+    {'title': 'On Shelves Travel Package', 'widget': const TravelPackageCreatePage()}
   ];
 
   void _onItemTapped(int index) {
     setState(() {
       _currentIndex = index;
       _title = widgetItems[_currentIndex]['title'];
-      // print('Current Index: $_currentIndex'); // Debug statement
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    final bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
-
-    return Consumer<ThemeNotifier>(
-      builder: (context, themeNotifier, child) {
-        return MaterialApp(
-          theme: lightTheme,
-          darkTheme: darkTheme,
-          themeMode: themeNotifier.themeMode,
-          home: StreamBuilder<User?>(
-            stream: FirebaseAuth.instance.authStateChanges(),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(
-                    child:
-                        CircularProgressIndicator()); // Centered loading spinner
-              }
-              if (snapshot.hasData) {
-                // FirebaseAuth.instance.signOut();
-
-                // User is signed in
-                return Scaffold(
-                  appBar: AppBar(
-                    title: Text(_title),
-                    actions: [
-                      Padding(
-                        padding: const EdgeInsets.only(right: 16),
-                        child: IconButton(
-                          icon: SvgPicture.asset(
-                            'assets/icons/message_icon.svg', // Adjusted path
-                            color: isDarkMode ? Colors.white : Colors.black,
-                            width: 24,
-                            height: 24,
-                          ),
-                          onPressed: () {
-                            Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) => ChatListPage()));
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-                  drawer: TripifyDrawer(onItemTapped: _onItemTapped),
-                  body: widgetItems[_currentIndex]['widget'],
-                  bottomNavigationBar: TripifyNavBar(
-                    currentIndex: (_currentIndex < 4) ? _currentIndex : 4,
-                    onItemTapped: _onItemTapped,
-                  ),
-                  floatingActionButton: _currentIndex == 1
-                      ? FloatingActionButton(
-                          onPressed: () {
-                            //do somethings
-                          },
-                          child: const Icon(Icons.add),
-                        )
-                      : null,
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(_title),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 16),
+            child: IconButton(
+              icon: SvgPicture.asset(
+                Provider.of<ThemeNotifier>(context).themeMode == ThemeMode.dark
+                    ? 'assets/icons/message_icon_dark.svg'
+                    : 'assets/icons/message_icon_light.svg',
+                width: 24,
+                height: 24,
+              ),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => ChatListPage()),
                 );
-              } else {
-                // User is not signed in, redirect to login page
-                return const WelcomePage();
-              }
-            },
+              },
+            ),
           ),
-          debugShowCheckedModeBanner: false,
-        );
-      },
+        ],
+      ),
+      drawer: TripifyDrawer(onItemTapped: _onItemTapped),
+      body: widgetItems[_currentIndex]['widget'],
+      bottomNavigationBar: TripifyNavBar(
+        currentIndex: (_currentIndex < 4) ? _currentIndex : 4,
+        onItemTapped: _onItemTapped,
+      ),
+      floatingActionButton: _currentIndex == 1
+          ? FloatingActionButton(
+              onPressed: () {
+                // Action for the Market page
+              },
+              child: const Icon(Icons.add),
+            )
+          : null,
     );
   }
 }
