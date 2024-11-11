@@ -58,9 +58,9 @@ void main() async {
                   username: 'Guest', // Default or placeholder values
                   role: '',
                   ssm: null,
-                  bio: '',
+                  bio: 'This user has not set a bio yet.',
                   profilePic:
-                      'https://firebasestorage.googleapis.com/v0/b/tripify-d8e12.appspot.com/o/defaults%2Fdefault.jpg?alt=media&token=8e1189e2-ea22-4bdd-952f-e9d711307251',
+                      'https://console.firebase.google.com/project/tripify-d8e12/storage/tripify-d8e12.appspot.com/files/~2Fdefaults/default-profile.jpg',
                   birthdate: DateTime.now(),
                   createdAt: DateTime.now(),
                   updatedAt: null,
@@ -92,7 +92,7 @@ class _MyAppState extends State<MyApp> {
           theme: lightTheme,
           darkTheme: darkTheme,
           themeMode: themeNotifier.themeMode,
-          debugShowCheckedModeBanner: false,
+          // scrollBehavior: const MaterialScrollBehavior().copyWith(dragDevices: PointerDeviceKind.values.toSet()),
           home: StreamBuilder<User?>(
             stream: FirebaseAuth.instance.authStateChanges(),
             builder: (context, snapshot) {
@@ -100,18 +100,23 @@ class _MyAppState extends State<MyApp> {
                 return const Center(child: CircularProgressIndicator());
               }
 
+              print('Snapshot data: ${snapshot.data}');
+
+              // Debug output for tracking the authentication state
+              if (snapshot.hasError) {
+                return Center(child: Text('Error: ${snapshot.error}'));
+              }
+
               if (snapshot.hasData) {
-                User? user = snapshot.data;
-                if (user != null && user.emailVerified) {
-                  return const MainPage(); // MainPage for authenticated users
-                } else {
-                  return VerifyEmailPage(); // VerifyEmailPage for unverified users
-                }
+                // User is signed in, show the MainPage
+                return VerifyEmailPage(); // Render MainPage for authenticated users
               } else {
-                return const WelcomePage(); // WelcomePage for guests
+                // User is not signed in, show WelcomePage
+                return const WelcomePage();
               }
             },
           ),
+          debugShowCheckedModeBanner: false,
         );
       },
     );
@@ -165,6 +170,7 @@ class MainPageState extends State<MainPage> {
       'widget': const TravelPackageCreatePage()
     }
   ];
+  List<int> navigationStack = [];
 
   void onItemTapped(int index) {
     setState(() {
@@ -194,39 +200,85 @@ class MainPageState extends State<MainPage> {
     return null;
   }
 
+  // Pop the page if click back btn
+  // Show a confirmation dialog when back button is pressed
+  Future<bool> _onWillPop() async {
+    if (_currentIndex == 0) {
+      // Show confirmation dialog if user is on Home page
+      bool shouldExit = await showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: const Text('Exit App'),
+              content: const Text('Do you want to exit the app?'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  child: const Text('No'),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(true),
+                  child: const Text('Yes'),
+                ),
+              ],
+            ),
+          ) ??
+          false;
+
+      return shouldExit;
+    } else {
+      // Pop back to the previous page if not on the Home page
+      if (navigationStack.isNotEmpty) {
+        setState(() {
+          _currentIndex =
+              navigationStack.removeLast(); // Navigate to the previous page
+          _title = widgetItems[_currentIndex]['title'];
+        });
+      } else {
+        // If there are no previous pages in the stack, go to the Home page
+        setState(() {
+          _currentIndex = 0;
+          _title = widgetItems[_currentIndex]['title'];
+        });
+      }
+      return false; // Prevent exiting the app
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-        appBar: AppBar(
-          title: Text(_title),
-          actions: [
-            Padding(
-              padding: const EdgeInsets.only(right: 16),
-              child: IconButton(
-                icon: SvgPicture.asset(
-                  Provider.of<ThemeNotifier>(context).themeMode ==
-                          ThemeMode.dark
-                      ? 'assets/icons/message_icon_dark.svg'
-                      : 'assets/icons/message_icon_light.svg',
-                  width: 24,
-                  height: 24,
+    return WillPopScope(
+        onWillPop: _onWillPop,
+        child: Scaffold(
+            appBar: AppBar(
+              title: Text(_title),
+              actions: [
+                Padding(
+                  padding: const EdgeInsets.only(right: 16),
+                  child: IconButton(
+                    icon: SvgPicture.asset(
+                      Provider.of<ThemeNotifier>(context).themeMode ==
+                              ThemeMode.dark
+                          ? 'assets/icons/message_icon_dark.svg'
+                          : 'assets/icons/message_icon_light.svg',
+                      width: 24,
+                      height: 24,
+                    ),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => ChatListPage()),
+                      );
+                    },
+                  ),
                 ),
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => ChatListPage()),
-                  );
-                },
-              ),
+              ],
             ),
-          ],
-        ),
-        drawer: TripifyDrawer(onItemTapped: onItemTapped),
-        body: widgetItems[_currentIndex]['widget'],
-        bottomNavigationBar: TripifyNavBar(
-          currentIndex: _btmNavIndex,
-          onItemTapped: onItemTapped,
-        ),
-        floatingActionButton: floatingButtonReturn(_currentIndex));
+            drawer: TripifyDrawer(onItemTapped: onItemTapped),
+            body: widgetItems[_currentIndex]['widget'],
+            bottomNavigationBar: TripifyNavBar(
+              currentIndex: (_currentIndex < 4) ? _currentIndex : 4,
+              onItemTapped: onItemTapped,
+            ),
+            floatingActionButton: floatingButtonReturn(_currentIndex)));
   }
 }
