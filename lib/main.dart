@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -144,53 +145,106 @@ class _MainPageState extends State<MainPage> {
     {'title': 'On Shelves Travel Package', 'widget': const TravelPackageCreatePage()}
   ];
 
+  // Store the last visited index in a list
+  List<int> navigationStack = [];
+  
   void _onItemTapped(int index) {
     setState(() {
+      // Store the current index to the stack before navigating
+      if (_currentIndex != 0) {
+        navigationStack.add(_currentIndex);
+      }
       _currentIndex = index;
       _title = widgetItems[_currentIndex]['title'];
     });
   }
 
+  // Pop the page if click back btn
+  // Show a confirmation dialog when back button is pressed
+  Future<bool> _onWillPop() async {
+    if (_currentIndex == 0) {
+      // Show confirmation dialog if user is on Home page
+      bool shouldExit = await showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: const Text('Exit App'),
+              content: const Text('Do you want to exit the app?'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  child: const Text('No'),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(true),
+                  child: const Text('Yes'),
+                ),
+              ],
+            ),
+          ) ??
+          false;
+
+      return shouldExit;
+    } else {
+      // Pop back to the previous page if not on the Home page
+      if (navigationStack.isNotEmpty) {
+        setState(() {
+          _currentIndex = navigationStack.removeLast(); // Navigate to the previous page
+          _title = widgetItems[_currentIndex]['title'];
+        });
+      } else {
+        // If there are no previous pages in the stack, go to the Home page
+        setState(() {
+          _currentIndex = 0;
+          _title = widgetItems[_currentIndex]['title'];
+        });
+      }
+      return false; // Prevent exiting the app
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(_title),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 16),
-            child: IconButton(
-              icon: SvgPicture.asset(
-                Provider.of<ThemeNotifier>(context).themeMode == ThemeMode.dark
-                    ? 'assets/icons/message_icon_dark.svg'
-                    : 'assets/icons/message_icon_light.svg',
-                width: 24,
-                height: 24,
+    return WillPopScope(
+        onWillPop: _onWillPop,
+        child: Scaffold(
+          appBar: AppBar(
+            title: Text(_title),
+            actions: [
+              Padding(
+                padding: const EdgeInsets.only(right: 16),
+                child: IconButton(
+                  icon: SvgPicture.asset(
+                    Provider.of<ThemeNotifier>(context).themeMode ==
+                            ThemeMode.dark
+                        ? 'assets/icons/message_icon_dark.svg'
+                        : 'assets/icons/message_icon_light.svg',
+                    width: 24,
+                    height: 24,
+                  ),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => ChatListPage()),
+                    );
+                  },
+                ),
               ),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => ChatListPage()),
-                );
-              },
-            ),
+            ],
           ),
-        ],
-      ),
-      drawer: TripifyDrawer(onItemTapped: _onItemTapped),
-      body: widgetItems[_currentIndex]['widget'],
-      bottomNavigationBar: TripifyNavBar(
-        currentIndex: (_currentIndex < 4) ? _currentIndex : 4,
-        onItemTapped: _onItemTapped,
-      ),
-      floatingActionButton: _currentIndex == 1
-          ? FloatingActionButton(
-              onPressed: () {
-                // Action for the Market page
-              },
-              child: const Icon(Icons.add),
-            )
-          : null,
-    );
+          drawer: TripifyDrawer(onItemTapped: _onItemTapped),
+          body: widgetItems[_currentIndex]['widget'],
+          bottomNavigationBar: TripifyNavBar(
+            currentIndex: (_currentIndex < 4) ? _currentIndex : 4,
+            onItemTapped: _onItemTapped,
+          ),
+          floatingActionButton: _currentIndex == 1
+              ? FloatingActionButton(
+                  onPressed: () {
+                    // Action for the Market page
+                  },
+                  child: const Icon(Icons.add),
+                )
+              : null,
+        ));
   }
 }
