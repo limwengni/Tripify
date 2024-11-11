@@ -81,7 +81,8 @@ flutter:
   assets:
     - assets/images/travis.png
     - assets/icons/robot_icon.svg
-    - assets/icons/message_icon.svg
+    - assets/icons/message_icon_light.svg
+    - assets/icons/message_icon_dark.svg
     - assets/icons/itinerary_icon_outlined.svg
     # - images/a_dot_ham.jpeg
 

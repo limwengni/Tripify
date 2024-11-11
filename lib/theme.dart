@@ -42,4 +42,10 @@ final ThemeData darkTheme = ThemeData(
       borderSide: BorderSide(color: Color.fromARGB(255, 159, 118, 249), width: 2.0),
     ),
   ),
+  textSelectionTheme: const TextSelectionThemeData(
+    cursorColor: Colors.white,
+    selectionHandleColor: Colors.white,
+    selectionColor: Color(0xFF9F76F9),
+  ),
+  
 );

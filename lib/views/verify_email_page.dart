@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tripify/main.dart';
+import 'package:tripify/theme.dart';
 import 'package:tripify/view_models/firestore_service.dart';
 import 'package:tripify/views/signup_details_page1.dart';
 import 'package:tripify/view_models/user_provider.dart';
@@ -18,6 +19,7 @@ class _VerifyEmailPageState extends State<VerifyEmailPage> {
   bool isLoading = true; // Added to manage loading state
   Map<String, dynamic>? userData;
   Timer? timer;
+  DateTime? _lastEmailSentTime;
 
   FirestoreService firestoreService = FirestoreService();
 
@@ -32,8 +34,7 @@ class _VerifyEmailPageState extends State<VerifyEmailPage> {
         const Duration(seconds: 3),
         (_) => checkEmailVerified(),
       );
-    } 
-   
+    }
   }
 
   Future<void> _initializeUserData() async {
@@ -42,15 +43,15 @@ class _VerifyEmailPageState extends State<VerifyEmailPage> {
           'User', FirebaseAuth.instance.currentUser!.uid);
       print("User data fetched: $userData");
       if (userData != null) {
-    print("Data retrieved successfully: $userData");
-    // Handle the data (e.g., map it to a model or display it in the UI)
-  } else {
-    print("No data found for the given document ID.");
-  }
+        print("Data retrieved successfully: $userData");
+        // Handle the data (e.g., map it to a model or display it in the UI)
+      } else {
+        print("No data found for the given document ID.");
+      }
     } catch (e) {
       print("Error fetching user data: $e");
     }
-     setState(() {
+    setState(() {
       isLoading = false; // Set loading to false after data is fetched
     });
   }
@@ -108,6 +109,7 @@ class _VerifyEmailPageState extends State<VerifyEmailPage> {
   Future<void> sendVerificationEmail() async {
     try {
       final user = FirebaseAuth.instance.currentUser!;
+
       if (user.emailVerified) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -118,7 +120,22 @@ class _VerifyEmailPageState extends State<VerifyEmailPage> {
         return;
       }
 
+      // Check if there's a recent email verification sent
+      if (_lastEmailSentTime != null &&
+          DateTime.now().difference(_lastEmailSentTime!).inMinutes < 5) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Please wait a few minutes before requesting again.'),
+            duration: Duration(seconds: 2),
+            backgroundColor: Colors.orange,
+          ),
+        );
+        return;
+      }
+
       await user.sendEmailVerification();
+      _lastEmailSentTime = DateTime.now();
+      
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('A verification email has been sent to your email.'),
@@ -138,59 +155,67 @@ class _VerifyEmailPageState extends State<VerifyEmailPage> {
 
   @override
   Widget build(BuildContext context) {
-    if (isLoading) {
-      return const Scaffold(
-        body: Center(
-          child: CircularProgressIndicator(),
-        ),
-      );
-    } else if (isEmailVerified && userData != null) {
-      return const MainPage();
-    } else if (isEmailVerified && userData == null ) {
-      return const SignupDetailsPage1();
-    } else {
-      return Scaffold(
-          body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(10.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                'A verification email has been sent to your email',
-                style: Theme.of(context).textTheme.titleMedium,
+    return Theme(
+      data: lightTheme, // Set light theme here
+      child: Builder(
+        builder: (context) {
+          if (isLoading) {
+            return const Scaffold(
+              body: Center(
+                child: CircularProgressIndicator(),
               ),
-              const SizedBox(height: 10),
-              MaterialButton(
-                onPressed: sendVerificationEmail,
-                color: Colors.blue,
-                textColor: Colors.white,
-                padding: const EdgeInsets.symmetric(
-                    vertical: 10.0, horizontal: 15.0),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8.0),
+            );
+          } else if (isEmailVerified && userData != null) {
+            return const MainPage();
+          } else if (isEmailVerified && userData == null) {
+            return const SignupDetailsPage1();
+          } else {
+            return Scaffold(
+              body: Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(10.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        'A verification email has been sent to your email',
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                      const SizedBox(height: 10),
+                      MaterialButton(
+                        onPressed: sendVerificationEmail,
+                        color: Color.fromARGB(255, 159, 118, 249),
+                        textColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 10.0, horizontal: 15.0),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8.0),
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.max,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.email, color: Colors.white),
+                            SizedBox(width: 8),
+                            Text('Resend Email'),
+                          ],
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          FirebaseAuth.instance.signOut();
+                          Navigator.pop(context);
+                        },
+                        child: const Text('Cancel'),
+                      ),
+                    ],
+                  ),
                 ),
-                child: const Row(
-                  mainAxisSize: MainAxisSize.max,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.email, color: Colors.white),
-                    SizedBox(width: 8),
-                    Text('Resend Email'),
-                  ],
-                ),
               ),
-              TextButton(
-                onPressed: () {
-                  FirebaseAuth.instance.signOut();
-                  Navigator.pop(context);
-                },
-                child: const Text('Cancel'),
-              ),
-            ],
-          ),
-        ),
-      ));
-    }
+            );
+          }
+        },
+      ),
+    );
   }
 }

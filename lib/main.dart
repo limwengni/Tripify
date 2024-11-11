@@ -58,9 +58,9 @@ void main() async {
                   username: 'Guest', // Default or placeholder values
                   role: '',
                   ssm: null,
-                  bio: 'This user has not set a bio yet.',
+                  bio: '',
                   profilePic:
-                      'https://console.firebase.google.com/project/tripify-d8e12/storage/tripify-d8e12.appspot.com/files/~2Fdefaults/default-profile.jpg',
+                      'https://firebasestorage.googleapis.com/v0/b/tripify-d8e12.appspot.com/o/defaults%2Fdefault.jpg?alt=media&token=8e1189e2-ea22-4bdd-952f-e9d711307251',
                   birthdate: DateTime.now(),
                   createdAt: DateTime.now(),
                   updatedAt: null,
@@ -92,7 +92,7 @@ class _MyAppState extends State<MyApp> {
           theme: lightTheme,
           darkTheme: darkTheme,
           themeMode: themeNotifier.themeMode,
-          // scrollBehavior: const MaterialScrollBehavior().copyWith(dragDevices: PointerDeviceKind.values.toSet()),
+          debugShowCheckedModeBanner: false,
           home: StreamBuilder<User?>(
             stream: FirebaseAuth.instance.authStateChanges(),
             builder: (context, snapshot) {
@@ -100,23 +100,18 @@ class _MyAppState extends State<MyApp> {
                 return const Center(child: CircularProgressIndicator());
               }
 
-              print('Snapshot data: ${snapshot.data}');
-
-              // Debug output for tracking the authentication state
-              if (snapshot.hasError) {
-                return Center(child: Text('Error: ${snapshot.error}'));
-              }
-
               if (snapshot.hasData) {
-                // User is signed in, show the MainPage
-                return VerifyEmailPage(); // Render MainPage for authenticated users
+                User? user = snapshot.data;
+                if (user != null && user.emailVerified) {
+                  return const MainPage(); // MainPage for authenticated users
+                } else {
+                  return VerifyEmailPage(); // VerifyEmailPage for unverified users
+                }
               } else {
-                // User is not signed in, show WelcomePage
-                return const WelcomePage();
+                return const WelcomePage(); // WelcomePage for guests
               }
             },
           ),
-          debugShowCheckedModeBanner: false,
         );
       },
     );
@@ -148,10 +143,12 @@ class MainPageState extends State<MainPage> {
     {'title': 'Car Rental Request', 'widget': const RequestSelectionPage()},
     {
       'title': 'Accommodation Request Create',
-      'widget':  AccommodationRequirementCreatePage()
+      'widget': AccommodationRequirementCreatePage()
     },
-       {'title': 'Car Rental Request Create', 'widget': const RequestSelectionPage()},
-
+    {
+      'title': 'Car Rental Request Create',
+      'widget': const RequestSelectionPage()
+    },
     {'title': 'Profile', 'widget': ProfilePage()},
     {'title': 'AI Chat', 'widget': TravelAssistantPage()},
     {'title': 'Emergency Call', 'widget': const EmergencyCallPage()},
@@ -199,65 +196,37 @@ class MainPageState extends State<MainPage> {
 
   @override
   Widget build(BuildContext context) {
-    final bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
-
-    return Consumer<ThemeNotifier>(
-      builder: (context, themeNotifier, child) {
-        return MaterialApp(
-          theme: lightTheme,
-          darkTheme: darkTheme,
-          themeMode: themeNotifier.themeMode,
-          home: StreamBuilder<User?>(
-            stream: FirebaseAuth.instance.authStateChanges(),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(
-                    child:
-                        CircularProgressIndicator()); // Centered loading spinner
-              }
-              if (snapshot.hasData) {
-                // FirebaseAuth.instance.signOut();
-
-                // User is signed in
-                return Scaffold(
-                    appBar: AppBar(
-                      title: Text(_title),
-                      actions: [
-                        Padding(
-                          padding: const EdgeInsets.only(right: 16),
-                          child: IconButton(
-                            icon: SvgPicture.asset(
-                              'assets/icons/message_icon.svg', // Adjusted path
-                              color: isDarkMode ? Colors.white : Colors.black,
-                              width: 24,
-                              height: 24,
-                            ),
-                            onPressed: () {
-                              Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (context) => ChatListPage()));
-                            },
-                          ),
-                        ),
-                      ],
-                    ),
-                    drawer: TripifyDrawer(onItemTapped: onItemTapped),
-                    body: widgetItems[_currentIndex]['widget'],
-                    bottomNavigationBar: TripifyNavBar(
-                      currentIndex: _btmNavIndex,
-                      onItemTapped: onItemTapped,
-                    ),
-                    floatingActionButton: floatingButtonReturn(_currentIndex));
-              } else {
-                // User is not signed in, redirect to login page
-                return const WelcomePage();
-              }
-            },
-          ),
-          debugShowCheckedModeBanner: false,
-        );
-      },
-    );
+    return Scaffold(
+        appBar: AppBar(
+          title: Text(_title),
+          actions: [
+            Padding(
+              padding: const EdgeInsets.only(right: 16),
+              child: IconButton(
+                icon: SvgPicture.asset(
+                  Provider.of<ThemeNotifier>(context).themeMode ==
+                          ThemeMode.dark
+                      ? 'assets/icons/message_icon_dark.svg'
+                      : 'assets/icons/message_icon_light.svg',
+                  width: 24,
+                  height: 24,
+                ),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => ChatListPage()),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+        drawer: TripifyDrawer(onItemTapped: onItemTapped),
+        body: widgetItems[_currentIndex]['widget'],
+        bottomNavigationBar: TripifyNavBar(
+          currentIndex: _btmNavIndex,
+          onItemTapped: onItemTapped,
+        ),
+        floatingActionButton: floatingButtonReturn(_currentIndex));
   }
 }

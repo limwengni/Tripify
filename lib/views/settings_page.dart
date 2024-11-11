@@ -161,7 +161,7 @@ class SettingsPage extends StatelessWidget {
                           Text("Log Out", style: TextStyle(color: textColor)),
                       onPressed: () async {
                         await Provider.of<AuthService>(context, listen: false)
-                            .logout();
+                            .logout(context);
 
                         Navigator.of(context).pop(); // Dismiss the dialog
                         Navigator.of(context)

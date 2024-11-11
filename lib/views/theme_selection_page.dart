@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:tripify/view_models/firestore_service.dart';
 import '../theme_notifier.dart';
 
 class ThemeSelectionPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final themeNotifier = Provider.of<ThemeNotifier>(context);
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final isDarkMode = themeNotifier.themeMode == ThemeMode.dark;
 
     return Scaffold(
       appBar: AppBar(
@@ -55,6 +57,13 @@ class ThemeSelectionPage extends StatelessWidget {
                       } else {
                         themeNotifier.setTheme(ThemeMode.light);
                       }
+
+                      // Get the current user's UID
+                      String uid = FirebaseAuth.instance.currentUser!.uid;
+                      
+                      // Save the user's theme preference to Firestore
+                      final firestoreService = FirestoreService();
+                      firestoreService.saveUserTheme(uid, value);
                     },
                   ),
                 ],

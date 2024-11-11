@@ -18,7 +18,7 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
-  late Future<String> _profileImageUrl;
+  late String? _profileImageUrl;
 
   @override
   void initState() {
@@ -31,8 +31,16 @@ class _ProfilePageState extends State<ProfilePage> {
     final user = FirebaseAuth.instance.currentUser;
 
     if (user != null) {
-      userProvider.fetchUserDetails(user.uid);
-      _profileImageUrl = userProvider.fetchProfileImageUrl();
+      await userProvider.fetchUserDetails(user.uid);
+
+      // After fetching user details, the _profileImageUrl is updated in the provider
+      setState(() {
+        // Fetching the profile image URL directly from the provider after details are fetched
+        _profileImageUrl = userProvider.userModel?.profilePic ??
+            "https://firebasestorage.googleapis.com/v0/b/tripify-d8e12.appspot.com/o/defaults%2Fdefault.jpg?alt=media&token=8e1189e2-ea22-4bdd-952f-e9d711307251";
+      });
+
+      // print(_profileImageUrl);
     }
   }
 
@@ -257,8 +265,7 @@ class _ProfilePageState extends State<ProfilePage> {
       return _buildShimmerPlaceholder(); // Show shimmer while loading
     }
 
-    String userBio =
-        userProvider.userModel?.bio ?? 'This user has not set a bio yet.';
+    String userBio = userProvider.userModel?.bio ?? '';
 
     return Container(
         padding: const EdgeInsets.only(top: 0.0, bottom: 16.0),
@@ -272,44 +279,65 @@ class _ProfilePageState extends State<ProfilePage> {
             Row(
               children: [
                 // Profile Picture
-                FutureBuilder<String>(
-                  future: _profileImageUrl,
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return Shimmer.fromColors(
-                        baseColor: Colors.grey.shade300,
-                        highlightColor: Colors.grey.shade100,
-                        child: CircleAvatar(
-                          radius: 50,
-                          backgroundColor: Colors.grey.shade200,
-                        ),
-                      );
-                    } else if (snapshot.hasError) {
-                      // Handle the error case
-                      return CircleAvatar(
-                        radius: 50,
-                        backgroundColor: Colors.grey.shade200,
-                        child: Icon(Icons.error), // Error icon
-                      );
-                    } else {
-                      // Image URL loaded successfully
-                      // return CircleAvatar(
-                      //   radius: 50,
-                      //   backgroundImage:
-                      //       CachedNetworkImageProvider(snapshot.data!),
-                      // );
-                      return ClipOval(
-                          child: Image.network(
-                        'https://firebasestorage.googleapis.com/v0/b/tripify-d8e12.appspot.com/o/AD9FpoxYM1XgY9h5JIV2QQaOouU2%2Fpfp%2Fpfp.jpg?alt=media&token=812a109f-05a2-4535-84ce-79666b652c60',
-                        width:
-                            60, // Set width and height to match the CircleAvatar size
-                        height: 60,
-                        fit: BoxFit
-                            .cover, // Crop the image to fit inside the circle
-                      ));
-                    }
-                  },
+                CachedNetworkImage(
+                  imageUrl: _profileImageUrl ?? '', // Use your image URL
+                  placeholder: (context, url) => Shimmer.fromColors(
+                    baseColor: Colors.grey.shade300,
+                    highlightColor: Colors.grey.shade100,
+                    child: CircleAvatar(
+                      radius: 50,
+                      backgroundColor: Colors.grey.shade200,
+                    ),
+                  ),
+                  errorWidget: (context, url, error) => CircleAvatar(
+                    radius: 50,
+                    backgroundColor: Colors.grey.shade200,
+                    child: Icon(Icons.error),
+                  ),
+                  imageBuilder: (context, imageProvider) => CircleAvatar(
+                    radius: 50,
+                    backgroundImage: imageProvider,
+                  ),
                 ),
+                // FutureBuilder<String>(
+                //   future: _profileImageUrl,
+                //   builder: (context, snapshot) {
+                //     if (snapshot.connectionState == ConnectionState.waiting) {
+                //       return Shimmer.fromColors(
+                //         baseColor: Colors.grey.shade300,
+                //         highlightColor: Colors.grey.shade100,
+                //         child: CircleAvatar(
+                //           radius: 50,
+                //           backgroundColor: Colors.grey.shade200,
+                //         ),
+                //       );
+                //     } else if (snapshot.hasError) {
+                //       // Handle the error case
+                //       return CircleAvatar(
+                //         radius: 50,
+                //         backgroundColor: Colors.grey.shade200,
+                //         child: Icon(Icons.error), // Error icon
+                //       );
+                //     } else {
+                //       // Image URL loaded successfully
+                //       return CircleAvatar(
+                //         radius: 50,
+                //         backgroundImage:
+                //             CachedNetworkImageProvider(snapshot.data!),
+                //       );
+
+                //       // return ClipOval(
+                //       //     child: Image.network(
+                //       //   'https://firebasestorage.googleapis.com/v0/b/tripify-d8e12.appspot.com/o/AD9FpoxYM1XgY9h5JIV2QQaOouU2%2Fpfp%2Fpfp.jpg?alt=media&token=812a109f-05a2-4535-84ce-79666b652c60',
+                //       //   width:
+                //       //       60, // Set width and height to match the CircleAvatar size
+                //       //   height: 60,
+                //       //   fit: BoxFit
+                //       //       .cover, // Crop the image to fit inside the circle
+                //       // ));
+                //     }
+                //   },
+                // ),
                 const SizedBox(width: 16.0),
                 // Username and Join Date
                 Expanded(

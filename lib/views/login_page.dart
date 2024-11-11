@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:tripify/components/components.dart';
 import 'package:tripify/constants.dart';
 import 'package:tripify/main.dart';
+import 'package:tripify/theme.dart';
 import 'package:tripify/views/reset_password_page.dart';
 import 'package:tripify/views/verify_email_page.dart';
 import 'package:tripify/views/welcome_page.dart';
@@ -69,6 +70,7 @@ class _LoginScreenState extends State<LoginPage> {
                           const SizedBox(height: 10),
                           CustomTextField(
                             textField: TextField(
+                              cursorColor: Color(0xFF3B3B3B),
                               onChanged: (value) {
                                 _email = value; // Ensure to handle empty cases
                               },
@@ -81,6 +83,7 @@ class _LoginScreenState extends State<LoginPage> {
                           const SizedBox(height: 10),
                           CustomTextField(
                             textField: TextField(
+                              cursorColor: Color(0xFF3B3B3B),
                               obscureText: !_isPasswordVisible,
                               onChanged: (value) {
                                 _password =
@@ -127,7 +130,7 @@ class _LoginScreenState extends State<LoginPage> {
                                 showDialog(
                                   context: context,
                                   builder: (context) => Theme(
-                                    data: ThemeData.light(),
+                                    data: lightTheme,
                                     child: AlertDialog(
                                       title: const Text('Error',
                                           style: TextStyle(
@@ -155,7 +158,7 @@ class _LoginScreenState extends State<LoginPage> {
                                 showDialog(
                                   context: context,
                                   builder: (context) => Theme(
-                                    data: ThemeData.light(),
+                                    data: lightTheme,
                                     child: AlertDialog(
                                       title: const Text('Error',
                                           style: TextStyle(
@@ -178,7 +181,7 @@ class _LoginScreenState extends State<LoginPage> {
                               try {
                                 // Attempt to sign in and receive a message
                                 String? returnAuth =
-                                    await authService.signIn(_email, _password);
+                                    await authService.signIn(_email, _password, context);
 
                                 if (returnAuth == "Success") {
                                   // Delay briefly to ensure Firebase state updates
@@ -202,7 +205,7 @@ class _LoginScreenState extends State<LoginPage> {
                                   showDialog(
                                     context: context,
                                     builder: (context) => Theme(
-                                      data: ThemeData.light(),
+                                      data: lightTheme,
                                       child: AlertDialog(
                                         title: const Text('Error',
                                             style: TextStyle(

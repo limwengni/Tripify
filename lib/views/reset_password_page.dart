@@ -71,6 +71,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                           const SizedBox(height: 20),
                           CustomTextField(
                             textField: TextField(
+                              cursorColor: Color(0xFF3B3B3B),
                               onChanged: (value) {
                                 _email = value;
                               },
@@ -121,26 +122,28 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                                     _saving = false;
                                   });
                                   showDialog(
-                                    context: context,
-                                    builder: (BuildContext context) =>
-                                        AlertDialog(
-                                      title: const Text(
-                                        'Error',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                      content: const Text(
-                                          'Please enter a valid email address.'),
-                                      actions: <Widget>[
-                                        TextButton(
-                                          onPressed: () =>
-                                              Navigator.pop(context, 'OK'),
-                                          child: const Text('OK'),
-                                        ),
-                                      ],
-                                    ),
-                                  );
+                                      context: context,
+                                      builder: (BuildContext context) => Theme(
+                                            data: ThemeData.light(),
+                                            child: AlertDialog(
+                                              title: const Text(
+                                                'Error',
+                                                style: TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                              content: const Text(
+                                                  'Please enter a valid email address.'),
+                                              actions: <Widget>[
+                                                TextButton(
+                                                  onPressed: () =>
+                                                      Navigator.pop(
+                                                          context, 'OK'),
+                                                  child: const Text('OK'),
+                                                ),
+                                              ],
+                                            ),
+                                          ));
                                   return;
                                 }
 
@@ -153,48 +156,52 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
 
                                 if (returnState == "Success") {
                                   showDialog(
-                                    context: context,
-                                    builder: (BuildContext context) =>
-                                        AlertDialog(
-                                      title: const Text(
-                                        'Success',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                      content: const Text(
-                                          'If an account exists with this email, a password reset link has been sent. Please check your email.'),
-                                      actions: <Widget>[
-                                        TextButton(
-                                          onPressed: () =>
-                                              Navigator.pop(context, 'OK'),
-                                          child: const Text('OK'),
-                                        ),
-                                      ],
-                                    ),
-                                  );
+                                      context: context,
+                                      builder: (BuildContext context) => Theme(
+                                            data: ThemeData.light(),
+                                            child: AlertDialog(
+                                              title: const Text(
+                                                'Success',
+                                                style: TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                              content: const Text(
+                                                  'If an account exists with this email, a password reset link has been sent. Please check your email.'),
+                                              actions: <Widget>[
+                                                TextButton(
+                                                  onPressed: () =>
+                                                      Navigator.pop(
+                                                          context, 'OK'),
+                                                  child: const Text('OK'),
+                                                ),
+                                              ],
+                                            ),
+                                          ));
                                 } else {
                                   showDialog(
-                                    context: context,
-                                    builder: (BuildContext context) =>
-                                        AlertDialog(
-                                      title: const Text(
-                                        'Error',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                      content: const Text(
-                                          'Failed to send reset link, please try again later.'),
-                                      actions: <Widget>[
-                                        TextButton(
-                                          onPressed: () =>
-                                              Navigator.pop(context, 'OK'),
-                                          child: const Text('OK'),
-                                        ),
-                                      ],
-                                    ),
-                                  );
+                                      context: context,
+                                      builder: (BuildContext context) => Theme(
+                                            data: ThemeData.light(),
+                                            child: AlertDialog(
+                                              title: const Text(
+                                                'Error',
+                                                style: TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                              content: const Text(
+                                                  'Failed to send reset link, please try again later.'),
+                                              actions: <Widget>[
+                                                TextButton(
+                                                  onPressed: () =>
+                                                      Navigator.pop(
+                                                          context, 'OK'),
+                                                  child: const Text('OK'),
+                                                ),
+                                              ],
+                                            ),
+                                          ));
                                 }
                               }),
                         ],

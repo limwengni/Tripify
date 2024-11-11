@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:tripify/view_models/user_provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
@@ -18,7 +19,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
   final TextEditingController _bioController = TextEditingController();
   late Future<String> _profileImageUrl;
   String? _newProfilePicPath;
-  final int _maxBioLength = 100;
+  final int _maxBioLength = 150;
 
   @override
   void initState() {
@@ -50,7 +51,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
         String bioFromFirebase = userProvider.userModel?.bio ?? '';
         _bioController.text = bioFromFirebase.replaceAll(r'\n', '\n');
-        
+
         _profileImageUrl = userProvider.fetchProfileImageUrl();
       });
     }
@@ -60,18 +61,18 @@ class _EditProfilePageState extends State<EditProfilePage> {
   Future<void> _pickImage() async {
     final picker = ImagePicker();
     final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
 
     if (pickedFile != null) {
       setState(() {
-        _newProfilePicPath =
-            pickedFile.path; // Store the path for the new profile picture
-        _profileImageUrl = Future.value(
-            _newProfilePicPath); // Store as future for the profile image URL
+        _newProfilePicPath = pickedFile.path; // Store the local file path
+        _profileImageUrl =
+            Future.value(pickedFile.path); // Update with the local path
       });
     } else {
       setState(() {
         _newProfilePicPath = null;
-        _profileImageUrl = Future.value('');
+        _profileImageUrl = Future.value(userProvider.fetchProfileImageUrl());
       });
     }
   }
@@ -81,18 +82,34 @@ class _EditProfilePageState extends State<EditProfilePage> {
     final user = FirebaseAuth.instance.currentUser;
 
     if (user != null) {
-      final resolvedProfileImageUrl = _newProfilePicPath?.isNotEmpty == true
-          ? await _profileImageUrl
-          : null;
+      // String? resolvedProfileImageUrl;
 
-      String bioWithEscapedNewlines = _bioController.text.replaceAll('\n', '\\n');
+      // // If a new profile picture is selected, upload it to Firebase Storage
+      // if (_newProfilePicPath != null && _newProfilePicPath!.isNotEmpty) {
+      //   try {
+      //     final storageRef = FirebaseStorage.instance.ref(
+      //         '${user.uid}/pfp/${DateTime.now().millisecondsSinceEpoch}.jpg'); // Unique file name
+
+      //     // Upload the selected image file to Firebase Storage
+      //     await storageRef.putFile(File(_newProfilePicPath!));
+
+      //     // Get the download URL after the upload is complete
+      //     resolvedProfileImageUrl = await storageRef.getDownloadURL();
+      //   } catch (e) {
+      //     print('Error uploading image: $e');
+      //     resolvedProfileImageUrl = null; // If upload fails, leave the URL null
+      //   }
+      // }
+
+      String bioWithEscapedNewlines =
+          _bioController.text.replaceAll('\n', '\\n');
       final trimmedBio = bioWithEscapedNewlines.trim();
 
       userProvider.updateUserDetails(
         userId: user.uid,
         username: _usernameController.text,
         bio: trimmedBio,
-        newProfilePicPath: resolvedProfileImageUrl,
+        newProfilePicPath: _newProfilePicPath,
       );
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Profile updated successfully!')),
@@ -177,6 +194,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
               // Username Field
               TextFormField(
+                cursorColor: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.white
+                    : Colors.black,
                 controller: _usernameController,
                 decoration: InputDecoration(
                   labelText: 'Username',

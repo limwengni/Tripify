@@ -15,6 +15,36 @@ class FirestoreService {
   // Get the Firestore instance
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
+  Future<void> saveUserTheme(String uid, bool isDarkMode) async {
+    try {
+      await _db.collection('User').doc(uid).update({
+        'theme': isDarkMode ? 'dark' : 'light',
+      });
+      print("User theme updated successfully.");
+    } catch (e) {
+      print("Error saving theme: $e");
+    }
+  }
+
+  Future<String> getUserTheme(String uid) async {
+    try {
+      // Fetch the user document from Firestore
+      var userDoc = await _db.collection('User').doc(uid).get();
+
+      // Check if the document exists and if the 'theme' field is available
+      if (userDoc.exists && userDoc.data() != null) {
+        return userDoc.data()?['theme'] ??
+            'light'; // Return theme or default to 'light'
+      } else {
+        // Return 'light' if the document doesn't exist or has no 'theme' field
+        return 'light';
+      }
+    } catch (e) {
+      print("Error fetching user theme: $e");
+      return 'light'; // In case of any error, default to 'light'
+    }
+  }
+
   // Insert Data (General)
   Future<void> insertData(String collection, Map<String, dynamic> data) async {
     try {
@@ -26,20 +56,26 @@ class FirestoreService {
   }
 
   // Insert user data
-  Future<void> insertUserData(Map<String, dynamic> data) async {
-  try {
-    String uid = FirebaseAuth.instance.currentUser!.uid;
+  Future<void> insertUserData(
+      String collection, Map<String, dynamic> data) async {
+    try {
+      String uid = FirebaseAuth.instance.currentUser!.uid;
+      String theme = 'light'; // Default theme
 
-    // Use the UID as the document ID in Firestore
-    await _db.collection('User').doc(uid).set(data);
-    print("User data inserted successfully.");
-  } catch (e) {
-    print("Error inserting data: $e");
+      // Add theme to the data map
+      data['theme'] = theme;
+
+      // Use the UID as the document ID in Firestore
+      await _db.collection(collection).doc(uid).set(data);
+      print("User data inserted successfully.");
+    } catch (e) {
+      print("Error inserting data: $e");
+    }
   }
-}
 
   // Update Data
-  Future<void> updateData(String collection, String documentId, Map<String, dynamic> data) async {
+  Future<void> updateData(
+      String collection, String documentId, Map<String, dynamic> data) async {
     try {
       await _db.collection(collection).doc(documentId).update(data);
       print("Data updated successfully.");
@@ -74,9 +110,11 @@ class FirestoreService {
   }
 
   // Select Data (Get by Document ID)
-  Future<Map<String, dynamic>?> getDataById(String collection, String documentId) async {
+  Future<Map<String, dynamic>?> getDataById(
+      String collection, String documentId) async {
     try {
-      final docSnapshot = await _db.collection(collection).doc(documentId).get();
+      final docSnapshot =
+          await _db.collection(collection).doc(documentId).get();
       if (docSnapshot.exists) {
         return docSnapshot.data() as Map<String, dynamic>;
       } else {
@@ -88,6 +126,7 @@ class FirestoreService {
       return null;
     }
   }
+
 // Select Data (Get by Field Value)
   Future<List<Map<String, dynamic>>> getDataByField(
       String collection, String field, dynamic value) async {
@@ -104,5 +143,4 @@ class FirestoreService {
       return [];
     }
   }
-
 }

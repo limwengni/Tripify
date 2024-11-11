@@ -1,5 +1,9 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'firestore_service.dart';
+import 'package:tripify/theme.dart';
+import 'package:provider/provider.dart';
+import '../theme_notifier.dart';
 import 'package:flutter/material.dart';
 import 'package:tripify/models/user_model.dart';
 
@@ -16,13 +20,27 @@ class AuthService extends ChangeNotifier {
     });
   }
 
-  Future<String?> signIn(String email, String password) async {
+  Future<String?> signIn(
+      String email, String password, BuildContext context) async {
     try {
       UserCredential userCredential = await _auth.signInWithEmailAndPassword(
         email: email,
         password: password,
       );
       _user = userCredential.user;
+
+      // Fetch user theme preference from Firestore
+      final FirestoreService firestoreService = FirestoreService();
+      String theme = await firestoreService.getUserTheme(FirebaseAuth.instance.currentUser!.uid);
+
+      final themeNotifier = Provider.of<ThemeNotifier>(context, listen: false);
+
+      // Apply the theme based on user preference
+      if (theme == 'dark') {
+        themeNotifier.setTheme(ThemeMode.dark);
+      } else {
+        themeNotifier.setTheme(ThemeMode.light);
+      }
       return 'Success'; // Return a success message
     } on FirebaseAuthException catch (e) {
       // Handle specific Firebase authentication exceptions
@@ -51,10 +69,14 @@ class AuthService extends ChangeNotifier {
     }
   }
 
-  Future<void> logout() async {
+  Future<void> logout(BuildContext context) async {
     try {
       await FirebaseAuth.instance.signOut(); // Directly sign out from Firebase
       _user = null;
+
+      final themeNotifier = Provider.of<ThemeNotifier>(context, listen: false);
+      themeNotifier
+          .setTheme(ThemeMode.light); // Set theme to light after logout
       notifyListeners();
     } catch (e) {
       // Handle any errors that occur during sign out
