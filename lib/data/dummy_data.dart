@@ -11,7 +11,7 @@ AccommodationRequirement testAccommodation = AccommodationRequirement(
   bedNum: 1,
   budget: 150.0,
   additionalRequirement: 'Near subway station',
-  houseType: HouseType.banglow,
+  houseType: HouseType.banglow, userDocId: '',
 );
 
 // Ensure the list contains your test data
@@ -26,7 +26,7 @@ List<AccommodationRequirement> accommodationsList = [
     bedNum: 1,
     budget: 150.0,
     additionalRequirement: 'Near subway station',
-    houseType: HouseType.banglow,
+    houseType: HouseType.banglow, userDocId: '',
   ),
   AccommodationRequirement(
     id: '2',
@@ -38,6 +38,6 @@ List<AccommodationRequirement> accommodationsList = [
     bedNum: 2,
     budget: 300.0,
     additionalRequirement: '',
-    houseType: HouseType.banglow,
+    houseType: HouseType.banglow, userDocId: '',
   ),
 ];

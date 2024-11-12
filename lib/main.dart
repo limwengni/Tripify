@@ -7,6 +7,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:tripify/views/accommodation_requirement_create_page.dart';
 import 'package:tripify/views/chat_list_page.dart';
 import 'package:tripify/views/request_selection_page.dart';
+import 'package:tripify/views/test_map.dart';
 import 'package:tripify/views/travel_package_create_page.dart';
 import 'package:tripify/views/verify_email_page.dart';
 import 'firebase_options.dart';
@@ -266,7 +267,7 @@ class MainPageState extends State<MainPage> {
                     onPressed: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => ChatListPage()),
+                        MaterialPageRoute(builder: (context) => MapSample()),
                       );
                     },
                   ),

@@ -19,6 +19,7 @@ class AccommodationRequirement {
   final double budget;
   final String additionalRequirement;
   final HouseType houseType;
+  final String userDocId;
 
   AccommodationRequirement({
     required this.id,
@@ -29,9 +30,25 @@ class AccommodationRequirement {
     required this.guestNum,
     required this.bedNum,
     required this.budget,
-    this.additionalRequirement = '',
+    required this.additionalRequirement,
     required this.houseType,
+    required this.userDocId,
   });
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'title': title,
+      'location': location,
+      'checkinDate': checkinDate,
+      'checkoutDate': checkoutDate,
+      'guestNum': guestNum,
+      'bedNum': bedNum,
+      'budget': budget,
+      'additionalRequirement': additionalRequirement,
+      'houseType': houseType,
+      'userDocId': userDocId,
+    };
+  }
 
   factory AccommodationRequirement.fromMap(Map<String, dynamic> data) {
     return AccommodationRequirement(
@@ -52,6 +69,7 @@ class AccommodationRequirement {
         (e) => e.toString().split('.').last == data['houseType'],
         orElse: () => HouseType.condo,
       ),
+      userDocId: data['userDocId'] as String,
     );
   }
 }
