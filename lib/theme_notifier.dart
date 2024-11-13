@@ -28,11 +28,8 @@ class ThemeNotifier with ChangeNotifier {
 
           if (theme == 'dark') {
             _themeMode = ThemeMode.dark;
-          } else if (theme == 'light') {
-            _themeMode = ThemeMode.light;
           } else {
-            _themeMode = ThemeMode
-                .light; // Default to light if theme is not set correctly
+            _themeMode = ThemeMode.light; // Default to light if theme is not set correctly
           }
         }
       } catch (e) {

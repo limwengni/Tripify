@@ -89,6 +89,9 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     return Consumer<ThemeNotifier>(
       builder: (context, themeNotifier, child) {
+        print("Current themeMode: ${themeNotifier.themeMode}");
+        print(
+            "Dark theme applied: ${themeNotifier.themeMode == ThemeMode.dark}");
         return MaterialApp(
           theme: lightTheme,
           darkTheme: darkTheme,

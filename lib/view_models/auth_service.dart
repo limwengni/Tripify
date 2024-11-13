@@ -47,7 +47,7 @@ class AuthService extends ChangeNotifier {
       if (e.code == 'user-not-found' || e.code == 'invalid-credential') {
         return 'Invalid email or password.';
       } else {
-        return e.message; // Return any other error message
+        return 'An internal error has occurred.'; // Return any other error message
       }
     } catch (e) {
       // Handle any other exceptions
