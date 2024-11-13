@@ -96,32 +96,42 @@ class _MyAppState extends State<MyApp> {
           theme: lightTheme,
           darkTheme: darkTheme,
           themeMode: themeNotifier.themeMode,
-          // scrollBehavior: const MaterialScrollBehavior().copyWith(dragDevices: PointerDeviceKind.values.toSet()),
-          home: StreamBuilder<User?>(
-            stream: FirebaseAuth.instance.authStateChanges(),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(child: CircularProgressIndicator());
-              }
-
-              print('Snapshot data: ${snapshot.data}');
-
-              // Debug output for tracking the authentication state
-              if (snapshot.hasError) {
-                return Center(child: Text('Error: ${snapshot.error}'));
-              }
-
-              if (snapshot.hasData) {
-                // User is signed in, show the MainPage
-                return VerifyEmailPage(); // Render MainPage for authenticated users
-              } else {
-                // User is not signed in, show WelcomePage
-                return const WelcomePage();
-              }
-            },
-          ),
           debugShowCheckedModeBanner: false,
+          home: FirebaseAuthStateHandler(),
         );
+      },
+    );
+  }
+}
+
+class FirebaseAuthStateHandler extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<User?>(
+      stream: FirebaseAuth.instance.authStateChanges(), // Listen for auth state changes
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          // Show loading spinner while waiting for Firebase auth state
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        if (snapshot.hasError) {
+          // Show error message if there is an error
+          return Center(child: Text('Error: ${snapshot.error}'));
+        }
+
+        // If the user is authenticated, we either check for email verification or just go to main
+        if (snapshot.hasData) {
+          // Check if the user's email is verified
+          if (FirebaseAuth.instance.currentUser?.emailVerified ?? false) {
+            return const MainPage(); // User is authenticated and email is verified
+          } else {
+            return VerifyEmailPage(); // User is authenticated but needs to verify email
+          }
+        } else {
+          // If no user is authenticated, show the WelcomePage
+          return const WelcomePage();
+        }
       },
     );
   }
