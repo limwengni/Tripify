@@ -11,9 +11,6 @@ class TravelAssistantPage extends StatelessWidget {
     return ChangeNotifierProvider(
       create: (_) => ChatViewModel(),
       child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Travis - Travel Assistant'),
-        ),
         body: Consumer<ChatViewModel>(
           builder: (context, viewModel, child) {
             // Automatically scroll to the bottom whenever messages are updated
@@ -143,7 +140,7 @@ class TravelAssistantPage extends StatelessWidget {
                 radius: 15.0, // Adjust the size as needed
                 backgroundColor: Colors.grey[300],
                 backgroundImage: AssetImage(
-                    '../assets/images/travis.png'), // Correct path to load the image
+                    './assets/images/travis.png'), // Correct path to load the image
               ),
               SizedBox(width: 8.0), // Space between avatar and message
               Expanded(
