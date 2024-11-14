@@ -327,7 +327,7 @@ class MainPageState extends State<MainPage> {
             drawer: TripifyDrawer(onItemTapped: onItemTapped),
             body: widgetItems[_currentIndex]['widget'],
             bottomNavigationBar: TripifyNavBar(
-              currentIndex: (_currentIndex < 4) ? _currentIndex : 4,
+              currentIndex: _btmNavIndex,
               onItemTapped: onItemTapped,
             ),
             floatingActionButton: floatingButtonReturn(_currentIndex)));
