@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:tripify/models/accommodation_requirement_model.dart';
 
 class AccommodationRequirementCard extends StatefulWidget {
-  final AccommodationRequirement accommodationRequirement;
+  final AccommodationRequirementModel accommodationRequirement;
   const AccommodationRequirementCard({super.key, required this.accommodationRequirement});
 
   @override

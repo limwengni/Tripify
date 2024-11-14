@@ -5,6 +5,8 @@ import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:tripify/views/accommodation_requirement_create_page.dart';
+import 'package:tripify/views/car_rental_requirement_create_page.dart';
+import 'package:tripify/views/car_rental_requirement_page.dart';
 import 'package:tripify/views/chat_list_page.dart';
 import 'package:tripify/views/request_selection_page.dart';
 import 'package:tripify/views/test_map.dart';
@@ -146,15 +148,7 @@ class MainPageState extends State<MainPage> {
       'title': 'Accommodation Request',
       'widget': const AccommodationRequirementPage()
     },
-    {'title': 'Car Rental Request', 'widget': const RequestSelectionPage()},
-    {
-      'title': 'Accommodation Request Create',
-      'widget': AccommodationRequirementCreatePage()
-    },
-    {
-      'title': 'Car Rental Request Create',
-      'widget': const RequestSelectionPage()
-    },
+    {'title': 'Car Rental Request', 'widget': const CarRentalRequirementPage()},
     {'title': 'Profile', 'widget': ProfilePage()},
     {'title': 'AI Chat', 'widget': TravelAssistantPage()},
     {'title': 'Emergency Call', 'widget': const EmergencyCallPage()},
@@ -191,8 +185,43 @@ class MainPageState extends State<MainPage> {
   Widget? floatingButtonReturn(int index) {
     if (index == 4) {
       return FloatingActionButton(
-        onPressed: () {
-          onItemTapped(6);
+        onPressed: () async {
+          final result = await Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (builder) => AccommodationRequirementCreatePage()));
+
+          if (result != null && result is String) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(result),
+                backgroundColor: Colors.green,
+                duration: Duration(seconds: 2),
+              ),
+            );
+           
+          }
+        },
+        child: const Icon(Icons.add),
+      );
+    }else if(index == 5){
+      return FloatingActionButton(
+        onPressed: () async {
+          final result = await Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (builder) =>CarRentalRequirementCreatePage()));
+
+          if (result != null && result is String) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(result),
+                backgroundColor: Colors.green,
+                duration: Duration(seconds: 2),
+              ),
+            );
+          
+          }
         },
         child: const Icon(Icons.add),
       );
@@ -267,7 +296,7 @@ class MainPageState extends State<MainPage> {
                     onPressed: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => MapSample()),
+                        MaterialPageRoute(builder: (context) => ChatListPage()),
                       );
                     },
                   ),

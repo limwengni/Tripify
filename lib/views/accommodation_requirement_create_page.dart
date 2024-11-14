@@ -1,12 +1,17 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:google_places_flutter/google_places_flutter.dart';
 import 'package:google_places_flutter/model/prediction.dart';
+import 'package:intl/intl.dart';
 import 'package:tripify/models/accommodation_requirement_model.dart';
 import 'package:tripify/view_models/firestore_service.dart';
 
 class AccommodationRequirementCreatePage extends StatefulWidget {
+  const AccommodationRequirementCreatePage({super.key});
+
   @override
   _AccommodationRequirementCreatePageState createState() =>
       _AccommodationRequirementCreatePageState();
@@ -62,6 +67,9 @@ class _AccommodationRequirementCreatePageState
                           Duration(days: 5 * 365),
                         ),
                         inputType: InputType.date,
+                        format: DateFormat(
+                            'dd/MM/yyyy'), // Set the format to dd/MM/yyyy
+
                         decoration: const InputDecoration(
                           labelText: 'Check-In Date',
                           border: OutlineInputBorder(), // Default border color
@@ -77,9 +85,12 @@ class _AccommodationRequirementCreatePageState
                           const Duration(days: 5 * 365),
                         ),
                         inputType: InputType.date,
+                        format: DateFormat(
+                            'dd/MM/yyyy'), // Set the format to dd/MM/yyyy
+
                         decoration: const InputDecoration(
                           labelText: 'Check-Out Date',
-                          border: OutlineInputBorder(), // Default border color
+                          border: OutlineInputBorder(),
                         ),
                         validator: FormBuilderValidators.required(),
                       ),
@@ -164,7 +175,7 @@ class _AccommodationRequirementCreatePageState
                           labelText: 'Additional Requirement',
                           border: OutlineInputBorder(), // Default border color
                         ),
-                        maxLines: 3,
+                        maxLines: null,
                         onChanged: (val) {
                           print(val);
                         },
@@ -181,12 +192,13 @@ class _AccommodationRequirementCreatePageState
               child: MaterialButton(
                 padding: const EdgeInsets.all(15),
                 color: Theme.of(context).colorScheme.secondary,
-                onPressed: () {
+                onPressed: () async {
                   if (_formKey.currentState?.saveAndValidate() ?? false) {
                     final formValues = _formKey.currentState?.value;
                     print(formValues); // Print the form data
 
-                    final accommodationRequirement = AccommodationRequirement(
+                    final accommodationRequirement =
+                        AccommodationRequirementModel(
                       id: '',
                       title: formValues?['title'] ?? '',
                       location: controller.text,
@@ -204,30 +216,27 @@ class _AccommodationRequirementCreatePageState
                       additionalRequirement:
                           formValues?['additional_requirement'] ?? '',
                       houseType: HouseType.values.firstWhere(
-                        (e) => e.toString() == formValues?['house_type'],
-                        orElse: () => HouseType.condo,
+                        (e) =>
+                            e.toString().split('.').last ==
+                            formValues?['house_type'],
+                        orElse: () => HouseType.condo, // Default value
                       ),
-                      userDocId: '',
+                      userDocId: FirebaseAuth.instance.currentUser!.uid,
                     );
-                    // firestoreService.insertData('Accommodation_Requirement',
-                    //     accommodationRequirement.toMap());
-                    print('ID: ${accommodationRequirement.id}');
-                    print('Title: ${accommodationRequirement.title}');
-                    print('Location: ${accommodationRequirement.location}');
-                    print(
-                        'Check-In Date: ${accommodationRequirement.checkinDate}');
-                    print(
-                        'Check-Out Date: ${accommodationRequirement.checkoutDate}');
-                    print('Guest Number: ${accommodationRequirement.guestNum}');
-                    print('Bed Number: ${accommodationRequirement.bedNum}');
-                    print('Budget: RM ${accommodationRequirement.budget}');
-                    print(
-                        'Additional Requirement: ${accommodationRequirement.additionalRequirement}');
-                    print('House Type: ${accommodationRequirement.houseType}');
-                    print('User Doc ID: ${accommodationRequirement.userDocId}');
+                    try {
+                      await firestoreService.insertDataWithAutoID(
+                        'Accommodation_Requirement',
+                        accommodationRequirement.toMap(),
+                      );
+
+                      Navigator.pop(context,
+                          'Accommodation requirement created successfully');
+                    } catch (e) {
+                      print('${e}');
+                    }
                   }
                 },
-                child: const Text('On Shelves'),
+                child: const Text('Create'),
               ),
             ),
           ],
@@ -278,50 +287,8 @@ class _AccommodationRequirementCreatePageState
           );
         },
         isCrossBtnShown: true,
-        focusNode: _focusNode, // Attach FocusNode to the widget
+        focusNode: _focusNode,
       ),
     );
   }
-
-// placesAutoCompleteTextField() {
-//     return Container(
-//       child: GooglePlaceAutoCompleteTextField(
-//         containerVerticalPadding: 0,
-//         textEditingController: controller,
-//         googleAPIKey: "YOUR_GOOGLE_API_KEY",  // Make sure to use your actual API Key
-//         inputDecoration: const InputDecoration(
-//           hintText: "Search your location",
-//           labelText: 'Location',
-//           border: OutlineInputBorder(),
-//         ),
-//         debounceTime: 400,
-//         countries: [],
-//         isLatLngRequired: true,
-//         getPlaceDetailWithLatLng: (Prediction prediction) {
-//           print("placeDetails: " + prediction.lat.toString());
-//         },
-//         itemClick: (Prediction prediction) {
-//           controller.text = prediction.description ?? "";
-//           controller.selection = TextSelection.fromPosition(
-//               TextPosition(offset: prediction.description?.length ?? 0));
-//         },
-//         seperatedBuilder: Divider(),
-//         // Optional customization of the list view item builder
-//         itemBuilder: (context, index, Prediction prediction) {
-//           return Container(
-//             padding: EdgeInsets.all(10),
-//             child: Row(
-//               children: [
-//                 Icon(Icons.location_on),
-//                 SizedBox(width: 7),
-//                 Expanded(child: Text("${prediction.description ?? ""}"))
-//               ],
-//             ),
-//           );
-//         },
-//         isCrossBtnShown: true,
-//         focusNode: _focusNode, // Attach FocusNode to the widget
-//       ),
-//     );
-//   }
 }

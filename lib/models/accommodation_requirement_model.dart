@@ -8,7 +8,7 @@ enum HouseType {
   hotel,
 }
 
-class AccommodationRequirement {
+class AccommodationRequirementModel {
   final String id;
   final String title;
   final String location;
@@ -21,7 +21,7 @@ class AccommodationRequirement {
   final HouseType houseType;
   final String userDocId;
 
-  AccommodationRequirement({
+  AccommodationRequirementModel({
     required this.id,
     required this.title,
     required this.location,
@@ -39,37 +39,37 @@ class AccommodationRequirement {
       'id': id,
       'title': title,
       'location': location,
-      'checkinDate': checkinDate,
-      'checkoutDate': checkoutDate,
+      'checkinDate':  Timestamp.fromDate(checkinDate),
+      'checkoutDate':  Timestamp.fromDate(checkoutDate),
       'guestNum': guestNum,
       'bedNum': bedNum,
       'budget': budget,
       'additionalRequirement': additionalRequirement,
-      'houseType': houseType,
+      'houseType': houseType.toString().split('.').last,
       'userDocId': userDocId,
     };
   }
+factory AccommodationRequirementModel.fromMap(Map<String, dynamic> data) {
+  return AccommodationRequirementModel(
+    id: data['id'] as String,
+    title: data['title'] as String,
+    location: data['location'] as String,
+    checkinDate: (data['checkinDate'] is Timestamp)
+        ? (data['checkinDate'] as Timestamp).toDate()
+        : DateTime.parse(data['checkinDate']),
+    checkoutDate: (data['checkoutDate'] is Timestamp)
+        ? (data['checkoutDate'] as Timestamp).toDate()
+        : DateTime.parse(data['checkoutDate']),
+    guestNum: data['guestNum'] as int,
+    bedNum: data['bedNum'] as int,
+    budget: data['budget'] as double,
+    additionalRequirement: data['additionalRequirement'] as String? ?? '',
+    houseType: HouseType.values.firstWhere(
+      (e) => e.toString().split('.').last == data['houseType'],
+      orElse: () => HouseType.condo,
+    ),
+    userDocId: data['userDocId'] as String,
+  );
+}
 
-  factory AccommodationRequirement.fromMap(Map<String, dynamic> data) {
-    return AccommodationRequirement(
-      id: data['id'] as String,
-      title: data['title'] as String,
-      location: data['location'] as String,
-      checkinDate: (data['checkin_date'] is Timestamp)
-          ? (data['checkin_date'] as Timestamp).toDate()
-          : DateTime.parse(data['checkinDate']),
-      checkoutDate: (data['checkout_date'] is Timestamp)
-          ? (data['checkout_date'] as Timestamp).toDate()
-          : DateTime.parse(data['checkoutDate']),
-      guestNum: data['guestNum'] as int,
-      bedNum: data['bedNum'] as int,
-      budget: data['budget'] as double,
-      additionalRequirement: data['additionalRequirement'] as String? ?? '',
-      houseType: HouseType.values.firstWhere(
-        (e) => e.toString().split('.').last == data['houseType'],
-        orElse: () => HouseType.condo,
-      ),
-      userDocId: data['userDocId'] as String,
-    );
-  }
 }
