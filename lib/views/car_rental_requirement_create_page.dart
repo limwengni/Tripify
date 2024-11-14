@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
@@ -6,30 +5,34 @@ import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:google_places_flutter/google_places_flutter.dart';
 import 'package:google_places_flutter/model/prediction.dart';
 import 'package:intl/intl.dart';
-import 'package:tripify/models/accommodation_requirement_model.dart';
+import 'package:tripify/models/car_rental_requirement_model.dart';
 import 'package:tripify/view_models/firestore_service.dart';
 
-class AccommodationRequirementCreatePage extends StatefulWidget {
-  const AccommodationRequirementCreatePage({super.key});
+class CarRentalRequirementCreatePage extends StatefulWidget {
+  const CarRentalRequirementCreatePage({super.key});
 
   @override
-  _AccommodationRequirementCreatePageState createState() =>
-      _AccommodationRequirementCreatePageState();
+  _CarRentalRequirementCreatePageState createState() =>
+      _CarRentalRequirementCreatePageState();
 }
 
-class _AccommodationRequirementCreatePageState
-    extends State<AccommodationRequirementCreatePage> {
-  final FocusNode _focusNode = FocusNode(); // Declare the FocusNode
+class _CarRentalRequirementCreatePageState
+    extends State<CarRentalRequirementCreatePage> {
+  final FocusNode _pickupFocusNode = FocusNode(); // Focus node for pickup location
+  final FocusNode _returnFocusNode = FocusNode(); // Focus node for return location
 
   @override
   void dispose() {
-    _focusNode.dispose(); // Dispose the FocusNode to avoid memory leaks
+    _pickupFocusNode.dispose();
+    _returnFocusNode.dispose();
     super.dispose();
   }
 
   final _formKey = GlobalKey<FormBuilderState>();
   FirestoreService firestoreService = FirestoreService();
-  TextEditingController controller = TextEditingController();
+  TextEditingController pickupLocationController = TextEditingController();
+  TextEditingController returnLocationController = TextEditingController();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -57,10 +60,12 @@ class _AccommodationRequirementCreatePageState
                         validator: FormBuilderValidators.required(),
                       ),
                       const SizedBox(height: 15),
-                      placesAutoCompleteTextField(),
+                      placesAutoCompleteTextField(pickupLocationController, _pickupFocusNode),
+                      const SizedBox(height: 15),
+                      placesAutoCompleteTextField(returnLocationController, _returnFocusNode),
                       const SizedBox(height: 15),
                       FormBuilderDateTimePicker(
-                        name: 'checkin_date',
+                        name: 'pickup_date',
                         initialDate: DateTime.now(),
                         firstDate: DateTime.now(),
                         lastDate: DateTime.now().add(
@@ -71,14 +76,14 @@ class _AccommodationRequirementCreatePageState
                             'dd/MM/yyyy'), // Set the format to dd/MM/yyyy
 
                         decoration: const InputDecoration(
-                          labelText: 'Check-In Date',
+                          labelText: 'Pickup Date',
                           border: OutlineInputBorder(), // Default border color
                         ),
                         validator: FormBuilderValidators.required(),
                       ),
                       const SizedBox(height: 15),
                       FormBuilderDateTimePicker(
-                        name: 'checkout_date',
+                        name: 'return_date',
                         initialDate: DateTime.now(),
                         firstDate: DateTime.now(),
                         lastDate: DateTime.now().add(
@@ -89,69 +94,56 @@ class _AccommodationRequirementCreatePageState
                             'dd/MM/yyyy'), // Set the format to dd/MM/yyyy
 
                         decoration: const InputDecoration(
-                          labelText: 'Check-Out Date',
+                          labelText: 'Return Date',
                           border: OutlineInputBorder(),
                         ),
                         validator: FormBuilderValidators.required(),
                       ),
                       const SizedBox(height: 15),
-                      FormBuilderTextField(
-                        name: 'guest_num',
-                        decoration: const InputDecoration(
-                          labelText: 'Guest Number',
-                          border: OutlineInputBorder(), // Default border color
-                        ),
-                        keyboardType: TextInputType.number,
-                        onChanged: (val) {
-                          print('Guest Number: $val');
-                        },
-                        validator: FormBuilderValidators.required(),
-                      ),
-                      const SizedBox(height: 15),
-                      FormBuilderTextField(
-                        name: 'bed_num',
-                        decoration: const InputDecoration(
-                          labelText: 'Bed Number',
-                          border: OutlineInputBorder(), // Default border color
-                        ),
-                        keyboardType: TextInputType.number,
-                        onChanged: (val) {
-                          print('Bed Number: $val');
-                        },
-                        validator: FormBuilderValidators.required(),
-                      ),
-                      const SizedBox(height: 15),
                       FormBuilderDropdown<String>(
-                        name: 'house_type',
+                        name: 'car_type',
                         decoration: const InputDecoration(
-                          labelText: 'House Type',
+                          labelText: 'Car Type',
                           border: OutlineInputBorder(), // Default border color
                         ),
                         validator: FormBuilderValidators.required(),
                         items: const [
                           DropdownMenuItem(
-                            value: 'condo',
-                            child: Text('Condo'),
+                            value: 'sedan',
+                            child: Text('Sedan'),
                           ),
                           DropdownMenuItem(
-                            value: 'semiD',
-                            child: Text('Semi-D'),
+                            value: 'suv',
+                            child: Text('SUV'),
                           ),
                           DropdownMenuItem(
-                            value: 'banglow',
-                            child: Text('Banglow'),
+                            value: 'hatchback',
+                            child: Text('Hatchback'),
                           ),
                           DropdownMenuItem(
-                            value: 'landed',
-                            child: Text('Landed'),
+                            value: 'coupe',
+                            child: Text('Coupe'),
                           ),
                           DropdownMenuItem(
-                            value: 'hotel',
-                            child: Text('Hotel'),
+                            value: 'convertible',
+                            child: Text('Convertible'),
                           ),
+                            DropdownMenuItem(
+                            value: 'minivan',
+                            child: Text('Mini Van'),
+                          ),  DropdownMenuItem(
+                            value: 'sportsCar',
+                            child: Text('Sports Car'),
+                          ),  DropdownMenuItem(
+                            value: 'electric',
+                            child: Text('Electric'),
+                          ),  DropdownMenuItem(
+                            value: 'hybird',
+                            child: Text('Hybird'),
+                          ), 
                         ],
                         onChanged: (value) {
-                          print("Selected house type: $value");
+                          print("Selected car type: $value");
                         },
                       ),
                       const SizedBox(height: 15),
@@ -197,40 +189,35 @@ class _AccommodationRequirementCreatePageState
                     final formValues = _formKey.currentState?.value;
                     print(formValues); // Print the form data
 
-                    final accommodationRequirement =
-                        AccommodationRequirementModel(
+                    final accommodationRequirement = CarRentalRequirementModel(
                       id: '',
                       title: formValues?['title'] ?? '',
-                      location: controller.text,
-                      checkinDate:
-                          formValues?['checkin_date'] ?? DateTime.now(),
-                      checkoutDate:
-                          formValues?['checkout_date'] ?? DateTime.now(),
-                      guestNum:
-                          int.tryParse(formValues?['guest_num'] ?? '') ?? 0,
-                      bedNum: int.tryParse(formValues?['bed_num'] ?? '') ?? 0,
+                      pickupLocation: pickupLocationController.text,
+                      returnLocation: returnLocationController.text,
+                      pickupDate: formValues?['pickup_date'] ?? DateTime.now(),
+                      returnDate: formValues?['return_date'] ?? DateTime.now(),
                       budget: double.tryParse(formValues?['budget']
                                   ?.replaceAll(RegExp(r'[^0-9.]'), '') ??
                               '0.0') ??
                           0.0,
                       additionalRequirement:
                           formValues?['additional_requirement'] ?? '',
-                      houseType: HouseType.values.firstWhere(
+                      carType: CarType.values.firstWhere(
                         (e) =>
                             e.toString().split('.').last ==
                             formValues?['house_type'],
-                        orElse: () => HouseType.condo, // Default value
+                        orElse: () => CarType.sedan, // Default value
                       ),
                       userDocId: FirebaseAuth.instance.currentUser!.uid,
                     );
                     try {
                       await firestoreService.insertDataWithAutoID(
-                        'Accommodation_Requirement',
+                        'Car_Rental_Requirement',
                         accommodationRequirement.toMap(),
                       );
 
                       Navigator.pop(context,
-                          'Accommodation requirement created successfully');
+                          'Car rental requirement created successfully');
                     } catch (e) {
                       print('${e}');
                     }
@@ -245,11 +232,11 @@ class _AccommodationRequirementCreatePageState
     );
   }
 
-  placesAutoCompleteTextField() {
+  placesAutoCompleteTextField(TextEditingController textEditingController, FocusNode focusNode) {
     return Container(
       child: GooglePlaceAutoCompleteTextField(
         containerVerticalPadding: 0,
-        textEditingController: controller,
+        textEditingController: textEditingController,
         googleAPIKey: "AIzaSyBKL2cfygOtYMNsbA8lMz84HrNnAAHAkc8",
         inputDecoration: const InputDecoration(
           hintText: "Search your location",
@@ -265,20 +252,19 @@ class _AccommodationRequirementCreatePageState
         },
 
         itemClick: (Prediction prediction) {
-          controller.text = prediction.description ?? "";
-          controller.selection = TextSelection.fromPosition(
+          textEditingController.text = prediction.description ?? "";
+          textEditingController.selection = TextSelection.fromPosition(
               TextPosition(offset: prediction.description?.length ?? 0));
         },
-        seperatedBuilder: Divider(),
+        seperatedBuilder: const Divider(),
 
-        // OPTIONAL// If you want to customize list view item builder
         itemBuilder: (context, index, Prediction prediction) {
           return Container(
             padding: EdgeInsets.all(10),
             child: Row(
               children: [
-                Icon(Icons.location_on),
-                SizedBox(
+                const Icon(Icons.location_on),
+                const SizedBox(
                   width: 7,
                 ),
                 Expanded(child: Text("${prediction.description ?? ""}"))
@@ -286,8 +272,8 @@ class _AccommodationRequirementCreatePageState
             ),
           );
         },
-        isCrossBtnShown: true,
-        focusNode: _focusNode,
+      isCrossBtnShown: true,
+        focusNode: focusNode, //
       ),
     );
   }

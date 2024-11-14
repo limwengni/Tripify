@@ -55,6 +55,24 @@ class FirestoreService {
     }
   }
 
+// Insert Data with Document ID as an Attribute
+  Future<void> insertDataWithAutoID(String collection, Map<String, dynamic> data) async {
+    try {
+      // Create a new document reference with an auto-generated ID
+      DocumentReference docRef = _db.collection(collection).doc();
+
+      // Add the document ID to the data map
+      data['id'] = docRef.id;
+
+      // Insert the data into Firestore, including the document ID as an attribute
+      await docRef.set(data);
+
+      print("Data inserted successfully with document ID as an attribute.");
+    } catch (e) {
+      print("Error inserting data: $e");
+    }
+  }
+
   // Insert user data
   Future<void> insertUserData(
       String collection, Map<String, dynamic> data) async {
