@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tripify/view_models/chat_viewmodel.dart';
@@ -11,9 +12,6 @@ class TravelAssistantPage extends StatelessWidget {
     return ChangeNotifierProvider(
       create: (_) => ChatViewModel(),
       child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Travis - Travel Assistant'),
-        ),
         body: Consumer<ChatViewModel>(
           builder: (context, viewModel, child) {
             // Automatically scroll to the bottom whenever messages are updated
@@ -65,6 +63,8 @@ class TravelAssistantPage extends StatelessWidget {
                   hintText: 'Ask anything...',
                   hintStyle: TextStyle(fontSize: 14.0),
                   border: InputBorder.none,
+                  focusedBorder: InputBorder.none,
+                  enabledBorder: InputBorder.none,
                 ),
                 enabled: !viewModel.isTyping,
                 onSubmitted: (value) {
@@ -97,7 +97,8 @@ class TravelAssistantPage extends StatelessWidget {
   void _sendMessage(
       BuildContext context, ChatViewModel viewModel, String message) {
     if (message.isNotEmpty) {
-      viewModel.sendMessage(message, 1);
+      final userId = FirebaseAuth.instance.currentUser?.uid ?? '';
+      viewModel.sendMessage(message, userId);
       _controller.clear();
       _scrollToBottom();
     }
@@ -124,6 +125,7 @@ class TravelAssistantPage extends StatelessWidget {
             child: RichText(
               text: TextSpan(
                 children: parseMarkdown(message, true),
+                style: TextStyle(fontSize: 16.0),
               ),
             ),
           ),
@@ -143,13 +145,14 @@ class TravelAssistantPage extends StatelessWidget {
                 radius: 15.0, // Adjust the size as needed
                 backgroundColor: Colors.grey[300],
                 backgroundImage: AssetImage(
-                    '../assets/images/travis.png'), // Correct path to load the image
+                    './assets/images/travis.png'), // Correct path to load the image
               ),
               SizedBox(width: 8.0), // Space between avatar and message
               Expanded(
                 child: RichText(
                   text: TextSpan(
                     children: parseMarkdown(message, false),
+                    style: TextStyle(fontSize: 16.0),
                   ),
                 ),
               ),

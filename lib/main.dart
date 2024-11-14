@@ -61,9 +61,9 @@ void main() async {
                   username: 'Guest', // Default or placeholder values
                   role: '',
                   ssm: null,
-                  bio: 'This user has not set a bio yet.',
+                  bio: '',
                   profilePic:
-                      'https://console.firebase.google.com/project/tripify-d8e12/storage/tripify-d8e12.appspot.com/files/~2Fdefaults/default-profile.jpg',
+                      'https://firebasestorage.googleapis.com/v0/b/tripify-d8e12.appspot.com/o/defaults%2Fdefault.jpg?alt=media&token=8e1189e2-ea22-4bdd-952f-e9d711307251',
                   birthdate: DateTime.now(),
                   createdAt: DateTime.now(),
                   updatedAt: null,
@@ -91,36 +91,49 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     return Consumer<ThemeNotifier>(
       builder: (context, themeNotifier, child) {
+        print("Current themeMode: ${themeNotifier.themeMode}");
+        print(
+            "Dark theme applied: ${themeNotifier.themeMode == ThemeMode.dark}");
         return MaterialApp(
           theme: lightTheme,
           darkTheme: darkTheme,
           themeMode: themeNotifier.themeMode,
-          // scrollBehavior: const MaterialScrollBehavior().copyWith(dragDevices: PointerDeviceKind.values.toSet()),
-          home: StreamBuilder<User?>(
-            stream: FirebaseAuth.instance.authStateChanges(),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(child: CircularProgressIndicator());
-              }
-
-              print('Snapshot data: ${snapshot.data}');
-
-              // Debug output for tracking the authentication state
-              if (snapshot.hasError) {
-                return Center(child: Text('Error: ${snapshot.error}'));
-              }
-
-              if (snapshot.hasData) {
-                // User is signed in, show the MainPage
-                return VerifyEmailPage(); // Render MainPage for authenticated users
-              } else {
-                // User is not signed in, show WelcomePage
-                return const WelcomePage();
-              }
-            },
-          ),
           debugShowCheckedModeBanner: false,
+          home: FirebaseAuthStateHandler(),
         );
+      },
+    );
+  }
+}
+
+class FirebaseAuthStateHandler extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<User?>(
+      stream: FirebaseAuth.instance.authStateChanges(), // Listen for auth state changes
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          // Show loading spinner while waiting for Firebase auth state
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        if (snapshot.hasError) {
+          // Show error message if there is an error
+          return Center(child: Text('Error: ${snapshot.error}'));
+        }
+
+        // If the user is authenticated, we either check for email verification or just go to main
+        if (snapshot.hasData) {
+          // Check if the user's email is verified
+          if (FirebaseAuth.instance.currentUser?.emailVerified ?? false) {
+            return const MainPage(); // User is authenticated and email is verified
+          } else {
+            return VerifyEmailPage(); // User is authenticated but needs to verify email
+          }
+        } else {
+          // If no user is authenticated, show the WelcomePage
+          return const WelcomePage();
+        }
       },
     );
   }
@@ -165,12 +178,21 @@ class MainPageState extends State<MainPage> {
       'widget': const TravelPackageCreatePage()
     }
   ];
+
   List<int> navigationStack = [];
 
   void onItemTapped(int index) {
     setState(() {
+      // Store the current index to the stack before navigating
+      if (_currentIndex != 0) {
+        navigationStack.add(_currentIndex);
+      }
+
+      // Set the current index and update the title
       _currentIndex = index;
       _title = widgetItems[_currentIndex]['title'];
+
+      // Manage bottom navigation index based on current page
       if (_currentIndex > 3 && _currentIndex < 6) {
         _btmNavIndex = 3;
       } else if (_currentIndex > 5) {
@@ -178,7 +200,6 @@ class MainPageState extends State<MainPage> {
       } else {
         _btmNavIndex = _currentIndex;
       }
-      // print('Current Index: $_currentIndex'); // Debug statement
     });
   }
 

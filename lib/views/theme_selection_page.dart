@@ -58,9 +58,11 @@ class ThemeSelectionPage extends StatelessWidget {
                         themeNotifier.setTheme(ThemeMode.light);
                       }
 
+                      print('New theme: ${themeNotifier.themeMode}');
+
                       // Get the current user's UID
                       String uid = FirebaseAuth.instance.currentUser!.uid;
-                      
+
                       // Save the user's theme preference to Firestore
                       final firestoreService = FirestoreService();
                       firestoreService.saveUserTheme(uid, value);
