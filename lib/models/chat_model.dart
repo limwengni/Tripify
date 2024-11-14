@@ -2,9 +2,9 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class ChatModel {
-  Future<String> sendMessageToApi(String message, int userId) async {
+  Future<String> sendMessageToApi(String message, String userId) async {
     final response = await http.post(
-      Uri.parse('http://127.0.0.1:5000/api/message'),
+      Uri.parse('http://192.168.126.148:5000/api/message'),
       headers: {'Content-Type': 'application/json'},
       body: json.encode({'message': message, 'user_id': userId}),
     );

@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tripify/view_models/chat_viewmodel.dart';
@@ -62,6 +63,8 @@ class TravelAssistantPage extends StatelessWidget {
                   hintText: 'Ask anything...',
                   hintStyle: TextStyle(fontSize: 14.0),
                   border: InputBorder.none,
+                  focusedBorder: InputBorder.none,
+                  enabledBorder: InputBorder.none,
                 ),
                 enabled: !viewModel.isTyping,
                 onSubmitted: (value) {
@@ -94,7 +97,8 @@ class TravelAssistantPage extends StatelessWidget {
   void _sendMessage(
       BuildContext context, ChatViewModel viewModel, String message) {
     if (message.isNotEmpty) {
-      viewModel.sendMessage(message, 1);
+      final userId = FirebaseAuth.instance.currentUser?.uid ?? '';
+      viewModel.sendMessage(message, userId);
       _controller.clear();
       _scrollToBottom();
     }
@@ -121,6 +125,7 @@ class TravelAssistantPage extends StatelessWidget {
             child: RichText(
               text: TextSpan(
                 children: parseMarkdown(message, true),
+                style: TextStyle(fontSize: 16.0),
               ),
             ),
           ),
@@ -147,6 +152,7 @@ class TravelAssistantPage extends StatelessWidget {
                 child: RichText(
                   text: TextSpan(
                     children: parseMarkdown(message, false),
+                    style: TextStyle(fontSize: 16.0),
                   ),
                 ),
               ),

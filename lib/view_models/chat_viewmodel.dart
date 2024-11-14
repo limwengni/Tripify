@@ -14,7 +14,7 @@ class ChatViewModel extends ChangeNotifier {
     });
   }
 
-  Future<void> sendMessage(String message, int userId) async {
+  Future<void> sendMessage(String message, String userId) async {
     messages.add({'text': message, 'sender': 'user'});
     isTyping = true;
     notifyListeners();
