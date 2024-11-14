@@ -451,8 +451,13 @@ class _ProfilePageState extends State<ProfilePage> {
 
 // Create a shimmer effect for each posts
   Widget _buildPostShimmer() {
+    Color cardColor = Theme.of(context).brightness == Brightness.dark
+      ? Color(0xFF333333)
+      : Colors.white;
+
     return Card(
       elevation: 2,
+      color: cardColor,
       child: Container(
         padding: EdgeInsets.all(0.0),
         child: Column(
@@ -566,8 +571,13 @@ class _ProfilePageState extends State<ProfilePage> {
 
 // Build Post UI
   Widget _buildPostUi() {
+    Color cardColor = Theme.of(context).brightness == Brightness.dark
+      ? Color(0xFF333333)
+      : Colors.white;
+
     return Card(
         elevation: 2,
+        color: cardColor,
         child: Container(
           padding: EdgeInsets.all(0.0),
           child: Column(

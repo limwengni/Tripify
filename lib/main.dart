@@ -110,7 +110,8 @@ class FirebaseAuthStateHandler extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<User?>(
-      stream: FirebaseAuth.instance.authStateChanges(), // Listen for auth state changes
+      stream: FirebaseAuth.instance
+          .authStateChanges(), // Listen for auth state changes
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           // Show loading spinner while waiting for Firebase auth state
@@ -220,18 +221,17 @@ class MainPageState extends State<MainPage> {
                 duration: Duration(seconds: 2),
               ),
             );
-           
           }
         },
         child: const Icon(Icons.add),
       );
-    }else if(index == 5){
+    } else if (index == 5) {
       return FloatingActionButton(
         onPressed: () async {
           final result = await Navigator.push(
               context,
               MaterialPageRoute(
-                  builder: (builder) =>CarRentalRequirementCreatePage()));
+                  builder: (builder) => CarRentalRequirementCreatePage()));
 
           if (result != null && result is String) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -241,7 +241,6 @@ class MainPageState extends State<MainPage> {
                 duration: Duration(seconds: 2),
               ),
             );
-          
           }
         },
         child: const Icon(Icons.add),
@@ -264,11 +263,25 @@ class MainPageState extends State<MainPage> {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(false),
-                  child: const Text('No'),
+                  child: Text(
+                    'No',
+                    style: TextStyle(
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.white
+                          : Color(0xFF222222),
+                    ),
+                  ),
                 ),
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(true),
-                  child: const Text('Yes'),
+                  child: Text(
+                    'Yes',
+                    style: TextStyle(
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.white
+                          : Color(0xFF222222),
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -333,5 +346,3 @@ class MainPageState extends State<MainPage> {
             floatingActionButton: floatingButtonReturn(_currentIndex)));
   }
 }
-
-
