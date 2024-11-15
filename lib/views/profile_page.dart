@@ -79,6 +79,14 @@ class _ProfilePageState extends State<ProfilePage> {
           ],
         ),
       ),
+      floatingActionButton: FloatingActionButton(
+      onPressed: () {
+        // Action when the button is pressed
+        // _onAddButtonPressed(context);
+      },
+      child: const Icon(Icons.add),
+      backgroundColor: const Color.fromARGB(255, 159, 118, 249), // Customize color
+    ),
     );
   }
 
