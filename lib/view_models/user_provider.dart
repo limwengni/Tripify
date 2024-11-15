@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:tripify/models/user_model.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -125,6 +126,8 @@ class UserProvider with ChangeNotifier {
 
           _userModel?.profilePic = downloadUrl;
 
+          updateProfilePic(downloadUrl);
+
           await userRef.update({'profile_picture': downloadUrl});
         } catch (e) {
           print('Error uploading new profile picture: $e');
@@ -146,10 +149,28 @@ class UserProvider with ChangeNotifier {
         await userRef.update({'bio': bio});
       }
 
+      // Get the current DateTime
+      DateTime dateTime = DateTime.now();
+      Timestamp timestamp = Timestamp.fromDate(dateTime);
+
+      // Update the updatedAt timestamp to the current time
+      await userRef.update({
+        'updated_at': timestamp, // Set the updatedAt field
+      });
+
       notifyListeners(); // Notify listeners about the change
     } catch (error) {
       print('Error updating user details: $error');
       throw error; // Rethrow the error or handle it as needed
     }
+  }
+
+  String _profilePicUrl = ''; // Hold the profile image URL
+
+  String get profilePicUrl => _profilePicUrl;
+
+  void updateProfilePic(String newUrl) {
+    _profilePicUrl = newUrl;
+    notifyListeners(); // Notify listeners to refresh UI
   }
 }

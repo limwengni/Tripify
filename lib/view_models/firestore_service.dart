@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:tripify/models/user_model.dart';
 
 class FirestoreService {
   static final FirestoreService _instance = FirestoreService._internal();
@@ -56,7 +57,8 @@ class FirestoreService {
   }
 
 // Insert Data with Document ID as an Attribute
-  Future<void> insertDataWithAutoID(String collection, Map<String, dynamic> data) async {
+  Future<void> insertDataWithAutoID(
+      String collection, Map<String, dynamic> data) async {
     try {
       // Create a new document reference with an auto-generated ID
       DocumentReference docRef = _db.collection(collection).doc();
@@ -160,5 +162,40 @@ class FirestoreService {
       print("Error fetching data by field: $e");
       return [];
     }
+  }
+
+  Future<bool> insertUserWithUniqueUsername(String username) async {
+    final FirebaseFirestore firestore = FirebaseFirestore.instance;
+
+    // Check if username already exists in Firestore
+    final QuerySnapshot result = await firestore
+        .collection('User')
+        .where('username',
+            isEqualTo: username) // 'username' is the field in your Firestore
+        .get();
+
+    if (result.docs.isNotEmpty) {
+      return false; // Username already taken, return false
+    } else {
+      return true; // Username not taken
+    }
+  }
+
+  Future<bool> isUsernameCorrectForUID(String username, String uid) async {
+    final FirebaseFirestore firestore = FirebaseFirestore.instance;
+
+    final DocumentSnapshot userDoc =
+        await firestore.collection('User').doc(uid).get();
+
+    // Check if the document exists and if the username matches
+    if (userDoc.exists) {
+      Map<String, dynamic> userData = userDoc.data() as Map<String, dynamic>;
+
+      if (userData['username'] == username) {
+        return true;
+      }
+    }
+
+    return false; // The username does not match the uid or user does not exist
   }
 }

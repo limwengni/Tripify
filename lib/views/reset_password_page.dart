@@ -3,6 +3,7 @@ import 'package:tripify/components/components.dart';
 import 'package:tripify/constants.dart';
 import 'package:tripify/view_models/auth_service.dart';
 import 'package:tripify/views/welcome_page.dart';
+import 'package:tripify/theme.dart';
 import 'package:loading_overlay/loading_overlay.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
@@ -97,7 +98,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                                   showDialog(
                                     context: context,
                                     builder: (context) => Theme(
-                                      data: ThemeData.light(),
+                                      data: lightTheme,
                                       child: AlertDialog(
                                         title: const Text('Error',
                                             style: TextStyle(
@@ -157,8 +158,8 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                                 if (returnState == "Success") {
                                   showDialog(
                                       context: context,
-                                      builder: (BuildContext context) => Theme(
-                                            data: ThemeData.light(),
+                                      builder: (context) => Theme(
+                                            data: lightTheme,
                                             child: AlertDialog(
                                               title: const Text(
                                                 'Success',

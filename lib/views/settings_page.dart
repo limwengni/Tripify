@@ -37,7 +37,6 @@ class SettingsPage extends StatelessWidget {
             context,
             items: [
               "Help Center",
-              "Switch Account",
               "Log Out",
             ],
           ),
@@ -142,13 +141,22 @@ class SettingsPage extends StatelessWidget {
             showDialog(
               context: context,
               builder: (BuildContext context) {
-                final bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
-                final textColor =
-                    isDarkMode ? Colors.white : Colors.black; // Adapts to dark/light theme
+                final bool isDarkMode =
+                    Theme.of(context).brightness == Brightness.dark;
+                final textColor = isDarkMode
+                    ? Colors.white
+                    : Colors.black; // Text color based on theme
+                final dialogBackgroundColor = isDarkMode
+                    ? Color(0xFF333333)
+                    : Colors.white; // Dialog background color
 
                 return AlertDialog(
-                  title: Text("Log Out"),
-                  content: Text("Are you sure you want to log out?"),
+                  backgroundColor:
+                      dialogBackgroundColor, // Apply background color
+                  title: Text("Log Out",
+                      style: TextStyle(color: textColor)), // Title text color
+                  content: Text("Are you sure you want to log out?",
+                      style: TextStyle(color: textColor)), // Content text color
                   actions: [
                     TextButton(
                       child: Text("Cancel", style: TextStyle(color: textColor)),
@@ -164,10 +172,13 @@ class SettingsPage extends StatelessWidget {
                             .logout(context);
 
                         Navigator.of(context).pop(); // Dismiss the dialog
-                        Navigator.of(context)
-                            .popUntil((route) => route.isFirst);
-                        Navigator.pushReplacement(context,
-                            MaterialPageRoute(builder: (_) => WelcomePage()));
+                        Navigator.of(context).popUntil((route) =>
+                            route.isFirst); // Pop all routes until the first
+                        Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                                builder: (_) =>
+                                    WelcomePage())); // Navigate to WelcomePage
                       },
                     ),
                   ],

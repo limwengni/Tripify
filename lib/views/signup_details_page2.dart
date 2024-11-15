@@ -164,6 +164,37 @@ class _SignupDetailsPage2State extends State<SignupDetailsPage2> {
                       child: MaterialButton(
                         padding: const EdgeInsets.all(14.0),
                         onPressed: () async {
+                          bool isUsernameUnique = await firestoreService
+                              .insertUserWithUniqueUsername(widget.username);
+
+                          if (!isUsernameUnique) {
+                            // Username is not unique, show an error message and stop the process
+                            showDialog(
+                              context: context,
+                              builder: (context) => Theme(
+                                data:
+                                    lightTheme, // Use your light theme or any theme you want for the dialog
+                                child: AlertDialog(
+                                  title: const Text(
+                                    'Error',
+                                    style:
+                                        TextStyle(fontWeight: FontWeight.bold),
+                                  ),
+                                  content: const Text(
+                                      'Username is already taken. Please choose a different one.'),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () =>
+                                          Navigator.pop(context, 'OK'),
+                                      child: const Text('OK'),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                            return;
+                          }
+
                           if (selectedOption != 'Normal User' && pdf != null) {
                             selectedOption =
                                 _formKey.currentState?.fields['role']?.value;
@@ -192,6 +223,7 @@ class _SignupDetailsPage2State extends State<SignupDetailsPage2> {
                                 likesCount: 0,
                                 commentsCount: 0,
                                 savedCount: 0);
+
                             firestoreService.insertData('User', user.toMap());
                           } else if (selectedOption == 'Normal User') {
                             selectedOption =
@@ -219,7 +251,29 @@ class _SignupDetailsPage2State extends State<SignupDetailsPage2> {
                             await firestoreService.insertUserData(
                                 "User", user.toMap());
                           } else {
-                            print('No PDF file selected');
+                            showDialog(
+                              context: context,
+                              builder: (context) => Theme(
+                                data:
+                                    lightTheme, // Use your light theme or any theme you want for the dialog
+                                child: AlertDialog(
+                                  title: const Text(
+                                    'Error',
+                                    style:
+                                        TextStyle(fontWeight: FontWeight.bold),
+                                  ),
+                                  content: const Text(
+                                      'No PDF file selected'),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () =>
+                                          Navigator.pop(context, 'OK'),
+                                      child: const Text('OK'),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
                             return;
                           }
 

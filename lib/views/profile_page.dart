@@ -76,37 +76,6 @@ class _ProfilePageState extends State<ProfilePage> {
 
             // Grid for displaying user posts
             _buildPostGrid(),
-
-            // Grid for displaying user posts
-            // Expanded(
-            //   child: FutureBuilder<List<Post>>(
-            //     future: userProvider.fetchUserPosts(), // Replace with your actual method
-            //     builder: (context, snapshot) {
-            //       if (snapshot.connectionState == ConnectionState.waiting) {
-            //         return Center(child: CircularProgressIndicator());
-            //       } else if (snapshot.hasError) {
-            //         return Center(child: Text('Error: ${snapshot.error}'));
-            //       } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            //         return Center(child: Text('No posts available.'));
-            //       }
-
-            //       final posts = snapshot.data!;
-
-            //       return GridView.builder(
-            //         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            //           crossAxisCount: 2, // Two posts per row
-            //           childAspectRatio: 0.75, // Adjust this for post aspect ratio
-            //           crossAxisSpacing: 8.0,
-            //           mainAxisSpacing: 8.0,
-            //         ),
-            //         itemCount: posts.length,
-            //         itemBuilder: (context, index) {
-            //           return _buildPostUi(posts[index]); // Pass actual post object
-            //         },
-            //       );
-            //     },
-            //   ),
-            // ),
           ],
         ),
       ),
@@ -133,7 +102,7 @@ class _ProfilePageState extends State<ProfilePage> {
               children: [
                 // Profile Picture
                 CachedNetworkImage(
-                  imageUrl: _profileImageUrl ?? '', // Use your image URL
+                  imageUrl: userProvider.profilePicUrl, // Use your image URL
                   placeholder: (context, url) => Shimmer.fromColors(
                     baseColor: Colors.grey.shade300,
                     highlightColor: Colors.grey.shade100,

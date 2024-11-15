@@ -4,6 +4,7 @@ import 'package:shimmer/shimmer.dart';
 import 'package:tripify/view_models/user_provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:tripify/view_models/firestore_service.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
@@ -20,6 +21,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
   late Future<String> _profileImageUrl;
   String? _newProfilePicPath;
   final int _maxBioLength = 150;
+  FirestoreService firestoreService = FirestoreService();
 
   @override
   void initState() {
@@ -81,40 +83,106 @@ class _EditProfilePageState extends State<EditProfilePage> {
     final userProvider = Provider.of<UserProvider>(context, listen: false);
     final user = FirebaseAuth.instance.currentUser;
 
-    if (user != null) {
-      // String? resolvedProfileImageUrl;
+    if (_formKey.currentState?.validate() ?? false) {
+      if (user != null) {
+        bool isUsernameUnique = await firestoreService
+            .isUsernameCorrectForUID(_usernameController.text, user.uid);
 
-      // // If a new profile picture is selected, upload it to Firebase Storage
-      // if (_newProfilePicPath != null && _newProfilePicPath!.isNotEmpty) {
-      //   try {
-      //     final storageRef = FirebaseStorage.instance.ref(
-      //         '${user.uid}/pfp/${DateTime.now().millisecondsSinceEpoch}.jpg'); // Unique file name
+        if (!isUsernameUnique) {
+          // Username is not unique, show an error message and stop the process
+          showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              final bool isDarkMode =
+                  Theme.of(context).brightness == Brightness.dark;
+              final textColor = isDarkMode ? Colors.white : Colors.black;
+              final dialogBackgroundColor =
+                  isDarkMode ? Color(0xFF333333) : Colors.white;
 
-      //     // Upload the selected image file to Firebase Storage
-      //     await storageRef.putFile(File(_newProfilePicPath!));
+              return AlertDialog(
+                backgroundColor:
+                    dialogBackgroundColor, // Apply background color
+                title: const Text(
+                  'Error',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                content: Text(
+                  'Username is already taken. Please choose a different one.',
+                  style: TextStyle(
+                      color: textColor), // Content text color based on theme
+                ),
+                actions: <Widget>[
+                  TextButton(
+                    onPressed: () => Navigator.pop(context, 'OK'),
+                    child: Text(
+                      'OK',
+                      style: TextStyle(
+                          color: textColor), // Button text color based on theme
+                    ),
+                  ),
+                ],
+              );
+            },
+          );
+          return;
+        }
 
-      //     // Get the download URL after the upload is complete
-      //     resolvedProfileImageUrl = await storageRef.getDownloadURL();
-      //   } catch (e) {
-      //     print('Error uploading image: $e');
-      //     resolvedProfileImageUrl = null; // If upload fails, leave the URL null
-      //   }
-      // }
+        String bioWithEscapedNewlines =
+            _bioController.text.replaceAll('\n', '\\n');
+        final trimmedBio = bioWithEscapedNewlines.trim();
 
-      String bioWithEscapedNewlines =
-          _bioController.text.replaceAll('\n', '\\n');
-      final trimmedBio = bioWithEscapedNewlines.trim();
+        userProvider.updateUserDetails(
+          userId: user.uid,
+          username: _usernameController.text,
+          bio: trimmedBio,
+          newProfilePicPath: _newProfilePicPath,
+        );
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Profile updated successfully!')),
+        );
+        Navigator.pop(context, true);
+      }
+    } else {
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          final bool isDarkMode =
+              Theme.of(context).brightness == Brightness.dark;
+          final textColor = isDarkMode
+              ? Colors.white
+              : Colors.black; // Text color based on theme
+          final dialogBackgroundColor = isDarkMode
+              ? Color(0xFF333333)
+              : Colors.white; // Dialog background color
 
-      userProvider.updateUserDetails(
-        userId: user.uid,
-        username: _usernameController.text,
-        bio: trimmedBio,
-        newProfilePicPath: _newProfilePicPath,
+          return AlertDialog(
+            backgroundColor: dialogBackgroundColor, // Apply background color
+            title: const Text(
+              'Error',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            content: Text(
+              'Please ensure all fields are filled correctly.',
+              style: TextStyle(
+                  color: textColor), // Content text color based on theme
+            ),
+            actions: <Widget>[
+              TextButton(
+                onPressed: () => Navigator.pop(context, 'OK'),
+                child: Text(
+                  'OK',
+                  style: TextStyle(
+                      color: textColor), // Button text color based on theme
+                ),
+              ),
+            ],
+          );
+        },
       );
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Profile updated successfully!')),
-      );
-      Navigator.pop(context, true);
     }
   }
 
@@ -174,15 +242,17 @@ class _EditProfilePageState extends State<EditProfilePage> {
                             : (snapshot.data != null &&
                                         snapshot.data!.isNotEmpty
                                     ? CachedNetworkImageProvider(snapshot.data!)
-                                    : AssetImage(
-                                        'assets/default_profile.png') // Network image
+                                    : NetworkImage(
+                                        'https://firebasestorage.googleapis.com/v0/b/tripify-d8e12.appspot.com/o/defaults%2Fdefault.jpg?alt=media&token=8e1189e2-ea22-4bdd-952f-e9d711307251') // Network image
                                 ) as ImageProvider,
                         child: Align(
                           alignment: Alignment.bottomRight,
                           child: CircleAvatar(
                             radius: 18,
                             backgroundColor: Colors.grey.shade200,
-                            child: Icon(Icons.camera_alt, size: 18),
+                            child: Icon(Icons.camera_alt, 
+                            size: 18, 
+                            color: Theme.of(context).brightness == Brightness.light? Color(0xFF3B3B3B): null),
                           ),
                         ),
                       );
@@ -205,6 +275,21 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter a username';
+                  }
+
+                  if (value.length < 3) {
+                    return 'Username must be at least 3 characters long';
+                  }
+
+                  if (value.length > 20) {
+                    return 'Username cannot exceed 20 characters';
+                  }
+
+                  final pattern =
+                      r'^[a-zA-Z0-9_]+$'; // Regex to allow alphanumeric and underscore only
+                  final regExp = RegExp(pattern);
+                  if (!regExp.hasMatch(value)) {
+                    return 'Username can only contain letters, numbers, and underscores';
                   }
                   return null;
                 },

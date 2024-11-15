@@ -89,20 +89,22 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
-    return Consumer<ThemeNotifier>(
-      builder: (context, themeNotifier, child) {
-        print("Current themeMode: ${themeNotifier.themeMode}");
-        print(
-            "Dark theme applied: ${themeNotifier.themeMode == ThemeMode.dark}");
-        return MaterialApp(
-          theme: lightTheme,
-          darkTheme: darkTheme,
-          themeMode: themeNotifier.themeMode,
-          debugShowCheckedModeBanner: false,
-          home: FirebaseAuthStateHandler(),
-        );
-      },
-    );
+    return ChangeNotifierProvider(
+        create: (context) => ThemeNotifier(),
+        child: Consumer<ThemeNotifier>(
+          builder: (context, themeNotifier, child) {
+            print("Current themeMode: ${themeNotifier.themeMode}");
+            print(
+                "Dark theme applied: ${themeNotifier.themeMode == ThemeMode.dark}");
+            return MaterialApp(
+              theme: lightTheme,
+              darkTheme: darkTheme,
+              themeMode: themeNotifier.themeMode,
+              debugShowCheckedModeBanner: false,
+              home: FirebaseAuthStateHandler(),
+            );
+          },
+        ));
   }
 }
 
@@ -257,33 +259,52 @@ class MainPageState extends State<MainPage> {
       // Show confirmation dialog if user is on Home page
       bool shouldExit = await showDialog(
             context: context,
-            builder: (context) => AlertDialog(
-              title: const Text('Exit App'),
-              content: const Text('Do you want to exit the app?'),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(false),
-                  child: Text(
-                    'No',
-                    style: TextStyle(
-                      color: Theme.of(context).brightness == Brightness.dark
-                          ? Colors.white
-                          : Color(0xFF222222),
+            builder: (context) => Theme(
+              data: ThemeData.dark().copyWith(
+                dialogBackgroundColor:
+                    Color(0xFF333333), // Custom background color
+                textTheme: TextTheme(
+                  bodyMedium: TextStyle(
+                      color: Colors.white), // White text for readability
+                ),
+              ),
+              child: AlertDialog(
+                title: const Text(
+                  'Exit App',
+                  style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white), // Ensure title is white
+                ),
+                content: const Text(
+                  'Do you want to exit the app?',
+                  style: TextStyle(
+                      color: Colors.white), // Ensure content text is white
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(false),
+                    child: Text(
+                      'No',
+                      style: TextStyle(
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? Colors.white
+                            : Color(0xFF222222),
+                      ),
                     ),
                   ),
-                ),
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(true),
-                  child: Text(
-                    'Yes',
-                    style: TextStyle(
-                      color: Theme.of(context).brightness == Brightness.dark
-                          ? Colors.white
-                          : Color(0xFF222222),
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(true),
+                    child: Text(
+                      'Yes',
+                      style: TextStyle(
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? Colors.white
+                            : Color(0xFF222222),
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ) ??
           false;
