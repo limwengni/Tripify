@@ -40,7 +40,7 @@ class _ProfilePageState extends State<ProfilePage> {
             "https://firebasestorage.googleapis.com/v0/b/tripify-d8e12.appspot.com/o/defaults%2Fdefault.jpg?alt=media&token=8e1189e2-ea22-4bdd-952f-e9d711307251";
       });
 
-      // print(_profileImageUrl);
+      print(_profileImageUrl);
     }
   }
 
@@ -80,13 +80,14 @@ class _ProfilePageState extends State<ProfilePage> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-      onPressed: () {
-        // Action when the button is pressed
-        // _onAddButtonPressed(context);
-      },
-      child: const Icon(Icons.add),
-      backgroundColor: const Color.fromARGB(255, 159, 118, 249), // Customize color
-    ),
+        onPressed: () {
+          // Action when the button is pressed
+          // _onAddButtonPressed(context);
+        },
+        child: const Icon(Icons.add),
+        backgroundColor:
+            const Color.fromARGB(255, 159, 118, 249), // Customize color
+      ),
     );
   }
 
@@ -121,8 +122,11 @@ class _ProfilePageState extends State<ProfilePage> {
                   ),
                   errorWidget: (context, url, error) => CircleAvatar(
                     radius: 50,
-                    backgroundColor: Colors.grey.shade200,
-                    child: Icon(Icons.error),
+                    backgroundImage: NetworkImage(
+                      "https://firebasestorage.googleapis.com/v0/b/tripify-d8e12.appspot.com/o/defaults%2Fdefault.jpg?alt=media&token=8e1189e2-ea22-4bdd-952f-e9d711307251",
+                    ), // Use the default image URL
+                    backgroundColor:
+                        Colors.grey.shade200, // Fallback background color
                   ),
                   imageBuilder: (context, imageProvider) => CircleAvatar(
                     radius: 50,
@@ -429,8 +433,8 @@ class _ProfilePageState extends State<ProfilePage> {
 // Create a shimmer effect for each posts
   Widget _buildPostShimmer() {
     Color cardColor = Theme.of(context).brightness == Brightness.dark
-      ? Color(0xFF333333)
-      : Colors.white;
+        ? Color(0xFF333333)
+        : Colors.white;
 
     return Card(
       elevation: 2,
@@ -549,8 +553,8 @@ class _ProfilePageState extends State<ProfilePage> {
 // Build Post UI
   Widget _buildPostUi() {
     Color cardColor = Theme.of(context).brightness == Brightness.dark
-      ? Color(0xFF333333)
-      : Colors.white;
+        ? Color(0xFF333333)
+        : Colors.white;
 
     return Card(
         elevation: 2,

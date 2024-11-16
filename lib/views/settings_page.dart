@@ -145,23 +145,23 @@ class SettingsPage extends StatelessWidget {
                     Theme.of(context).brightness == Brightness.dark;
                 final textColor = isDarkMode
                     ? Colors.white
-                    : Colors.black; // Text color based on theme
+                    : Colors.black;
                 final dialogBackgroundColor = isDarkMode
                     ? Color(0xFF333333)
-                    : Colors.white; // Dialog background color
+                    : Colors.white;
 
                 return AlertDialog(
                   backgroundColor:
-                      dialogBackgroundColor, // Apply background color
+                      dialogBackgroundColor,
                   title: Text("Log Out",
-                      style: TextStyle(color: textColor)), // Title text color
+                      style: TextStyle(color: textColor)),
                   content: Text("Are you sure you want to log out?",
-                      style: TextStyle(color: textColor)), // Content text color
+                      style: TextStyle(color: textColor)),
                   actions: [
                     TextButton(
                       child: Text("Cancel", style: TextStyle(color: textColor)),
                       onPressed: () {
-                        Navigator.of(context).pop(); // Dismiss the dialog
+                        Navigator.of(context).pop();
                       },
                     ),
                     TextButton(
@@ -171,14 +171,14 @@ class SettingsPage extends StatelessWidget {
                         await Provider.of<AuthService>(context, listen: false)
                             .logout(context);
 
-                        Navigator.of(context).pop(); // Dismiss the dialog
+                        Navigator.of(context).pop();
                         Navigator.of(context).popUntil((route) =>
-                            route.isFirst); // Pop all routes until the first
+                            route.isFirst);
                         Navigator.pushReplacement(
                             context,
                             MaterialPageRoute(
                                 builder: (_) =>
-                                    WelcomePage())); // Navigate to WelcomePage
+                                    WelcomePage()));
                       },
                     ),
                   ],

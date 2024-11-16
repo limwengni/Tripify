@@ -184,18 +184,20 @@ class FirestoreService {
   Future<bool> isUsernameCorrectForUID(String username, String uid) async {
     final FirebaseFirestore firestore = FirebaseFirestore.instance;
 
-    final DocumentSnapshot userDoc =
-        await firestore.collection('User').doc(uid).get();
+    final QuerySnapshot querySnapshot = await firestore
+        .collection('User')
+        .where('username', isEqualTo: username)
+        .get();
 
-    // Check if the document exists and if the username matches
-    if (userDoc.exists) {
-      Map<String, dynamic> userData = userDoc.data() as Map<String, dynamic>;
-
-      if (userData['username'] == username) {
-        return true;
+    // Check if any user with the same username exists, except the current user
+    for (var doc in querySnapshot.docs) {
+      if (doc.id != uid) {
+        // A different user has the same username
+        return false;
       }
     }
 
-    return false; // The username does not match the uid or user does not exist
+    //Username is unique if no other user matches
+    return true;
   }
 }

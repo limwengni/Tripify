@@ -259,53 +259,54 @@ class MainPageState extends State<MainPage> {
       // Show confirmation dialog if user is on Home page
       bool shouldExit = await showDialog(
             context: context,
-            builder: (context) => Theme(
-              data: ThemeData.dark().copyWith(
-                dialogBackgroundColor:
-                    Color(0xFF333333), // Custom background color
-                textTheme: TextTheme(
-                  bodyMedium: TextStyle(
-                      color: Colors.white), // White text for readability
-                ),
-              ),
-              child: AlertDialog(
-                title: const Text(
+            builder: (BuildContext context) {
+              final bool isDarkMode =
+                  Theme.of(context).brightness == Brightness.dark;
+              final textColor = isDarkMode ? Colors.white : Colors.black;
+              final dialogBackgroundColor = isDarkMode
+                  ? const Color(0xFF333333)
+                  : Colors.white;
+
+              return AlertDialog(
+                backgroundColor:
+                    dialogBackgroundColor,
+                title: Text(
                   'Exit App',
                   style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white), // Ensure title is white
+                    fontWeight: FontWeight.bold,
+                    color: textColor,
+                  ),
                 ),
-                content: const Text(
+                content: Text(
                   'Do you want to exit the app?',
                   style: TextStyle(
-                      color: Colors.white), // Ensure content text is white
+                    color: textColor,
+                  ),
                 ),
                 actions: [
                   TextButton(
-                    onPressed: () => Navigator.of(context).pop(false),
+                    onPressed: () =>
+                        Navigator.of(context).pop(false),
                     child: Text(
                       'No',
                       style: TextStyle(
-                        color: Theme.of(context).brightness == Brightness.dark
-                            ? Colors.white
-                            : Color(0xFF222222),
+                        color: textColor,
                       ),
                     ),
                   ),
                   TextButton(
-                    onPressed: () => Navigator.of(context).pop(true),
+                    onPressed: () =>
+                        Navigator.of(context).pop(true), // Exit app
                     child: Text(
                       'Yes',
                       style: TextStyle(
-                        color: Theme.of(context).brightness == Brightness.dark
-                            ? Colors.white
-                            : Color(0xFF222222),
+                        color: textColor,
                       ),
                     ),
                   ),
                 ],
-              ),
-            ),
+              );
+            },
           ) ??
           false;
 

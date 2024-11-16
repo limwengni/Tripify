@@ -94,16 +94,13 @@ class UserProvider with ChangeNotifier {
         // Delete old pfp from firebase storage
         if (_userModel!.profilePic.isNotEmpty) {
           try {
-            // Extract the file path from the URL
-            final fileName = _userModel!.profilePic
-                .split('/')
-                .last
-                .split('?')
-                .first; // Get filename from URL
+            final oldProfilePicPath = Uri.decodeFull(_userModel!.profilePic)
+                .split('o/')[1]
+                .split('?')[0]; // Get the old profile pic first
 
             // Reference the file to delete it
             final oldProfilePicRef = FirebaseStorage.instance.ref().child(
-                '${userId}/pfp/$fileName'); // Construct path based on the userId and filename
+                oldProfilePicPath);
 
             // Delete the file
             await oldProfilePicRef.delete();
