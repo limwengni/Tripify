@@ -9,6 +9,8 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:intl/intl.dart';
 import 'package:tripify/models/post_model.dart';
 import 'package:tripify/views/edit_profile_page.dart';
+import 'package:tripify/views/add_post_page.dart';
+import 'package:tripify/views/pick_image_page.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/gestures.dart';
 
@@ -33,14 +35,14 @@ class _ProfilePageState extends State<ProfilePage> {
     if (user != null) {
       await userProvider.fetchUserDetails(user.uid);
 
-      // After fetching user details, the _profileImageUrl is updated in the provider
-      setState(() {
-        // Fetching the profile image URL directly from the provider after details are fetched
-        _profileImageUrl = userProvider.userModel?.profilePic ??
-            "https://firebasestorage.googleapis.com/v0/b/tripify-d8e12.appspot.com/o/defaults%2Fdefault.jpg?alt=media&token=8e1189e2-ea22-4bdd-952f-e9d711307251";
-      });
+      // // After fetching user details, the _profileImageUrl is updated in the provider
+      // setState(() {
+      //   // Fetching the profile image URL directly from the provider after details are fetched
+      //   _profileImageUrl = userProvider.userModel?.profilePic ??
+      //       "https://firebasestorage.googleapis.com/v0/b/tripify-d8e12.appspot.com/o/defaults%2Fdefault.jpg?alt=media&token=8e1189e2-ea22-4bdd-952f-e9d711307251";
+      // });
 
-      print(_profileImageUrl);
+      // print(_profileImageUrl);
     }
   }
 
@@ -82,9 +84,12 @@ class _ProfilePageState extends State<ProfilePage> {
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           // Action when the button is pressed
-          // _onAddButtonPressed(context);
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => PickImagesPage()),
+          );
         },
-        child: const Icon(Icons.add),
+        child: const Icon(Icons.add, color: Colors.white),
         backgroundColor:
             const Color.fromARGB(255, 159, 118, 249), // Customize color
       ),
@@ -436,25 +441,31 @@ class _ProfilePageState extends State<ProfilePage> {
         ? Color(0xFF333333)
         : Colors.white;
 
-    return Card(
-      elevation: 2,
-      color: cardColor,
-      child: Container(
-        padding: EdgeInsets.all(0.0),
+    return Padding(
+      padding: EdgeInsets.all(5),
+      child: Card(
+        semanticContainer: true,
+        color: cardColor,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10.0),
+        ),
+        clipBehavior: Clip.antiAlias,
         child: Column(
-          children: [
-            // Image Shimmer
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            // Image Shimmer (same size as the actual image)
             Shimmer.fromColors(
               baseColor: Colors.grey.shade300,
               highlightColor: Colors.grey.shade100,
               child: Container(
-                height: 180.0, // Same height as the actual image
+                height: 160.0, // Adjust height to match actual image size
                 width: double.infinity,
                 color: Colors.grey.shade300,
               ),
             ),
+            // Text section with shimmer
             Padding(
-              padding: const EdgeInsets.all(8.0),
+              padding: EdgeInsets.all(10.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -463,41 +474,40 @@ class _ProfilePageState extends State<ProfilePage> {
                     baseColor: Colors.grey.shade300,
                     highlightColor: Colors.grey.shade100,
                     child: Container(
-                      height: 16.0,
-                      width: 100.0, // Adjust width as per the title length
+                      height: 16.0, // Adjust width to match actual title length
+                      width: 100.0, // Placeholder width for title
                       color: Colors.grey.shade300,
                     ),
                   ),
-                  SizedBox(height: 8.0),
+                  SizedBox(
+                      height: 8.0), // Adds space between title and like section
+
+                  // Likes Section Shimmer (Right aligned)
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    mainAxisAlignment:
+                        MainAxisAlignment.end, // Align to the right
                     children: [
-                      SizedBox.shrink(), // For alignment
-                      Row(
-                        children: [
-                          // Like icon shimmer
-                          Shimmer.fromColors(
-                            baseColor: Colors.grey.shade300,
-                            highlightColor: Colors.grey.shade100,
-                            child: Icon(
-                              Icons.favorite_outline,
-                              color: Colors.grey.shade300,
-                              size: 16.0,
-                            ),
-                          ),
-                          SizedBox(width: 4.0),
-                          // Like count shimmer
-                          Shimmer.fromColors(
-                            baseColor: Colors.grey.shade300,
-                            highlightColor: Colors.grey.shade100,
-                            child: Container(
-                              height: 12.0,
-                              width:
-                                  40.0, // Adjust width for like count placeholder
-                              color: Colors.grey.shade300,
-                            ),
-                          ),
-                        ],
+                      // Like icon shimmer
+                      Shimmer.fromColors(
+                        baseColor: Colors.grey.shade300,
+                        highlightColor: Colors.grey.shade100,
+                        child: Icon(
+                          Icons.favorite_outline,
+                          color: Colors.grey.shade300,
+                          size: 16.0,
+                        ),
+                      ),
+                      SizedBox(width: 4.0),
+                      // Like count shimmer
+                      Shimmer.fromColors(
+                        baseColor: Colors.grey.shade300,
+                        highlightColor: Colors.grey.shade100,
+                        child: Container(
+                          height: 12.0,
+                          width:
+                              40.0, // Adjust width for like count placeholder
+                          color: Colors.grey.shade300,
+                        ),
                       ),
                     ],
                   ),
@@ -556,70 +566,70 @@ class _ProfilePageState extends State<ProfilePage> {
         ? Color(0xFF333333)
         : Colors.white;
 
-    return Card(
-        elevation: 2,
+    return Padding(
+      padding: EdgeInsets.all(5),
+      child: Card(
+        semanticContainer: true,
         color: cardColor,
-        child: Container(
-          padding: EdgeInsets.all(0.0),
-          child: Column(
-            children: [
-              ClipRRect(
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(12.0),
-                  topRight: Radius.circular(12.0),
-                ),
-                child: CachedNetworkImage(
-                  imageUrl:
-                      'https://firebasestorage.googleapis.com/v0/b/tripify-d8e12.appspot.com/o/GdkQDokljsVMIkPLanvtFdoshDR2%2Fpfp%2F1731142797668_IMG-20241109-WA0003.jpg?alt=media&token=69c27493-5a8f-48e9-84a3-3967e64d27e4',
-                  placeholder: (context, url) => Shimmer.fromColors(
-                    baseColor: Colors.grey[300]!,
-                    highlightColor: Colors.grey[100]!,
-                    child: Container(
-                      color: Colors.white,
-                      height: 180.0, // Fixed height for the shimmer
-                      width: double.infinity,
-                    ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10.0),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Expanded(
+              child: CachedNetworkImage(
+                imageUrl:
+                    'https://firebasestorage.googleapis.com/v0/b/tripify-d8e12.appspot.com/o/GdkQDokljsVMIkPLanvtFdoshDR2%2Fpfp%2FUntitled732_20241115203206.png?alt=media&token=54a8e225-170c-470a-b531-807ab7c95d09', // Replace with dynamic image URL
+                placeholder: (context, url) => Shimmer.fromColors(
+                  baseColor: Colors.grey[300]!,
+                  highlightColor: Colors.grey[100]!,
+                  child: Container(
+                    color: Colors.white,
+                    width: double.infinity,
                   ),
-                  errorWidget: (context, url, error) =>
-                      Icon(Icons.error), // Icon on error
-                  fit: BoxFit.cover,
-                  height: 180.0, // Fixed height for the image
-                  width: double.infinity,
                 ),
+                errorWidget: (context, url, error) => Icon(Icons.error),
+                width: double.infinity,
+                height: double.infinity,
+                fit: BoxFit.cover,
               ),
-              Padding(
-                padding: EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize
-                      .min, // Prevents the column from expanding too much
-                  children: [
-                    Text(
-                      'Post Title',
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    SizedBox(height: 8.0),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        SizedBox.shrink(),
-                        Row(
-                          children: [
-                            Icon(Icons.favorite_outline, size: 16.0),
-                            SizedBox(width: 4.0),
-                            Text(
-                              '42', // Replace with actual like count if needed
-                              style: TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
+            ),
+            // Text section with dynamic post title
+            Padding(
+              padding: EdgeInsets.all(10.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Post Title
+                  Text(
+                    'This is a title', // Replace with dynamic post title
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  SizedBox(
+                      height:
+                          8.0), // Adds space between the title and likes section
+
+                  // Likes Section (Right aligned)
+                  Row(
+                    mainAxisAlignment:
+                        MainAxisAlignment.end, // Align to the right
+                    children: [
+                      Icon(Icons.favorite_outline, size: 16.0),
+                      SizedBox(width: 4.0),
+                      Text(
+                        '20', // Replace with dynamic like count
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ],
+                  ),
+                ],
               ),
-            ],
-          ),
-        ));
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

@@ -33,7 +33,9 @@ class UserProvider with ChangeNotifier {
           _userModel = UserModel.fromMap(userData, uid);
 
           // Fetch the profile image URL after getting user details
-          await fetchProfileImageUrl();
+          String profilePicUrl = await fetchProfileImageUrl();
+
+          _profilePicUrl = profilePicUrl;
 
           notifyListeners();
         } else {

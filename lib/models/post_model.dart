@@ -32,7 +32,7 @@ class Post {
       'description': description,
       'createdAt': createdAt?.toIso8601String(),
       'updatedAt': updatedAt?.toIso8601String(),
-      'media': media,  // Store media as an array of URLs
+      'media': media, // Store media as an array of URLs
       'like_count': likesCount,
       'comment_count': commentsCount,
       'saved_count': savedCount,
@@ -51,6 +51,30 @@ class Post {
       likesCount: data['like_count'] ?? 0,
       commentsCount: data['comment_count'] ?? 0,
       savedCount: data['saved_count'] ?? 0,
+    );
+  }
+
+  Post copyWith({
+    String? userId,
+    String? title,
+    String? description,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    List<String>? media,
+    int? likesCount,
+    int? commentsCount,
+    int? savedCount,
+  }) {
+    return Post(
+      userId: userId ?? this.userId,
+      title: title ?? this.title,
+      description: description ?? this.description,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      media: media ?? this.media,
+      likesCount: likesCount ?? this.likesCount,
+      commentsCount: commentsCount ?? this.commentsCount,
+      savedCount: savedCount ?? this.savedCount,
     );
   }
 }
