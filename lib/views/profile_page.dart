@@ -458,7 +458,7 @@ class _ProfilePageState extends State<ProfilePage> {
               baseColor: Colors.grey.shade300,
               highlightColor: Colors.grey.shade100,
               child: Container(
-                height: 160.0, // Adjust height to match actual image size
+                height: 150.0, // Adjust height to match actual image size
                 width: double.infinity,
                 color: Colors.grey.shade300,
               ),
@@ -480,7 +480,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     ),
                   ),
                   SizedBox(
-                      height: 8.0), // Adds space between title and like section
+                      height: 4.0), // Adds space between title and like section
 
                   // Likes Section Shimmer (Right aligned)
                   Row(
