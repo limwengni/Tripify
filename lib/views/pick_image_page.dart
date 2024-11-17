@@ -18,6 +18,7 @@ class _PickImagesPageState extends State<PickImagesPage> {
   List<AssetEntity> _assets = [];
   List<bool> _isFetched = [];
   List<File> _selectedImages = [];
+  Map<File, int> _selectedImagesOrder = {};
   List<AssetPathEntity> _albums = []; // List of albums on phone
   AssetPathEntity? _selectedAlbum; // Selected album
   int currentPage = 0;
@@ -197,12 +198,26 @@ class _PickImagesPageState extends State<PickImagesPage> {
   void _toggleImageSelection(AssetEntity asset) async {
     final file = await asset.file;
     if (file != null) {
+      final filePath = file.path;
+
       setState(() {
-        if (_selectedImages.contains(file)) {
-          _selectedImages.remove(file);
+        if (_selectedImages
+            .any((selectedFile) => selectedFile.path == filePath)) {
+          // If the image is already selected, remove it
+          _selectedImages
+              .removeWhere((selectedFile) => selectedFile.path == filePath);
+          _selectedImagesOrder
+              .removeWhere((key, value) => key.path == filePath);
         } else {
+          // If the image is not selected, add it
           _selectedImages.add(file);
+          _selectedImagesOrder[file] = _selectedImages.length;
         }
+
+        // Debug print to confirm the state of the selected images and their order
+        print('File path: ${file.path}');
+        print('Selected Images Order: ${_selectedImagesOrder.keys.map((e) => e.path).toList()}');
+
       });
     }
   }
@@ -255,6 +270,7 @@ class _PickImagesPageState extends State<PickImagesPage> {
                   itemBuilder: (context, index) {
                     final asset = _assets[index];
                     final cachedThumbnail = _thumbnailCache[asset.id];
+                    final file = File(asset.id);
 
                     return GestureDetector(
                       onTap: () {
@@ -280,10 +296,8 @@ class _PickImagesPageState extends State<PickImagesPage> {
                                         baseColor: Colors.grey[300]!,
                                         highlightColor: Colors.grey[100]!,
                                         child: Container(
-                                          height: constraints
-                                              .maxHeight, // Dynamically set height
-                                          width: constraints
-                                              .maxWidth, // Dynamically set width
+                                          height: constraints.maxHeight,
+                                          width: constraints.maxWidth,
                                           color: Colors.grey[300],
                                         ),
                                       );
@@ -300,14 +314,23 @@ class _PickImagesPageState extends State<PickImagesPage> {
                                 }
                               },
                             ),
-                          if (_selectedImages.contains(File(asset.id)))
+
+                          // Show circle avatar with number if image is selected
+                          if (_selectedImagesOrder.containsKey(File(file.path))) 
                             Positioned(
                               top: 8,
                               right: 8,
-                              child: Icon(
-                                Icons.check_circle,
-                                color: Colors.blue,
-                              ),
+                              child: CircleAvatar(
+                                  backgroundColor: Colors.blue,
+                                  radius: 14,
+                                  child: Text(
+                                    '${_selectedImagesOrder[file]}',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 12,
+                                    ),
+                                  )),
                             ),
                           if (asset.type == AssetType.video)
                             Positioned(
@@ -343,10 +366,6 @@ class _PickImagesPageState extends State<PickImagesPage> {
                   },
                 )
               : Center(child: Text('No images available')),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {}, // Handle any extra actions
-        child: Icon(Icons.camera_alt),
-      ),
     );
   }
 }
