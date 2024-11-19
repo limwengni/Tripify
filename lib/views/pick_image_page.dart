@@ -8,6 +8,9 @@ import 'package:image_picker/image_picker.dart';
 import 'package:video_player/video_player.dart';
 import 'package:flutter_video_info/flutter_video_info.dart';
 import 'package:tripify/views/add_post_page.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:hive/hive.dart';
 
 class PickImagesPage extends StatefulWidget {
   @override
@@ -31,6 +34,8 @@ class _PickImagesPageState extends State<PickImagesPage> {
   Map<String, Map<String, Uint8List?>> _albumThumbnailCache = {};
 
   final FlutterVideoInfo _videoInfo = FlutterVideoInfo();
+
+  ValueNotifier<Map<File, int>> selectedImagesNotifier = ValueNotifier({});
 
   // Load albums
   Future<void> _loadAlbums() async {
@@ -114,7 +119,6 @@ class _PickImagesPageState extends State<PickImagesPage> {
       // If the number of assets fetched is less than the pageSize, we've reached the end
       hasMoreAssets = assetsPage.length == pageSize;
 
-      // Increment the page for the next request
       page++;
 
       // If the selected album has changed, stop loading
@@ -165,23 +169,34 @@ class _PickImagesPageState extends State<PickImagesPage> {
 
   // Load thumbnail only once and cache it
   Future<Uint8List?> _getThumbnail(AssetEntity asset) async {
+    final cacheDir = await getApplicationDocumentsDirectory();
     final albumId = _selectedAlbum?.id;
     if (albumId == null) return null;
 
-    // Initialize cache for the album if not already initialized
-    if (!_albumThumbnailCache.containsKey(albumId)) {
-      _albumThumbnailCache[albumId] = {};
+    // Define the cache directory and file path
+    final albumCacheDir = Directory('${cacheDir.path}/thumbnails/$albumId');
+    final cacheFile = File('${albumCacheDir.path}/${asset.id}.thumb');
+
+    // Ensure the cache directory exists
+    if (!await albumCacheDir.exists()) {
+      await albumCacheDir.create(recursive: true);
     }
 
-    if (_albumThumbnailCache[albumId]!.containsKey(asset.id)) {
-      return _albumThumbnailCache[albumId]![asset.id];
+    // Check if the thumbnail is cached
+    if (await cacheFile.exists()) {
+      print('Loaded from disk cache: ${cacheFile.path}');
+      return await cacheFile.readAsBytes();
     }
 
+    // Generate the thumbnail if not cached
     final thumbnailData = await asset.thumbnailData;
     if (thumbnailData != null) {
-      _thumbnailCache[asset.id] = thumbnailData;
+      await cacheFile.writeAsBytes(thumbnailData); // Save to disk
+      print('Saved to disk cache: ${cacheFile.path}');
+      return thumbnailData;
     }
-    return thumbnailData;
+
+    return null; // Return null if unable to generate thumbnail
   }
 
   // Handle album selection
@@ -200,26 +215,151 @@ class _PickImagesPageState extends State<PickImagesPage> {
     if (file != null) {
       final filePath = file.path;
 
-      setState(() {
-        if (_selectedImages
-            .any((selectedFile) => selectedFile.path == filePath)) {
-          // If the image is already selected, remove it
-          _selectedImages
-              .removeWhere((selectedFile) => selectedFile.path == filePath);
-          _selectedImagesOrder
-              .removeWhere((key, value) => key.path == filePath);
-        } else {
-          // If the image is not selected, add it
-          _selectedImages.add(file);
-          _selectedImagesOrder[file] = _selectedImages.length;
+      // Create a mutable copy of the map
+      Map<File, int> updatedSelection = Map.from(selectedImagesNotifier.value);
+
+      bool isSelected =
+          updatedSelection.entries.any((entry) => entry.key.path == filePath);
+
+      // bool isSelected =
+      //     _selectedImages.any((selectedFile) => selectedFile.path == filePath);
+
+      if (isSelected) {
+        // If the image is already selected, remove it
+        updatedSelection.removeWhere((key, value) => key.path == filePath);
+
+        // _selectedImages
+        //     .removeWhere((selectedFile) => selectedFile.path == filePath);
+        // _selectedImagesOrder.removeWhere((key, value) => key.path == filePath);
+      } else {
+        // If the image is not selected, add it
+        if (updatedSelection.length >= 9) {
+          // Show a message to the user
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                "You can select up to 10 images/videos only.",
+                style: TextStyle(color: Colors.white),
+              ),
+              backgroundColor: const Color.fromARGB(255, 159, 118, 249),
+            ),
+          );
+          return;
+        }
+        updatedSelection[file] = updatedSelection.length;
+
+        // _selectedImages.add(file);
+        // _selectedImagesOrder[file] = _selectedImages.length;
+      }
+
+      updatedSelection = _updateImageOrder(updatedSelection);
+      selectedImagesNotifier.value = updatedSelection;
+      selectedImagesNotifier.notifyListeners();
+
+      //   // Debug print to confirm the state of the selected images and their order
+      //   print(
+      //       'Selected Images: ${_selectedImages.map((file) => file.path).toList()}');
+      //   print(
+      //       'Selected Images Order: ${_selectedImagesOrder.entries.map((entry) => "${entry.key.path}: ${entry.value}").toList()}');
+    }
+  }
+
+  Map<File, int> _updateImageOrder(Map<File, int> selection) {
+    int order = 1;
+
+    // Reassign order based on the keys' current order
+    for (final file in selection.keys) {
+      selection[file] = order;
+      debugPrint("Assigned order $order to ${file.path}");
+      order++;
+    }
+
+    return selection;
+  }
+
+  Widget buildCircleAvatarForSelection(AssetEntity asset) {
+    return FutureBuilder<File?>(
+      future: asset.file,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return SizedBox.shrink();
         }
 
-        // Debug print to confirm the state of the selected images and their order
-        print('File path: ${file.path}');
-        print('Selected Images Order: ${_selectedImagesOrder.keys.map((e) => e.path).toList()}');
+        if (snapshot.hasError || !snapshot.hasData) {
+          return SizedBox.shrink();
+        }
 
-      });
+        final file = snapshot.data!;
+
+        return ValueListenableBuilder<Map<File, int>>(
+          valueListenable: selectedImagesNotifier,
+          builder: (context, selectedImages, _) {
+            final isSelected = selectedImages.entries
+                .any((entry) => entry.key.path == file.path);
+
+            if (isSelected) {
+              final order = selectedImagesNotifier.value.entries
+                  .firstWhere(
+                    (entry) => entry.key.path == file.path,
+                  )
+                  .value;
+
+              return CircleAvatar(
+                backgroundColor: const Color.fromARGB(255, 159, 118, 249),
+                radius: 14,
+                child: Text(
+                  '$order',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                  ),
+                ),
+              );
+            } else {
+              return SizedBox
+                  .shrink(); // Return an empty widget if not selected
+            }
+          },
+        );
+
+        // final isSelected = _selectedImagesOrder.entries.any((entry) {
+        //   return entry.key.path == file.path;
+        // });
+
+        // if (isSelected) {
+        //   final order = _selectedImagesOrder.entries
+        //       .firstWhere((entry) => entry.key.path == file.path)
+        //       .value;
+
+        //   return CircleAvatar(
+        //     backgroundColor: const Color.fromARGB(255, 159, 118, 249),
+        //     radius: 14,
+        //     child: Text(
+        //       '$order',
+        //       style: TextStyle(
+        //         color: Colors.white,
+        //         fontWeight: FontWeight.bold,
+        //         fontSize: 12,
+        //       ),
+        //     ),
+        //   );
+        // } else {
+        //   return SizedBox.shrink(); // Return an empty widget if not selected
+        // }
+      },
+    );
+  }
+
+// Async function to check if the file is selected
+  Future<bool> _isSelected(AssetEntity asset) async {
+    for (var entry in _selectedImagesOrder.entries) {
+      final assetFile = await asset.file;
+      if (assetFile != null && assetFile.path == entry.key.path) {
+        return true; // If the file path matches, it's selected
+      }
     }
+    return false; // If no match found
   }
 
   @override
@@ -232,24 +372,53 @@ class _PickImagesPageState extends State<PickImagesPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: SizedBox(
-            width: 200,
-            child: DropdownButton<AssetPathEntity>(
-              value: _selectedAlbum,
-              underline: SizedBox(),
-              isExpanded: true,
-              items: _albums.map((album) {
-                return DropdownMenuItem(
-                  value: album,
-                  child: Text(album.name),
-                );
-              }).toList(),
-              onChanged: (album) {
-                if (album != null) {
-                  _onAlbumSelected(album);
-                }
+        title: Row(
+          mainAxisAlignment:
+              MainAxisAlignment.spaceBetween, // Align dropdown and next button
+          children: [
+            SizedBox(
+              width: 200,
+              child: DropdownButton<AssetPathEntity>(
+                value: _selectedAlbum,
+                underline: SizedBox(),
+                isExpanded: true,
+                items: _albums.map((album) {
+                  return DropdownMenuItem(
+                    value: album,
+                    child: Text(album.name),
+                  );
+                }).toList(),
+                onChanged: (album) {
+                  if (album != null) {
+                    _onAlbumSelected(album);
+                  }
+                },
+              ),
+            ),
+            // Conditionally show the "Next" button (arrow icon) only when there are selected assets
+            ValueListenableBuilder<Map>(
+              valueListenable: selectedImagesNotifier,
+              builder: (context, selectedImages, _) {
+                return selectedImages.isNotEmpty
+                    ? IconButton(
+                        icon: Icon(Icons.arrow_forward), // "Next" arrow icon
+                        onPressed: () {
+                          // Action for "Next" button
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => NewPostPage(
+                                imagesWithIndex: selectedImagesNotifier.value,
+                              ),
+                            ),
+                          );
+                        },
+                      )
+                    : SizedBox(); // Return an empty SizedBox if no images are selected
               },
-            )),
+            ),
+          ],
+        ),
         leading: IconButton(
           icon: Icon(Icons.close),
           onPressed: () {
@@ -258,7 +427,10 @@ class _PickImagesPageState extends State<PickImagesPage> {
         ),
       ),
       body: _isLoading
-          ? Center(child: CircularProgressIndicator())
+          ? Center(
+              child: CircularProgressIndicator(
+              color: const Color.fromARGB(255, 159, 118, 249),
+            ))
           : _assets.isNotEmpty
               ? GridView.builder(
                   gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -270,9 +442,9 @@ class _PickImagesPageState extends State<PickImagesPage> {
                   itemBuilder: (context, index) {
                     final asset = _assets[index];
                     final cachedThumbnail = _thumbnailCache[asset.id];
-                    final file = File(asset.id);
 
                     return GestureDetector(
+                      key: ValueKey(asset.id),
                       onTap: () {
                         _toggleImageSelection(asset);
                       },
@@ -286,6 +458,7 @@ class _PickImagesPageState extends State<PickImagesPage> {
                             )
                           else
                             FutureBuilder<Uint8List?>(
+                              key: ValueKey(asset.id),
                               future: _getThumbnail(asset),
                               builder: (context, snapshot) {
                                 if (snapshot.connectionState ==
@@ -316,22 +489,11 @@ class _PickImagesPageState extends State<PickImagesPage> {
                             ),
 
                           // Show circle avatar with number if image is selected
-                          if (_selectedImagesOrder.containsKey(File(file.path))) 
-                            Positioned(
-                              top: 8,
-                              right: 8,
-                              child: CircleAvatar(
-                                  backgroundColor: Colors.blue,
-                                  radius: 14,
-                                  child: Text(
-                                    '${_selectedImagesOrder[file]}',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 12,
-                                    ),
-                                  )),
-                            ),
+                          Positioned(
+                            top: 8,
+                            right: 8,
+                            child: buildCircleAvatarForSelection(asset),
+                          ),
                           if (asset.type == AssetType.video)
                             Positioned(
                               bottom: 8,
@@ -342,7 +504,7 @@ class _PickImagesPageState extends State<PickImagesPage> {
                                           horizontal: 6, vertical: 2),
                                       color: Colors.black.withOpacity(0.6),
                                       child: Text(
-                                        '${_videoDurations[asset.id]!.inMinutes.toString().padLeft(2, '0')}:${(_videoDurations[asset.id]!.inSeconds % 60).toString().padLeft(2, '0')}',
+                                        '${_videoDurations[asset.id]!.inMinutes.toString().padLeft(1, '0')}:${(_videoDurations[asset.id]!.inSeconds % 60).toString().padLeft(2, '0')}',
                                         style: TextStyle(
                                           color: Colors.white,
                                           fontSize: 12,
