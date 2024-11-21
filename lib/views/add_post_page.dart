@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tripify/views/image_preview_page.dart';
+import 'package:tripify/views/preview_post_page.dart';
 import 'package:tripify/models/post_model.dart';
 import 'package:tripify/view_models/post_provider.dart'; // Import PostService
 
@@ -18,6 +19,14 @@ class NewPostPage extends StatefulWidget {
 class _NewPostPageState extends State<NewPostPage> {
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
+
+  List<String> _tags = [
+    'Travel',
+    'Adventure',
+    'Nature',
+    'Photography',
+    'Hiking'
+  ];
 
   final int _maxTitleLength = 20;
 
@@ -100,187 +109,293 @@ class _NewPostPageState extends State<NewPostPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text("New Post"),
-        // actions: [
-        //   IconButton(
-        //     icon: Icon(Icons.check),
-        //     onPressed: _savePost, // Trigger saving the post
-        //   ),
-        // ],
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Display images in a grid, showing the image and its index (if needed)
-              widget.imagesWithIndex.isNotEmpty
-                  ? SingleChildScrollView(
-                      scrollDirection:
-                          Axis.horizontal, // Allow horizontal scrolling
-                      child: Row(
-                        children: widget.imagesWithIndex.keys.map((image) {
-                          return Padding(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 4), // Minimal gap between images
-                              child: GestureDetector(
-                                onTap: () {
-                                  // Open preview mode in a dialog when the image is tapped
-                                  _showImagePreview(image);
-                                },
-                                child: ClipRRect(
-                                    child: Container(
-                                  color: Theme.of(context).brightness ==
-                                          Brightness.dark
-                                      ? Colors.grey[800]
-                                      : Colors.grey[200],
-                                  child: Image.file(
-                                    image,
-                                    width: 200, // Set width for square shape
-                                    height: 200, // Set height for square shape
-                                    fit: BoxFit
-                                        .contain, // Ensure image covers the box
-                                  ),
-                                )),
-                              ));
-                        }).toList(),
-                      ),
-                    )
-                  : Text('No images selected'),
+    return GestureDetector(
+        onTap: () {
+          FocusScope.of(context).unfocus();
+        },
+        child: Scaffold(
+          appBar: AppBar(
+            title: Text("New Post"),
+            // actions: [
+            //   IconButton(
+            //     icon: Icon(Icons.check),
+            //     onPressed: _savePost, // Trigger saving the post
+            //   ),
+            // ],
+          ),
+          body: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Display images in a grid, showing the image and its index (if needed)
+                  widget.imagesWithIndex.isNotEmpty
+                      ? SingleChildScrollView(
+                          scrollDirection:
+                              Axis.horizontal, // Allow horizontal scrolling
+                          child: Row(
+                            children: widget.imagesWithIndex.keys.map((image) {
+                              return Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal:
+                                          4), // Minimal gap between images
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      // Open preview mode in a dialog when the image is tapped
+                                      _showImagePreview(image);
+                                    },
+                                    child: ClipRRect(
+                                        child: Container(
+                                      color: Theme.of(context).brightness ==
+                                              Brightness.dark
+                                          ? Colors.grey[800]
+                                          : Colors.grey[200],
+                                      child: Image.file(
+                                        image,
+                                        width:
+                                            200, // Set width for square shape
+                                        height:
+                                            200, // Set height for square shape
+                                        fit: BoxFit
+                                            .contain, // Ensure image covers the box
+                                      ),
+                                    )),
+                                  ));
+                            }).toList(),
+                          ),
+                        )
+                      : Text('No images selected'),
 
-              SizedBox(height: 20),
+                  SizedBox(height: 20),
 
-              // Title TextField
-              TextFormField(
-                  cursorColor: Theme.of(context).brightness == Brightness.dark
-                      ? Colors.white
-                      : Colors.black,
-                  maxLength: 20,
-                  controller: _titleController,
-                  decoration: InputDecoration(
-                    hintText: 'Add a title',
-                    hintStyle: TextStyle(color: Colors.grey),
-                    border: InputBorder.none,
-                    focusedBorder: InputBorder.none,
-                    counterText: "",
-                    // Custom counter showing remaining characters
-                    suffixText:
-                        '${_maxTitleLength - _titleController.text.length}',
-                    suffixStyle: TextStyle(
-                      color: Colors.grey,
-                    ),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter a username';
-                    }
-
-                    if (value.length > 20) {
-                      return 'Title cannot exceed 20 characters';
-                    }
-
-                    return null;
-                  }),
-              Container(
-                margin: EdgeInsets.only(top: 4), // Optional margin for spacing
-                height: 2, // Height of the divider
-                color: Theme.of(context).brightness == Brightness.dark
-                    ? Colors.grey[800]
-                    : Colors.grey[300], // Color of the divider
-              ),
-              SizedBox(height: 16),
-
-              // Description TextField
-              TextFormField(
-                cursorColor: Theme.of(context).brightness == Brightness.dark
-                    ? Colors.white
-                    : Colors.black,
-                controller: _descriptionController,
-                keyboardType: TextInputType.multiline,
-                maxLines: null,
-                decoration: InputDecoration(
-                  hintText: 'Add description',
-                  hintStyle: TextStyle(color: Colors.grey),
-                  border: InputBorder.none,
-                  focusedBorder: InputBorder.none,
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter a description';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 5),
-              // Hashtag place
-              SingleChildScrollView(
-                scrollDirection:
-                    Axis.horizontal, // Enables horizontal scrolling
-                child: Row(
-                  children: [
-                    // Example hashtags
-                    'Travel',
-                    'Adventure',
-                    'Nature',
-                    'Photography',
-                    'Hiking'
-                  ].map((tag) {
-                    return Container(
-                      margin: const EdgeInsets.only(
-                          right: 8), // Space between pills
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).brightness == Brightness.dark
-                            ? Colors.grey[800]
-                            : Colors.grey[300], // Background color of the pill
-                        borderRadius:
-                            BorderRadius.circular(16), // Rounded corners
-                      ),
-                      child: Text(
-                        '#$tag',
-                        style: TextStyle(
-                          color: Theme.of(context).brightness == Brightness.dark
-                              ? Colors.grey[300]
+                  // Title TextField
+                  TextFormField(
+                      cursorColor:
+                          Theme.of(context).brightness == Brightness.dark
+                              ? Colors.white
                               : Colors.black,
-                          fontSize: 14,
+                      maxLength: 20,
+                      controller: _titleController,
+                      decoration: InputDecoration(
+                        hintText: 'Add a title',
+                        hintStyle: TextStyle(color: Colors.grey),
+                        border: InputBorder.none,
+                        focusedBorder: InputBorder.none,
+                        counterText: "",
+                        // Custom counter showing remaining characters
+                        suffixText:
+                            '${_maxTitleLength - _titleController.text.length}',
+                        suffixStyle: TextStyle(
+                          color: Colors.grey,
                         ),
                       ),
-                    );
-                  }).toList(),
-                ),
-              ),
-              const SizedBox(height: 5),
-              Container(
-                margin: EdgeInsets.only(top: 4), // Optional margin for spacing
-                height: 2, // Height of the divider
-                color: Theme.of(context).brightness == Brightness.dark
-                    ? Colors.grey[800]
-                    : Colors.grey[300], // Color of the divider
-              ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter a username';
+                        }
 
-              const SizedBox(height: 16),
+                        if (value.length > 20) {
+                          return 'Title cannot exceed 20 characters';
+                        }
 
-              // Post Button
-              Center(
-                child: ElevatedButton(
-                  onPressed: _savePost,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color.fromARGB(255, 159, 118, 249),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                        vertical: 12.0, horizontal: 24.0),
+                        return null;
+                      }),
+                  Container(
+                    margin:
+                        EdgeInsets.only(top: 4), // Optional margin for spacing
+                    height: 2, // Height of the divider
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.grey[800]
+                        : Colors.grey[300], // Color of the divider
                   ),
-                  child: Text('Post', style: TextStyle(fontSize: 16)),
-                ),
-              )
-            ],
+                  SizedBox(height: 16),
+
+                  // Description TextField
+                  TextFormField(
+                    cursorColor: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.white
+                        : Colors.black,
+                    controller: _descriptionController,
+                    keyboardType: TextInputType.multiline,
+                    maxLines: null,
+                    decoration: InputDecoration(
+                      hintText: 'Add description',
+                      hintStyle: TextStyle(color: Colors.grey),
+                      border: InputBorder.none,
+                      focusedBorder: InputBorder.none,
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter a description';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 5),
+                  // Hashtag place
+                  SingleChildScrollView(
+                    scrollDirection:
+                        Axis.horizontal, // Enables horizontal scrolling
+                    child: Row(
+                      children: _tags.map((tag) {
+                        return GestureDetector(
+                            onTap: () {
+                              // Append hashtag to the description
+                              String currentText = _descriptionController.text;
+
+                              if (currentText.isNotEmpty) {
+                                _descriptionController.text =
+                                    '$currentText #$tag';
+                              } else {
+                                _descriptionController.text = '#$tag';
+                              }
+
+                              _descriptionController.selection =
+                                  TextSelection.fromPosition(
+                                TextPosition(
+                                    offset: _descriptionController.text.length),
+                              );
+
+                              setState(() {
+                                _tags.remove(
+                                    tag); // Remove the selected tag from the list
+                              });
+                            },
+                            child: Container(
+                              margin: const EdgeInsets.only(
+                                  right: 8), // Space between pills
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: Theme.of(context).brightness ==
+                                        Brightness.dark
+                                    ? Colors.grey[800]
+                                    : Colors.grey[
+                                        300], // Background color of the pill
+                                borderRadius: BorderRadius.circular(
+                                    16), // Rounded corners
+                              ),
+                              child: Text(
+                                '#$tag',
+                                style: TextStyle(
+                                  color: Theme.of(context).brightness ==
+                                          Brightness.dark
+                                      ? Colors.grey[300]
+                                      : Colors.black,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ));
+                      }).toList(),
+                    ),
+                  ),
+                  const SizedBox(height: 5),
+                  Container(
+                    margin:
+                        EdgeInsets.only(top: 4), // Optional margin for spacing
+                    height: 2, // Height of the divider
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.grey[800]
+                        : Colors.grey[300], // Color of the divider
+                  ),
+
+                  Padding(
+                    padding: const EdgeInsets.only(top: 14, bottom: 14),
+                    child: GestureDetector(
+                      onTap: () {
+                        // Action when tapped, e.g., show a location picker or map.
+                        print("location");
+                      },
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.location_on_outlined, // Location icon
+                            color:
+                                Theme.of(context).brightness == Brightness.dark
+                                    ? Colors.white
+                                    : Colors.black, // Color of the icon
+                            size: 24, // Size of the icon
+                          ),
+                          SizedBox(width: 8), // Space between icon and text
+                          Expanded(
+                            child: Text(
+                              'Mark location', // The text
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                                color: Theme.of(context).brightness ==
+                                        Brightness.dark
+                                    ? Colors.white
+                                    : Colors.black,
+                              ),
+                            ),
+                          ),
+                          Icon(
+                            Icons.arrow_forward_ios, // Right arrow icon
+                            size: 18,
+                            color:
+                                Theme.of(context).brightness == Brightness.dark
+                                    ? Colors.grey[800]
+                                    : Colors.black, // Color of the arrow
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Post and Preview Buttons in a Row
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment
+                        .spaceBetween, // Distribute space between buttons
+                    children: [
+                      // Preview Button
+                      ElevatedButton(
+                        onPressed: () {
+                          // Navigate to the PostFormPage and pass data
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => PostFormPage(
+                                title: _titleController.text, // Pass the title
+                                description: _descriptionController
+                                    .text, // Pass the description
+                                imagesWithIndex:
+                                    widget.imagesWithIndex, // Pass the images (you may need to format this if needed)
+                                location: "_location", // Pass the location
+                              ),
+                            ),
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor:
+                              const Color.fromARGB(255, 159, 118, 249),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 12.0, horizontal: 24.0),
+                        ),
+                        child: Text('Preview', style: TextStyle(fontSize: 16)),
+                      ),
+
+                      // Post Button
+                      ElevatedButton(
+                        onPressed: _savePost, // Save post
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor:
+                              const Color.fromARGB(255, 159, 118, 249),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 12.0, horizontal: 24.0),
+                        ),
+                        child: Text('Post', style: TextStyle(fontSize: 16)),
+                      ),
+                    ],
+                  )
+                ],
+              ),
+            ),
           ),
-        ),
-      ),
-    );
+        ));
   }
 }

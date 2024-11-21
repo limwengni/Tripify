@@ -14,10 +14,14 @@ class EditProfilePage extends StatefulWidget {
   _EditProfilePageState createState() => _EditProfilePageState();
 }
 
-class _EditProfilePageState extends State<EditProfilePage> {
+class _EditProfilePageState extends State<EditProfilePage>
+    with WidgetsBindingObserver {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _usernameController = TextEditingController();
+  final FocusNode _usernameFocusNode = FocusNode();
   final TextEditingController _bioController = TextEditingController();
+  final FocusNode _bioFocusNode = FocusNode();
+
   late Future<String> _profileImageUrl;
   String? _newProfilePicPath;
   final int _maxUsernameLength = 20;
@@ -27,6 +31,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+
     _profileImageUrl = Future.value('');
     _fetchUserData();
 
@@ -201,165 +207,180 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _usernameController.dispose();
+    _usernameFocusNode.dispose();
     _bioController.dispose();
+    _bioFocusNode.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Edit Profile'),
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back),
-          onPressed: () {
-            Navigator.pop(context); // Goes back to the previous screen
-          },
-        ),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              // Profile Picture Section
-              GestureDetector(
-                onTap: _pickImage,
-                child: FutureBuilder<String>(
-                  future: _profileImageUrl,
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return Shimmer.fromColors(
-                        baseColor: Colors.grey.shade300,
-                        highlightColor: Colors.grey.shade100,
-                        child: CircleAvatar(
-                          radius: 65,
-                          backgroundColor: Colors.grey.shade200,
-                        ),
-                      );
-                    } else if (snapshot.hasError) {
-                      return CircleAvatar(
-                        radius: 65,
-                        backgroundColor: Colors.grey.shade200,
-                        child: Icon(Icons.error),
-                      );
-                    } else {
-                      return CircleAvatar(
-                        radius: 65,
-                        backgroundImage: _newProfilePicPath != null &&
-                                _newProfilePicPath!.isNotEmpty
-                            ? FileImage(File(
-                                _newProfilePicPath!)) // Display the local file if available
-                            : (snapshot.data != null &&
-                                        snapshot.data!.isNotEmpty
-                                    ? CachedNetworkImageProvider(snapshot.data!)
-                                    : NetworkImage(
-                                        'https://firebasestorage.googleapis.com/v0/b/tripify-d8e12.appspot.com/o/defaults%2Fdefault.jpg?alt=media&token=8e1189e2-ea22-4bdd-952f-e9d711307251') // Network image
-                                ) as ImageProvider,
-                        child: Align(
-                          alignment: Alignment.bottomRight,
-                          child: CircleAvatar(
-                            radius: 18,
-                            backgroundColor: Colors.grey.shade200,
-                            child: Icon(Icons.camera_alt,
-                                size: 18,
-                                color: Theme.of(context).brightness ==
-                                        Brightness.light
-                                    ? Color(0xFF3B3B3B)
-                                    : null),
-                          ),
-                        ),
-                      );
-                    }
-                  },
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              // Username Field
-              TextFormField(
-                cursorColor: Theme.of(context).brightness == Brightness.dark
-                    ? Colors.white
-                    : Colors.black,
-                maxLength: 20,
-                controller: _usernameController,
-                decoration: InputDecoration(
-                  labelText: 'Username',
-                  border: OutlineInputBorder(),
-                  counterText: "",
-                  // Custom counter showing remaining characters
-                  suffixText:
-                      '${_maxUsernameLength - _usernameController.text.length}',
-                  suffixStyle: TextStyle(
-                    color: Colors.grey,
-                  ),
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter a username';
-                  }
-
-                  if (value.length < 3) {
-                    return 'Username must be at least 3 characters long';
-                  }
-
-                  if (value.length > 20) {
-                    return 'Username cannot exceed 20 characters';
-                  }
-
-                  final pattern =
-                      r'^[a-zA-Z0-9_]+$'; // Regex to allow alphanumeric and underscore only
-                  final regExp = RegExp(pattern);
-                  if (!regExp.hasMatch(value)) {
-                    return 'Username can only contain letters, numbers, and underscores';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-
-              // Bio Field
-              TextFormField(
-                controller: _bioController,
-                keyboardType: TextInputType.multiline,
-                maxLines: null,
-                maxLength: 150,
-                decoration: InputDecoration(
-                  labelText: 'Bio',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              // Remaining characters display
-              // Padding(
-              //   padding: const EdgeInsets.only(top: 8.0),
-              //   child: Text(
-              //     '${_maxBioLength - _bioController.text.length} characters remaining',
-              //     style: TextStyle(
-              //       color: _bioController.text.length > _maxBioLength
-              //           ? Colors.red
-              //           : Colors.grey,
-              //     ),
-              //   ),
-              // ),
-              const SizedBox(height: 18),
-
-              // Save Button
-              ElevatedButton(
-                onPressed: _saveProfile,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color.fromARGB(255, 159, 118, 249),
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(
-                      vertical: 12.0, horizontal: 24.0),
-                ),
-                child: Text('Save Changes', style: TextStyle(fontSize: 16)),
-              ),
-            ],
+    return GestureDetector(
+        onTap: () {
+          // Unfocus when tapping anywhere outside the form
+          FocusScope.of(context).unfocus();
+        },
+        child: Scaffold(
+          appBar: AppBar(
+            title: Text('Edit Profile'),
+            leading: IconButton(
+              icon: Icon(Icons.arrow_back),
+              onPressed: () {
+                Navigator.pop(context); // Goes back to the previous screen
+              },
+            ),
           ),
-        ),
-      ),
-    );
+          body: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                children: [
+                  // Profile Picture Section
+                  GestureDetector(
+                    onTap: _pickImage,
+                    child: FutureBuilder<String>(
+                      future: _profileImageUrl,
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return Shimmer.fromColors(
+                            baseColor: Colors.grey.shade300,
+                            highlightColor: Colors.grey.shade100,
+                            child: CircleAvatar(
+                              radius: 65,
+                              backgroundColor: Colors.grey.shade200,
+                            ),
+                          );
+                        } else if (snapshot.hasError) {
+                          return CircleAvatar(
+                            radius: 65,
+                            backgroundColor: Colors.grey.shade200,
+                            child: Icon(Icons.error),
+                          );
+                        } else {
+                          return CircleAvatar(
+                            radius: 65,
+                            backgroundImage: _newProfilePicPath != null &&
+                                    _newProfilePicPath!.isNotEmpty
+                                ? FileImage(File(
+                                    _newProfilePicPath!)) // Display the local file if available
+                                : (snapshot.data != null &&
+                                            snapshot.data!.isNotEmpty
+                                        ? CachedNetworkImageProvider(
+                                            snapshot.data!)
+                                        : NetworkImage(
+                                            'https://firebasestorage.googleapis.com/v0/b/tripify-d8e12.appspot.com/o/defaults%2Fdefault.jpg?alt=media&token=8e1189e2-ea22-4bdd-952f-e9d711307251') // Network image
+                                    ) as ImageProvider,
+                            child: Align(
+                              alignment: Alignment.bottomRight,
+                              child: CircleAvatar(
+                                radius: 18,
+                                backgroundColor: Colors.grey.shade200,
+                                child: Icon(Icons.camera_alt,
+                                    size: 18,
+                                    color: Theme.of(context).brightness ==
+                                            Brightness.light
+                                        ? Color(0xFF3B3B3B)
+                                        : null),
+                              ),
+                            ),
+                          );
+                        }
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Username Field
+                  TextFormField(
+                    cursorColor: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.white
+                        : Colors.black,
+                    maxLength: 20,
+                    controller: _usernameController,
+                    focusNode: _usernameFocusNode,
+                    decoration: InputDecoration(
+                      labelText: 'Username',
+                      border: OutlineInputBorder(),
+                      counterText: "",
+                      // Custom counter showing remaining characters
+                      suffixText:
+                          '${_maxUsernameLength - _usernameController.text.length}',
+                      suffixStyle: TextStyle(
+                        color: Colors.grey,
+                      ),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter a username';
+                      }
+
+                      if (value.length < 3) {
+                        return 'Username must be at least 3 characters long';
+                      }
+
+                      if (value.length > 20) {
+                        return 'Username cannot exceed 20 characters';
+                      }
+
+                      final pattern =
+                          r'^[a-zA-Z0-9_]+$'; // Regex to allow alphanumeric and underscore only
+                      final regExp = RegExp(pattern);
+                      if (!regExp.hasMatch(value)) {
+                        return 'Username can only contain letters, numbers, and underscores';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Bio Field
+                  TextFormField(
+                    cursorColor: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.white
+                        : Colors.black,
+                    controller: _bioController,
+                    keyboardType: TextInputType.multiline,
+                    focusNode: _bioFocusNode,
+                    maxLines: 5,
+                    maxLength: 150,
+                    decoration: InputDecoration(
+                      labelText: 'Bio',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  // Remaining characters display
+                  // Padding(
+                  //   padding: const EdgeInsets.only(top: 8.0),
+                  //   child: Text(
+                  //     '${_maxBioLength - _bioController.text.length} characters remaining',
+                  //     style: TextStyle(
+                  //       color: _bioController.text.length > _maxBioLength
+                  //           ? Colors.red
+                  //           : Colors.grey,
+                  //     ),
+                  //   ),
+                  // ),
+                  const SizedBox(height: 18),
+
+                  // Save Button
+                  ElevatedButton(
+                    onPressed: _saveProfile,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color.fromARGB(255, 159, 118, 249),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 12.0, horizontal: 24.0),
+                    ),
+                    child: Text('Save Changes', style: TextStyle(fontSize: 16)),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ));
   }
 }
