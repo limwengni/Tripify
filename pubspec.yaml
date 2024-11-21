@@ -58,6 +58,10 @@ dependencies:
   form_builder_validators: ^11.0.0
   google_maps_flutter: ^2.9.0
   google_places_flutter: ^2.0.9
+  flutter_chat_ui: ^1.6.15
+  open_filex: ^4.5.0
+  video_player: ^2.9.2
+  
   # google_maps_flutter: ^2.9.0 # optional, if you need map integration
   # flutter_google_places: ^0.3.0 # Google Places autocomplete widget
   # flutter_dotenv: ^5.0.2

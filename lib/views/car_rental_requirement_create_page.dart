@@ -189,7 +189,7 @@ class _CarRentalRequirementCreatePageState
                     final formValues = _formKey.currentState?.value;
                     print(formValues); // Print the form data
 
-                    final accommodationRequirement = CarRentalRequirementModel(
+                    final carRentalRequirement = CarRentalRequirementModel(
                       id: '',
                       title: formValues?['title'] ?? '',
                       pickupLocation: pickupLocationController.text,
@@ -213,7 +213,7 @@ class _CarRentalRequirementCreatePageState
                     try {
                       await firestoreService.insertDataWithAutoID(
                         'Car_Rental_Requirement',
-                        accommodationRequirement.toMap(),
+                        carRentalRequirement.toMap(),
                       );
 
                       Navigator.pop(context,
