@@ -199,7 +199,7 @@ class _SignupDetailsPage2State extends State<SignupDetailsPage2> {
                             selectedOption =
                                 _formKey.currentState?.fields['role']?.value;
                             String? imgDownloadUrl = await firebaseStorageService
-                                .saveImageToFirestore(
+                                .saveImageVideoToFirestore(
                                     file: widget.profilePic,
                                     storagePath:
                                         '${FirebaseAuth.instance.currentUser!.uid}/pfp');
@@ -229,7 +229,7 @@ class _SignupDetailsPage2State extends State<SignupDetailsPage2> {
                             selectedOption =
                                 _formKey.currentState?.fields['role']?.value;
                             String? imgDownloadUrl = await firebaseStorageService
-                                .saveImageToFirestore(
+                                .saveImageVideoToFirestore(
                                     file: widget.profilePic,
                                     storagePath:
                                         '${FirebaseAuth.instance.currentUser!.uid}/pfp');

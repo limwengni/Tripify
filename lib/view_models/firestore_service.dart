@@ -75,6 +75,25 @@ class FirestoreService {
     }
   }
 
+  Future<void> insertSubCollectionDataWithAutoID(String collection,
+      String subCollection, String docId, Map<String, dynamic> data) async {
+    try {
+      // Create a new document reference with an auto-generated ID
+      DocumentReference docRef =
+          _db.collection(collection).doc(docId).collection(subCollection).doc();
+
+      // Add the document ID to the data map
+      data['id'] = docRef.id;
+
+      // Insert the data into Firestore, including the document ID as an attribute
+      await docRef.set(data);
+
+      print("Data inserted successfully with document ID as an attribute.");
+    } catch (e) {
+      print("Error inserting data: $e");
+    }
+  }
+
   // Insert user data
   Future<void> insertUserData(
       String collection, Map<String, dynamic> data) async {
@@ -129,6 +148,28 @@ class FirestoreService {
     }
   }
 
+  // Select Data (Get All Sub Collection Data)
+  Stream<QuerySnapshot> getSubCollectionMessagesStreamData({
+    required String collection,
+    required String subCollection,
+    required String docId,
+    bool? descending,
+  }) {
+    try {
+      return _db
+          .collection(collection)
+          .doc(docId)
+          .collection(subCollection)
+          .orderBy("created_at", descending: descending ?? true)
+          .snapshots();
+    } catch (e) {
+      print("Error fetching data: $e");
+      // Handle the error scenario appropriately
+      // You could return an empty Stream or rethrow the error
+      return const Stream.empty(); // Empty stream as a fallback
+    }
+  }
+
   // Select Data (Get by Document ID)
   Future<Map<String, dynamic>?> getDataById(
       String collection, String documentId) async {
@@ -164,6 +205,26 @@ class FirestoreService {
     }
   }
 
+// Stream Data (Get Conversations Stream)
+  Stream<List<Map<String, dynamic>>> getConversationsStream(
+      String currentUserId) {
+    try {
+      // Listen to changes in the "Conversations" collection
+      return _db
+          .collection('Conversations')
+          .where('participants', arrayContains: currentUserId)
+          .snapshots()
+          .map((querySnapshot) {
+        return querySnapshot.docs.map((doc) {
+          final conversation = doc.data();
+          return conversation;
+        }).toList();
+      });
+    } catch (e) {
+      print("Error fetching conversations stream: $e");
+      return Stream.value([]);
+    }
+  }
   Future<bool> insertUserWithUniqueUsername(String username) async {
     final FirebaseFirestore firestore = FirebaseFirestore.instance;
 
