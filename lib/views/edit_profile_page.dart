@@ -20,6 +20,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
   final TextEditingController _bioController = TextEditingController();
   late Future<String> _profileImageUrl;
   String? _newProfilePicPath;
+  final int _maxUsernameLength = 20;
   final int _maxBioLength = 150;
   FirestoreService firestoreService = FirestoreService();
 
@@ -30,16 +31,28 @@ class _EditProfilePageState extends State<EditProfilePage> {
     _fetchUserData();
 
     // Add listener to the controller to track changes
-    _bioController.addListener(() {
+    _usernameController.addListener(() {
       // If the bio exceeds the maximum length, we trim it
-      if (_bioController.text.length > _maxBioLength) {
-        _bioController.text = _bioController.text.substring(0, _maxBioLength);
+      if (_usernameController.text.length > _maxUsernameLength) {
+        _usernameController.text =
+            _usernameController.text.substring(0, _maxUsernameLength);
         // Move the cursor to the end of the text
-        _bioController.selection = TextSelection.fromPosition(
-            TextPosition(offset: _bioController.text.length));
+        _usernameController.selection = TextSelection.fromPosition(
+            TextPosition(offset: _usernameController.text.length));
       }
       setState(() {}); // Trigger a rebuild to show the character count
     });
+
+    // _bioController.addListener(() {
+    //   // If the bio exceeds the maximum length, we trim it
+    //   if (_bioController.text.length > _maxBioLength) {
+    //     _bioController.text = _bioController.text.substring(0, _maxBioLength);
+    //     // Move the cursor to the end of the text
+    //     _bioController.selection = TextSelection.fromPosition(
+    //         TextPosition(offset: _bioController.text.length));
+    //   }
+    //   setState(() {}); // Trigger a rebuild to show the character count
+    // });
   }
 
   Future<void> _fetchUserData() async {
@@ -85,8 +98,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
     if (_formKey.currentState?.validate() ?? false) {
       if (user != null) {
-        bool isUsernameUnique = await firestoreService
-            .isUsernameCorrectForUID(_usernameController.text, user.uid);
+        bool isUsernameUnique = await firestoreService.isUsernameCorrectForUID(
+            _usernameController.text, user.uid);
 
         if (!isUsernameUnique) {
           // Username is not unique, show an error message and stop the process
@@ -250,9 +263,12 @@ class _EditProfilePageState extends State<EditProfilePage> {
                           child: CircleAvatar(
                             radius: 18,
                             backgroundColor: Colors.grey.shade200,
-                            child: Icon(Icons.camera_alt, 
-                            size: 18, 
-                            color: Theme.of(context).brightness == Brightness.light? Color(0xFF3B3B3B): null),
+                            child: Icon(Icons.camera_alt,
+                                size: 18,
+                                color: Theme.of(context).brightness ==
+                                        Brightness.light
+                                    ? Color(0xFF3B3B3B)
+                                    : null),
                           ),
                         ),
                       );
@@ -267,10 +283,18 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 cursorColor: Theme.of(context).brightness == Brightness.dark
                     ? Colors.white
                     : Colors.black,
+                maxLength: 20,
                 controller: _usernameController,
                 decoration: InputDecoration(
                   labelText: 'Username',
-                  border: OutlineInputBorder(), // Default border color
+                  border: OutlineInputBorder(),
+                  counterText: "",
+                  // Custom counter showing remaining characters
+                  suffixText:
+                      '${_maxUsernameLength - _usernameController.text.length}',
+                  suffixStyle: TextStyle(
+                    color: Colors.grey,
+                  ),
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -299,24 +323,26 @@ class _EditProfilePageState extends State<EditProfilePage> {
               // Bio Field
               TextFormField(
                 controller: _bioController,
-                maxLines: 3,
+                keyboardType: TextInputType.multiline,
+                maxLines: null,
+                maxLength: 150,
                 decoration: InputDecoration(
                   labelText: 'Bio',
                   border: OutlineInputBorder(),
                 ),
               ),
               // Remaining characters display
-              Padding(
-                padding: const EdgeInsets.only(top: 8.0),
-                child: Text(
-                  '${_maxBioLength - _bioController.text.length} characters remaining',
-                  style: TextStyle(
-                    color: _bioController.text.length > _maxBioLength
-                        ? Colors.red
-                        : Colors.grey,
-                  ),
-                ),
-              ),
+              // Padding(
+              //   padding: const EdgeInsets.only(top: 8.0),
+              //   child: Text(
+              //     '${_maxBioLength - _bioController.text.length} characters remaining',
+              //     style: TextStyle(
+              //       color: _bioController.text.length > _maxBioLength
+              //           ? Colors.red
+              //           : Colors.grey,
+              //     ),
+              //   ),
+              // ),
               const SizedBox(height: 18),
 
               // Save Button

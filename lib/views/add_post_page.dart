@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:tripify/views/image_preview_page.dart';
 import 'package:tripify/models/post_model.dart';
 import 'package:tripify/view_models/post_provider.dart'; // Import PostService
 
@@ -18,12 +19,48 @@ class _NewPostPageState extends State<NewPostPage> {
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
 
+  final int _maxTitleLength = 20;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _titleController.addListener(() {
+      // If the bio exceeds the maximum length, we trim it
+      if (_titleController.text.length > _maxTitleLength) {
+        _titleController.text =
+            _titleController.text.substring(0, _maxTitleLength);
+        // Move the cursor to the end of the text
+        _titleController.selection = TextSelection.fromPosition(
+            TextPosition(offset: _titleController.text.length));
+      }
+      setState(() {}); // Trigger a rebuild to show the character count
+    });
+  }
+
+  void _showImagePreview(File initialImage) {
+    int initialIndex = widget.imagesWithIndex.keys
+        .toList()
+        .indexOf(initialImage); // Get the clicked image index
+
+    // Navigate to the ImagePreviewScreen
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ImagePreviewScreen(
+          images:
+              widget.imagesWithIndex.keys.toList(), // Pass the list of images
+          initialIndex: initialIndex, // Pass the initial image index
+        ),
+      ),
+    );
+  }
+
   Future<void> _savePost() async {
     // Validate if fields are empty
     if (_titleController.text.isEmpty || _descriptionController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('Please fill in all fields')
-      ));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Please fill in all fields')));
       return;
     }
 
@@ -56,9 +93,8 @@ class _NewPostPageState extends State<NewPostPage> {
       Navigator.pop(context);
     } catch (e) {
       // Handle errors when saving the post
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('Error saving post: $e')
-      ));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Error saving post: $e')));
     }
   }
 
@@ -66,13 +102,13 @@ class _NewPostPageState extends State<NewPostPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Create a New Post"),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.check),
-            onPressed: _savePost, // Trigger saving the post
-          ),
-        ],
+        title: Text("New Post"),
+        // actions: [
+        //   IconButton(
+        //     icon: Icon(Icons.check),
+        //     onPressed: _savePost, // Trigger saving the post
+        //   ),
+        // ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -80,50 +116,167 @@ class _NewPostPageState extends State<NewPostPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Title TextField
-              TextField(
-                controller: _titleController,
-                decoration: InputDecoration(
-                  labelText: 'Title',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              SizedBox(height: 16),
-              
-              // Description TextField
-              TextField(
-                controller: _descriptionController,
-                maxLines: 5,
-                decoration: InputDecoration(
-                  labelText: 'Description',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              SizedBox(height: 16),
-              
               // Display images in a grid, showing the image and its index (if needed)
               widget.imagesWithIndex.isNotEmpty
-                  ? GridView.builder(
-                      shrinkWrap: true, // To make sure grid doesn't overflow
-                      itemCount: widget.imagesWithIndex.length,
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 3, // 3 images per row
-                        crossAxisSpacing: 8,
-                        mainAxisSpacing: 8,
+                  ? SingleChildScrollView(
+                      scrollDirection:
+                          Axis.horizontal, // Allow horizontal scrolling
+                      child: Row(
+                        children: widget.imagesWithIndex.keys.map((image) {
+                          return Padding(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 4), // Minimal gap between images
+                              child: GestureDetector(
+                                onTap: () {
+                                  // Open preview mode in a dialog when the image is tapped
+                                  _showImagePreview(image);
+                                },
+                                child: ClipRRect(
+                                    child: Container(
+                                  color: Theme.of(context).brightness ==
+                                          Brightness.dark
+                                      ? Colors.grey[800]
+                                      : Colors.grey[200],
+                                  child: Image.file(
+                                    image,
+                                    width: 200, // Set width for square shape
+                                    height: 200, // Set height for square shape
+                                    fit: BoxFit
+                                        .contain, // Ensure image covers the box
+                                  ),
+                                )),
+                              ));
+                        }).toList(),
                       ),
-                      itemBuilder: (context, index) {
-                        File image = widget.imagesWithIndex.keys.toList()[index];
-                        int imageIndex = widget.imagesWithIndex.values.toList()[index];
-                        return Column(
-                          children: [
-                            Image.file(image, fit: BoxFit.cover),
-                            SizedBox(height: 4),
-                            Text('Index: $imageIndex'), // Show index or other data
-                          ],
-                        );
-                      },
                     )
                   : Text('No images selected'),
+
+              SizedBox(height: 20),
+
+              // Title TextField
+              TextFormField(
+                  cursorColor: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.white
+                      : Colors.black,
+                  maxLength: 20,
+                  controller: _titleController,
+                  decoration: InputDecoration(
+                    hintText: 'Add a title',
+                    hintStyle: TextStyle(color: Colors.grey),
+                    border: InputBorder.none,
+                    focusedBorder: InputBorder.none,
+                    counterText: "",
+                    // Custom counter showing remaining characters
+                    suffixText:
+                        '${_maxTitleLength - _titleController.text.length}',
+                    suffixStyle: TextStyle(
+                      color: Colors.grey,
+                    ),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter a username';
+                    }
+
+                    if (value.length > 20) {
+                      return 'Title cannot exceed 20 characters';
+                    }
+
+                    return null;
+                  }),
+              Container(
+                margin: EdgeInsets.only(top: 4), // Optional margin for spacing
+                height: 2, // Height of the divider
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.grey[800]
+                    : Colors.grey[300], // Color of the divider
+              ),
+              SizedBox(height: 16),
+
+              // Description TextField
+              TextFormField(
+                cursorColor: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.white
+                    : Colors.black,
+                controller: _descriptionController,
+                keyboardType: TextInputType.multiline,
+                maxLines: null,
+                decoration: InputDecoration(
+                  hintText: 'Add description',
+                  hintStyle: TextStyle(color: Colors.grey),
+                  border: InputBorder.none,
+                  focusedBorder: InputBorder.none,
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter a description';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 5),
+              // Hashtag place
+              SingleChildScrollView(
+                scrollDirection:
+                    Axis.horizontal, // Enables horizontal scrolling
+                child: Row(
+                  children: [
+                    // Example hashtags
+                    'Travel',
+                    'Adventure',
+                    'Nature',
+                    'Photography',
+                    'Hiking'
+                  ].map((tag) {
+                    return Container(
+                      margin: const EdgeInsets.only(
+                          right: 8), // Space between pills
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? Colors.grey[800]
+                            : Colors.grey[300], // Background color of the pill
+                        borderRadius:
+                            BorderRadius.circular(16), // Rounded corners
+                      ),
+                      child: Text(
+                        '#$tag',
+                        style: TextStyle(
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.grey[300]
+                              : Colors.black,
+                          fontSize: 14,
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ),
+              const SizedBox(height: 5),
+              Container(
+                margin: EdgeInsets.only(top: 4), // Optional margin for spacing
+                height: 2, // Height of the divider
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.grey[800]
+                    : Colors.grey[300], // Color of the divider
+              ),
+
+              const SizedBox(height: 16),
+
+              // Post Button
+              Center(
+                child: ElevatedButton(
+                  onPressed: _savePost,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color.fromARGB(255, 159, 118, 249),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 12.0, horizontal: 24.0),
+                  ),
+                  child: Text('Post', style: TextStyle(fontSize: 16)),
+                ),
+              )
             ],
           ),
         ),

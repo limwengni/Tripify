@@ -43,6 +43,7 @@ class ThemeSelectionPage extends StatelessWidget {
                     "Theme Mode: ${themeNotifier.themeMode == ThemeMode.light ? 'Light' : 'Dark'}",
                     style: TextStyle(
                         fontSize: 18.0,
+                        fontWeight: FontWeight.w500,
                         color: isDarkMode
                             ? Colors.white
                             : Colors.black), // Text color based on theme

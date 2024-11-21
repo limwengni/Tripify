@@ -17,7 +17,8 @@ class PickImagesPage extends StatefulWidget {
   _PickImagesPageState createState() => _PickImagesPageState();
 }
 
-class _PickImagesPageState extends State<PickImagesPage> {
+class _PickImagesPageState extends State<PickImagesPage>
+    with WidgetsBindingObserver {
   List<AssetEntity> _assets = [];
   List<bool> _isFetched = [];
   List<File> _selectedImages = [];
@@ -27,6 +28,7 @@ class _PickImagesPageState extends State<PickImagesPage> {
   int currentPage = 0;
   bool isMultiple = false;
   bool _isLoading = true;
+  bool _dialogShown = false;
 
   Map<String, Duration> _videoDurations = {};
   Map<String, Uint8List?> _thumbnailCache = {};
@@ -43,12 +45,55 @@ class _PickImagesPageState extends State<PickImagesPage> {
       _isLoading = true; // Start loading
     });
 
-    final permitted = await Permission.mediaLibrary.request().isGranted;
+    final permissionState = await PhotoManager.requestPermissionExtend();
 
-    if (!permitted) {
-      await openAppSettings();
+    if (!permissionState.isAuth) {
+      // Show the permission dialog
+      if (!_dialogShown) {
+        _dialogShown = true;
+        final bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
+        final textColor = isDarkMode ? Colors.white : Colors.black;
+        final dialogBackgroundColor =
+            isDarkMode ? Color(0xFF333333) : Colors.white;
+
+        await showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              backgroundColor: dialogBackgroundColor,
+              title: Text(
+                "Permission Required",
+                style: TextStyle(color: textColor),
+              ),
+              content: Text(
+                "We need access to your media library to proceed. Please enable the permission in your app settings.",
+                style: TextStyle(color: textColor),
+              ),
+              actions: [
+                TextButton(
+                  child: Text("Cancel", style: TextStyle(color: textColor)),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    Navigator.of(context).pop();
+                  },
+                ),
+                TextButton(
+                  child:
+                      Text("Open Settings", style: TextStyle(color: textColor)),
+                  onPressed: () {
+                    Navigator.of(context).pop(); // Close the dialog
+                    openAppSettings(); // Open app settings
+                  },
+                ),
+              ],
+            );
+          },
+        );
+      }
+
+      // Stop loading after dialog
       setState(() {
-        _isLoading = false; // Stop loading if permission is not granted
+        _isLoading = false;
       });
       return;
     }
@@ -110,11 +155,11 @@ class _PickImagesPageState extends State<PickImagesPage> {
           await album.getAssetListPaged(page: page, size: pageSize);
 
       // Filter only images and videos from the assets
-      final imageAndVideoAssets = assetsPage.where((asset) {
-        return asset.type == AssetType.image || asset.type == AssetType.video;
+      final imageAssets = assetsPage.where((asset) {
+        return asset.type == AssetType.image; // Only keep images
       }).toList();
 
-      allAssets.addAll(imageAndVideoAssets);
+      allAssets.addAll(imageAssets);
 
       // If the number of assets fetched is less than the pageSize, we've reached the end
       hasMoreAssets = assetsPage.length == pageSize;
@@ -139,28 +184,28 @@ class _PickImagesPageState extends State<PickImagesPage> {
     });
 
     // Fetch video durations asynchronously for videos
-    final videoAssets =
-        allAssets.where((asset) => asset.type == AssetType.video);
+    // final videoAssets =
+    //     allAssets.where((asset) => asset.type == AssetType.video);
 
-    Map<String, Duration> videoDurations = {};
-    await Future.wait(videoAssets.map((asset) async {
-      try {
-        final file = await asset.file;
-        if (file != null) {
-          final info = await _videoInfo.getVideoInfo(file.path);
-          if (info != null && info.duration != null) {
-            videoDurations[asset.id] =
-                Duration(milliseconds: info.duration!.toInt());
-          }
-        }
-      } catch (e) {
-        print('Error fetching video info: $e');
-      }
-    }));
+    // Map<String, Duration> videoDurations = {};
+    // await Future.wait(videoAssets.map((asset) async {
+    //   try {
+    //     final file = await asset.file;
+    //     if (file != null) {
+    //       final info = await _videoInfo.getVideoInfo(file.path);
+    //       if (info != null && info.duration != null) {
+    //         videoDurations[asset.id] =
+    //             Duration(milliseconds: info.duration!.toInt());
+    //       }
+    //     }
+    //   } catch (e) {
+    //     print('Error fetching video info: $e');
+    //   }
+    // }));
 
-    setState(() {
-      _videoDurations.addAll(videoDurations);
-    });
+    // setState(() {
+    //   _videoDurations.addAll(videoDurations);
+    // });
 
     setState(() {
       _isLoading = false; // Stop loading
@@ -365,7 +410,22 @@ class _PickImagesPageState extends State<PickImagesPage> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _loadAlbums();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    if (state == AppLifecycleState.resumed) {
+      _loadAlbums();
+    }
   }
 
   @override

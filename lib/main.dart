@@ -263,13 +263,11 @@ class MainPageState extends State<MainPage> {
               final bool isDarkMode =
                   Theme.of(context).brightness == Brightness.dark;
               final textColor = isDarkMode ? Colors.white : Colors.black;
-              final dialogBackgroundColor = isDarkMode
-                  ? const Color(0xFF333333)
-                  : Colors.white;
+              final dialogBackgroundColor =
+                  isDarkMode ? const Color(0xFF333333) : Colors.white;
 
               return AlertDialog(
-                backgroundColor:
-                    dialogBackgroundColor,
+                backgroundColor: dialogBackgroundColor,
                 title: Text(
                   'Exit App',
                   style: TextStyle(
@@ -285,8 +283,7 @@ class MainPageState extends State<MainPage> {
                 ),
                 actions: [
                   TextButton(
-                    onPressed: () =>
-                        Navigator.of(context).pop(false),
+                    onPressed: () => Navigator.of(context).pop(false),
                     child: Text(
                       'No',
                       style: TextStyle(
@@ -318,11 +315,20 @@ class MainPageState extends State<MainPage> {
           _currentIndex =
               navigationStack.removeLast(); // Navigate to the previous page
           _title = widgetItems[_currentIndex]['title'];
+
+          if (_currentIndex > 3 && _currentIndex < 6) {
+            _btmNavIndex = 3;
+          } else if (_currentIndex > 5) {
+            _btmNavIndex = 4;
+          } else {
+            _btmNavIndex = _currentIndex;
+          }
         });
       } else {
         // If there are no previous pages in the stack, go to the Home page
         setState(() {
           _currentIndex = 0;
+          _btmNavIndex = 0;
           _title = widgetItems[_currentIndex]['title'];
         });
       }
