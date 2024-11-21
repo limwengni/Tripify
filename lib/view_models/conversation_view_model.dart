@@ -6,7 +6,7 @@ class ConversationViewModel {
   FirestoreService firestoreService = FirestoreService();
 
   Future<void> sendMessage({ required String senderID, required String content,
-      required ContentType contentType, required String conversationId, String? thumbnailDownloadUrl}) async {
+      required ContentType contentType, required String conversationId, String? thumbnailDownloadUrl,String? fileName}) async {
     //get current user info
     MessageModel newMessage = MessageModel(
       id: "",
@@ -17,6 +17,7 @@ class ConversationViewModel {
       createdAt: DateTime.now(),
       conversationId: conversationId,
       thumbnailDownloadUrl: thumbnailDownloadUrl,
+      fileName: fileName,
     );
 
     await firestoreService.insertSubCollectionDataWithAutoID(

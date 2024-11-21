@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:tripify/models/user_model.dart';
 
 class FirestoreService {
   static final FirestoreService _instance = FirestoreService._internal();
@@ -223,5 +224,41 @@ class FirestoreService {
       print("Error fetching conversations stream: $e");
       return Stream.value([]);
     }
+  }
+  Future<bool> insertUserWithUniqueUsername(String username) async {
+    final FirebaseFirestore firestore = FirebaseFirestore.instance;
+
+    // Check if username already exists in Firestore
+    final QuerySnapshot result = await firestore
+        .collection('User')
+        .where('username',
+            isEqualTo: username) // 'username' is the field in your Firestore
+        .get();
+
+    if (result.docs.isNotEmpty) {
+      return false; // Username already taken, return false
+    } else {
+      return true; // Username not taken
+    }
+  }
+
+  Future<bool> isUsernameCorrectForUID(String username, String uid) async {
+    final FirebaseFirestore firestore = FirebaseFirestore.instance;
+
+    final QuerySnapshot querySnapshot = await firestore
+        .collection('User')
+        .where('username', isEqualTo: username)
+        .get();
+
+    // Check if any user with the same username exists, except the current user
+    for (var doc in querySnapshot.docs) {
+      if (doc.id != uid) {
+        // A different user has the same username
+        return false;
+      }
+    }
+
+    //Username is unique if no other user matches
+    return true;
   }
 }

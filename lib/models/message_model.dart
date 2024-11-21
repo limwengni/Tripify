@@ -17,6 +17,7 @@ class MessageModel {
   final DateTime createdAt;
   final String conversationId;
   final String? thumbnailDownloadUrl;
+  final String? fileName;
 
   // Constructor
   MessageModel( {
@@ -28,6 +29,7 @@ class MessageModel {
     required this.createdAt,
     required this.conversationId,
     this.thumbnailDownloadUrl,
+    this.fileName,
   });
 
   // Convert Message to Map
@@ -44,6 +46,7 @@ class MessageModel {
       'created_at': createdAt,
       'coversation_id': conversationId,
       'thumbnail_download_url': thumbnailDownloadUrl,
+      'file_name': fileName,
     };
   }
 
@@ -63,7 +66,8 @@ class MessageModel {
           ? (data['create_at'] as Timestamp).toDate()
           : DateTime.parse(data['create_at']),
       conversationId: data['conversation_id'],
-      thumbnailDownloadUrl: data['thumbnail_download_url']
+      thumbnailDownloadUrl: data['thumbnail_download_url'],
+      fileName: data['file_name']
     );
   }
 }

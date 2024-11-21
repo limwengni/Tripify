@@ -61,12 +61,17 @@ class TravelAssistantPage extends StatelessWidget {
                 controller: _controller,
                 decoration: const InputDecoration(
                   hintText: 'Ask anything...',
-                  hintStyle: TextStyle(fontSize: 14.0),
+                  hintStyle:
+                      TextStyle(fontSize: 14.0, color: Color(0xFF3B3B3B)),
                   border: InputBorder.none,
                   focusedBorder: InputBorder.none,
                   enabledBorder: InputBorder.none,
                 ),
+                cursorColor: Color(0xFF3B3B3B),
                 enabled: !viewModel.isTyping,
+                style: TextStyle(
+                  color: Color(0xFF3B3B3B), // Light mode text color
+                ),
                 onSubmitted: (value) {
                   if (!viewModel.isTyping) {
                     _sendMessage(context, viewModel, value);
@@ -84,7 +89,7 @@ class TravelAssistantPage extends StatelessWidget {
                     ),
                   )
                 : IconButton(
-                    icon: const Icon(Icons.send),
+                    icon: const Icon(Icons.send, color: Color(0xFF3B3B3B)),
                     onPressed: () =>
                         _sendMessage(context, viewModel, _controller.text),
                   ),
@@ -109,61 +114,72 @@ class TravelAssistantPage extends StatelessWidget {
 
     if (isUser) {
       // User response with bubble
-      return Align(
-        alignment: Alignment.centerRight,
-        child: ConstrainedBox(
-          constraints: BoxConstraints(
-            maxWidth: MediaQuery.of(context).size.width * 0.7,
-          ),
-          child: Container(
-            margin: const EdgeInsets.symmetric(vertical: 5.0, horizontal: 10.0),
-            padding: const EdgeInsets.all(10.0),
-            decoration: BoxDecoration(
-              color: Color.fromARGB(255, 160, 118, 249),
-              borderRadius: BorderRadius.circular(15.0),
-            ),
-            child: RichText(
-              text: TextSpan(
-                children: parseMarkdown(message, true),
-                style: TextStyle(fontSize: 16.0),
+      return Padding(
+          padding: const EdgeInsets.only(bottom: 10.0),
+          child: Align(
+            alignment: Alignment.centerRight,
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxWidth: MediaQuery.of(context).size.width * 0.7,
               ),
-            ),
-          ),
-        ),
-      );
-    } else {
-      // AI response with circle avatar
-      return Align(
-        alignment: Alignment.centerLeft,
-        child: Container(
-          margin: const EdgeInsets.symmetric(vertical: 5.0, horizontal: 10.0),
-          child: Row(
-            crossAxisAlignment:
-                CrossAxisAlignment.start, // Aligns items at the start (top)
-            children: [
-              CircleAvatar(
-                radius: 15.0, // Adjust the size as needed
-                backgroundColor: Colors.grey[300],
-                backgroundImage: AssetImage(
-                    './assets/images/travis.png'), // Correct path to load the image
-              ),
-              SizedBox(width: 8.0), // Space between avatar and message
-              Expanded(
+              child: Container(
+                margin:
+                    const EdgeInsets.symmetric(vertical: 5.0, horizontal: 10.0),
+                padding: const EdgeInsets.all(10.0),
+                decoration: BoxDecoration(
+                  color: Color.fromARGB(255, 160, 118, 249),
+                  borderRadius: BorderRadius.circular(15.0),
+                ),
                 child: RichText(
                   text: TextSpan(
-                    children: parseMarkdown(message, false),
-                    style: TextStyle(fontSize: 16.0),
+                    children: parseMarkdown(message, true, context),
+                    style: TextStyle(
+                      fontSize: 16.0,
+                    ),
                   ),
                 ),
               ),
-            ],
-          ),
-        ),
-      );
+            ),
+          ));
+    } else {
+      // AI response with circle avatar
+      return Padding(
+          padding: const EdgeInsets.only(bottom: 10.0),
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: Container(
+              margin:
+                  const EdgeInsets.symmetric(vertical: 5.0, horizontal: 10.0),
+              child: Row(
+                crossAxisAlignment:
+                    CrossAxisAlignment.start, // Aligns items at the start (top)
+                children: [
+                  CircleAvatar(
+                    radius: 15.0, // Adjust the size as needed
+                    backgroundColor: Colors.grey[300],
+                    backgroundImage: AssetImage(
+                        './assets/images/travis.png'), // Correct path to load the image
+                  ),
+                  SizedBox(width: 8.0), // Space between avatar and message
+                  Expanded(
+                    child: RichText(
+                      text: TextSpan(
+                        children: parseMarkdown(message, false, context),
+                        style: TextStyle(
+                          fontSize: 16.0,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ));
     }
   }
 
-  List<InlineSpan> parseMarkdown(String message, bool isUser) {
+  List<InlineSpan> parseMarkdown(
+      String message, bool isUser, BuildContext context) {
     List<InlineSpan> spans = [];
     RegExp regex = RegExp(r'\*\*(.*?)\*\*');
     int lastIndex = 0;
@@ -171,7 +187,10 @@ class TravelAssistantPage extends StatelessWidget {
     for (Match match in regex.allMatches(message)) {
       spans.add(TextSpan(
         text: message.substring(lastIndex, match.start),
-        style: TextStyle(color: isUser ? Colors.white : Colors.black),
+        style: TextStyle(
+            color: isUser
+                ? Colors.white
+                : Theme.of(context).textTheme.bodyMedium?.color),
       ));
 
       // Add the bold text
@@ -179,7 +198,9 @@ class TravelAssistantPage extends StatelessWidget {
         text: match.group(1),
         style: TextStyle(
             fontWeight: FontWeight.bold,
-            color: isUser ? Colors.white : Colors.black),
+            color: isUser
+                ? Colors.white
+                : Theme.of(context).textTheme.bodyMedium?.color),
       ));
 
       lastIndex = match.end;
@@ -189,7 +210,10 @@ class TravelAssistantPage extends StatelessWidget {
     if (lastIndex < message.length) {
       spans.add(TextSpan(
         text: message.substring(lastIndex),
-        style: TextStyle(color: isUser ? Colors.white : Colors.black),
+        style: TextStyle(
+            color: isUser
+                ? Colors.white
+                : Theme.of(context).textTheme.bodyMedium?.color),
       ));
     }
 

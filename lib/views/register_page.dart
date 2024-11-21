@@ -28,6 +28,7 @@ class _RegistrationScreenState extends State<RegistrationPage> {
   late String _confirmPassword = '';
   bool _saving = false;
   bool _isPasswordVisible = false;
+  bool _isConfirmPasswordVisible = false;
 
   final RegExp _emailRegExp = RegExp(
     r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
@@ -120,7 +121,7 @@ class _RegistrationScreenState extends State<RegistrationPage> {
                           CustomTextField(
                             textField: TextField(
                               cursorColor: Color(0xFF3B3B3B),
-                              obscureText: !_isPasswordVisible,
+                              obscureText: !_isConfirmPasswordVisible,
                               onChanged: (value) {
                                 _confirmPassword = value;
                               },
@@ -129,15 +130,15 @@ class _RegistrationScreenState extends State<RegistrationPage> {
                                 hintStyle: const TextStyle(color: Colors.grey),
                                 suffixIcon: IconButton(
                                   icon: Icon(
-                                    _isPasswordVisible
+                                    _isConfirmPasswordVisible
                                         ? Icons.visibility
                                         : Icons.visibility_off,
                                     color: Colors.grey,
                                   ),
                                   onPressed: () {
                                     setState(() {
-                                      _isPasswordVisible =
-                                          !_isPasswordVisible; // Toggle visibility
+                                      _isConfirmPasswordVisible =
+                                          !_isConfirmPasswordVisible; // Toggle visibility
                                     });
                                   },
                                 ),

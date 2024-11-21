@@ -9,6 +9,8 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:intl/intl.dart';
 import 'package:tripify/models/post_model.dart';
 import 'package:tripify/views/edit_profile_page.dart';
+import 'package:tripify/views/add_post_page.dart';
+import 'package:tripify/views/pick_image_page.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/gestures.dart';
 
@@ -33,12 +35,12 @@ class _ProfilePageState extends State<ProfilePage> {
     if (user != null) {
       await userProvider.fetchUserDetails(user.uid);
 
-      // After fetching user details, the _profileImageUrl is updated in the provider
-      setState(() {
-        // Fetching the profile image URL directly from the provider after details are fetched
-        _profileImageUrl = userProvider.userModel?.profilePic ??
-            "https://firebasestorage.googleapis.com/v0/b/tripify-d8e12.appspot.com/o/defaults%2Fdefault.jpg?alt=media&token=8e1189e2-ea22-4bdd-952f-e9d711307251";
-      });
+      // // After fetching user details, the _profileImageUrl is updated in the provider
+      // setState(() {
+      //   // Fetching the profile image URL directly from the provider after details are fetched
+      //   _profileImageUrl = userProvider.userModel?.profilePic ??
+      //       "https://firebasestorage.googleapis.com/v0/b/tripify-d8e12.appspot.com/o/defaults%2Fdefault.jpg?alt=media&token=8e1189e2-ea22-4bdd-952f-e9d711307251";
+      // });
 
       // print(_profileImageUrl);
     }
@@ -75,187 +77,21 @@ class _ProfilePageState extends State<ProfilePage> {
             const SizedBox(height: 10.0), // Spacing below title
 
             // Grid for displaying user posts
-            // Expanded(
-            //   child: FutureBuilder<List<Post>>(
-            //     future: userProvider.fetchUserPosts(), // Replace with your actual method
-            //     builder: (context, snapshot) {
-            //       if (snapshot.connectionState == ConnectionState.waiting) {
-            //         return Center(child: CircularProgressIndicator());
-            //       } else if (snapshot.hasError) {
-            //         return Center(child: Text('Error: ${snapshot.error}'));
-            //       } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            //         return Center(child: Text('No posts available.'));
-            //       }
-
-            //       final posts = snapshot.data!;
-
-            //       return GridView.builder(
-            //         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            //           crossAxisCount: 2, // Two posts per row
-            //           childAspectRatio: 0.75, // Adjust this for post aspect ratio
-            //           crossAxisSpacing: 8.0,
-            //           mainAxisSpacing: 8.0,
-            //         ),
-            //         itemCount: posts.length,
-            //         itemBuilder: (context, index) {
-            //           return _buildPostUi(posts[index]); // Pass actual post object
-            //         },
-            //       );
-            //     },
-            //   ),
-            // ),
+            _buildPostGrid(),
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildShimmerPlaceholder() {
-    return Container(
-      padding: const EdgeInsets.only(top: 0.0, bottom: 16.0),
-      decoration: BoxDecoration(
-        border: Border(bottom: BorderSide(color: Colors.grey.shade300)),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Row 1: Profile Picture and Username
-          Row(
-            children: [
-              // Profile Picture Shimmer
-              Shimmer.fromColors(
-                baseColor: Colors.grey.shade300,
-                highlightColor: Colors.grey.shade100,
-                child: CircleAvatar(
-                  radius: 50,
-                  backgroundColor: Colors.grey.shade200,
-                ),
-              ),
-              const SizedBox(width: 16.0),
-              // Username and Join Date Shimmer
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Shimmer.fromColors(
-                      baseColor: Colors.grey.shade300,
-                      highlightColor: Colors.grey.shade100,
-                      child: Container(
-                        height: 20.0,
-                        width: 150,
-                        color: Colors.grey.shade300,
-                      ),
-                    ),
-                    const SizedBox(height: 4.0),
-                    Shimmer.fromColors(
-                      baseColor: Colors.grey.shade300,
-                      highlightColor: Colors.grey.shade100,
-                      child: Container(
-                        height: 16.0,
-                        width: 100,
-                        color: Colors.grey.shade300,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16.0),
-
-          // Row 2: Bio Shimmer
-          Shimmer.fromColors(
-            baseColor: Colors.grey.shade300,
-            highlightColor: Colors.grey.shade100,
-            child: Container(
-              height: 16.0,
-              width: double.infinity,
-              color: Colors.grey.shade300,
-            ),
-          ),
-          const SizedBox(height: 8.0),
-          Shimmer.fromColors(
-            baseColor: Colors.grey.shade300,
-            highlightColor: Colors.grey.shade100,
-            child: Container(
-              height: 16.0,
-              width: double.infinity,
-              color: Colors.grey.shade300,
-            ),
-          ),
-          const SizedBox(height: 16.0),
-
-          // Row 3: Likes, Comments, and Saved Shimmer
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  _buildStatPlaceholder(),
-                  const SizedBox(width: 16.0),
-                  _buildStatPlaceholder(),
-                  const SizedBox(width: 16.0),
-                  _buildStatPlaceholder(),
-                ],
-              ),
-              // Edit Profile Button Shimmer
-              Shimmer.fromColors(
-                baseColor: Colors.grey.shade300,
-                highlightColor: Colors.grey.shade100,
-                child: Container(
-                  height: 40.0,
-                  width: 100.0,
-                  color: Colors.grey.shade300,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-// Create a shimmer effect for each stat (Likes, Comments, Saved)
-  Widget _buildStatPlaceholder() {
-    return Column(
-      children: [
-        Shimmer.fromColors(
-          baseColor: Colors.grey.shade300,
-          highlightColor: Colors.grey.shade100,
-          child: Container(
-            height: 16.0,
-            width: 40.0,
-            color: Colors.grey.shade300,
-          ),
-        ),
-        const SizedBox(height: 4.0),
-        Shimmer.fromColors(
-          baseColor: Colors.grey.shade300,
-          highlightColor: Colors.grey.shade100,
-          child: Container(
-            height: 14.0,
-            width: 30.0,
-            color: Colors.grey.shade300,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildPostUi(String postId) {
-    return Card(
-      elevation: 2,
-      child: Container(
-        padding: EdgeInsets.all(8.0),
-        child: Column(
-          children: [
-            // Example content for the post
-            Image.network(
-                'https://example.com/post_image/$postId'), // Replace with your image URL
-            SizedBox(height: 8.0),
-            Text('Post Title for $postId'),
-          ],
-        ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          // Action when the button is pressed
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => PickImagesPage()),
+          );
+        },
+        child: const Icon(Icons.add, color: Colors.white),
+        backgroundColor:
+            const Color.fromARGB(255, 159, 118, 249), // Customize color
       ),
     );
   }
@@ -280,7 +116,7 @@ class _ProfilePageState extends State<ProfilePage> {
               children: [
                 // Profile Picture
                 CachedNetworkImage(
-                  imageUrl: _profileImageUrl ?? '', // Use your image URL
+                  imageUrl: userProvider.profilePicUrl, // Use your image URL
                   placeholder: (context, url) => Shimmer.fromColors(
                     baseColor: Colors.grey.shade300,
                     highlightColor: Colors.grey.shade100,
@@ -291,53 +127,17 @@ class _ProfilePageState extends State<ProfilePage> {
                   ),
                   errorWidget: (context, url, error) => CircleAvatar(
                     radius: 50,
-                    backgroundColor: Colors.grey.shade200,
-                    child: Icon(Icons.error),
+                    backgroundImage: NetworkImage(
+                      "https://firebasestorage.googleapis.com/v0/b/tripify-d8e12.appspot.com/o/defaults%2Fdefault.jpg?alt=media&token=8e1189e2-ea22-4bdd-952f-e9d711307251",
+                    ), // Use the default image URL
+                    backgroundColor:
+                        Colors.grey.shade200, // Fallback background color
                   ),
                   imageBuilder: (context, imageProvider) => CircleAvatar(
                     radius: 50,
                     backgroundImage: imageProvider,
                   ),
                 ),
-                // FutureBuilder<String>(
-                //   future: _profileImageUrl,
-                //   builder: (context, snapshot) {
-                //     if (snapshot.connectionState == ConnectionState.waiting) {
-                //       return Shimmer.fromColors(
-                //         baseColor: Colors.grey.shade300,
-                //         highlightColor: Colors.grey.shade100,
-                //         child: CircleAvatar(
-                //           radius: 50,
-                //           backgroundColor: Colors.grey.shade200,
-                //         ),
-                //       );
-                //     } else if (snapshot.hasError) {
-                //       // Handle the error case
-                //       return CircleAvatar(
-                //         radius: 50,
-                //         backgroundColor: Colors.grey.shade200,
-                //         child: Icon(Icons.error), // Error icon
-                //       );
-                //     } else {
-                //       // Image URL loaded successfully
-                //       return CircleAvatar(
-                //         radius: 50,
-                //         backgroundImage:
-                //             CachedNetworkImageProvider(snapshot.data!),
-                //       );
-
-                //       // return ClipOval(
-                //       //     child: Image.network(
-                //       //   'https://firebasestorage.googleapis.com/v0/b/tripify-d8e12.appspot.com/o/AD9FpoxYM1XgY9h5JIV2QQaOouU2%2Fpfp%2Fpfp.jpg?alt=media&token=812a109f-05a2-4535-84ce-79666b652c60',
-                //       //   width:
-                //       //       60, // Set width and height to match the CircleAvatar size
-                //       //   height: 60,
-                //       //   fit: BoxFit
-                //       //       .cover, // Crop the image to fit inside the circle
-                //       // ));
-                //     }
-                //   },
-                // ),
                 const SizedBox(width: 16.0),
                 // Username and Join Date
                 Expanded(
@@ -501,5 +301,335 @@ class _ProfilePageState extends State<ProfilePage> {
     if (result == true) {
       _fetchUserData();
     }
+  }
+
+  Widget _buildShimmerPlaceholder() {
+    return Container(
+      padding: const EdgeInsets.only(top: 0.0, bottom: 16.0),
+      decoration: BoxDecoration(
+        border: Border(bottom: BorderSide(color: Colors.grey.shade300)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Row 1: Profile Picture and Username
+          Row(
+            children: [
+              // Profile Picture Shimmer
+              Shimmer.fromColors(
+                baseColor: Colors.grey.shade300,
+                highlightColor: Colors.grey.shade100,
+                child: CircleAvatar(
+                  radius: 50,
+                  backgroundColor: Colors.grey.shade200,
+                ),
+              ),
+              const SizedBox(width: 16.0),
+              // Username and Join Date Shimmer
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Shimmer.fromColors(
+                      baseColor: Colors.grey.shade300,
+                      highlightColor: Colors.grey.shade100,
+                      child: Container(
+                        height: 20.0,
+                        width: 150,
+                        color: Colors.grey.shade300,
+                      ),
+                    ),
+                    const SizedBox(height: 4.0),
+                    Shimmer.fromColors(
+                      baseColor: Colors.grey.shade300,
+                      highlightColor: Colors.grey.shade100,
+                      child: Container(
+                        height: 16.0,
+                        width: 100,
+                        color: Colors.grey.shade300,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16.0),
+
+          // Row 2: Bio Shimmer
+          Shimmer.fromColors(
+            baseColor: Colors.grey.shade300,
+            highlightColor: Colors.grey.shade100,
+            child: Container(
+              height: 16.0,
+              width: double.infinity,
+              color: Colors.grey.shade300,
+            ),
+          ),
+          const SizedBox(height: 8.0),
+          Shimmer.fromColors(
+            baseColor: Colors.grey.shade300,
+            highlightColor: Colors.grey.shade100,
+            child: Container(
+              height: 16.0,
+              width: double.infinity,
+              color: Colors.grey.shade300,
+            ),
+          ),
+          const SizedBox(height: 16.0),
+
+          // Row 3: Likes, Comments, and Saved Shimmer
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  _buildStatPlaceholder(),
+                  const SizedBox(width: 16.0),
+                  _buildStatPlaceholder(),
+                  const SizedBox(width: 16.0),
+                  _buildStatPlaceholder(),
+                ],
+              ),
+              // Edit Profile Button Shimmer
+              Shimmer.fromColors(
+                baseColor: Colors.grey.shade300,
+                highlightColor: Colors.grey.shade100,
+                child: Container(
+                  height: 40.0,
+                  width: 100.0,
+                  color: Colors.grey.shade300,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+// Create a shimmer effect for each stat (Likes, Comments, Saved)
+  Widget _buildStatPlaceholder() {
+    return Column(
+      children: [
+        Shimmer.fromColors(
+          baseColor: Colors.grey.shade300,
+          highlightColor: Colors.grey.shade100,
+          child: Container(
+            height: 16.0,
+            width: 40.0,
+            color: Colors.grey.shade300,
+          ),
+        ),
+        const SizedBox(height: 4.0),
+        Shimmer.fromColors(
+          baseColor: Colors.grey.shade300,
+          highlightColor: Colors.grey.shade100,
+          child: Container(
+            height: 14.0,
+            width: 30.0,
+            color: Colors.grey.shade300,
+          ),
+        ),
+      ],
+    );
+  }
+
+// Create a shimmer effect for each posts
+  Widget _buildPostShimmer() {
+    Color cardColor = Theme.of(context).brightness == Brightness.dark
+        ? Color(0xFF333333)
+        : Colors.white;
+
+    return Padding(
+      padding: EdgeInsets.all(5),
+      child: Card(
+        semanticContainer: true,
+        color: cardColor,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10.0),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            // Image Shimmer (same size as the actual image)
+            Shimmer.fromColors(
+              baseColor: Colors.grey.shade300,
+              highlightColor: Colors.grey.shade100,
+              child: Container(
+                height: 150.0, // Adjust height to match actual image size
+                width: double.infinity,
+                color: Colors.grey.shade300,
+              ),
+            ),
+            // Text section with shimmer
+            Padding(
+              padding: EdgeInsets.all(10.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Title Shimmer
+                  Shimmer.fromColors(
+                    baseColor: Colors.grey.shade300,
+                    highlightColor: Colors.grey.shade100,
+                    child: Container(
+                      height: 16.0, // Adjust width to match actual title length
+                      width: 100.0, // Placeholder width for title
+                      color: Colors.grey.shade300,
+                    ),
+                  ),
+                  SizedBox(
+                      height: 4.0), // Adds space between title and like section
+
+                  // Likes Section Shimmer (Right aligned)
+                  Row(
+                    mainAxisAlignment:
+                        MainAxisAlignment.end, // Align to the right
+                    children: [
+                      // Like icon shimmer
+                      Shimmer.fromColors(
+                        baseColor: Colors.grey.shade300,
+                        highlightColor: Colors.grey.shade100,
+                        child: Icon(
+                          Icons.favorite_outline,
+                          color: Colors.grey.shade300,
+                          size: 16.0,
+                        ),
+                      ),
+                      SizedBox(width: 4.0),
+                      // Like count shimmer
+                      Shimmer.fromColors(
+                        baseColor: Colors.grey.shade300,
+                        highlightColor: Colors.grey.shade100,
+                        child: Container(
+                          height: 12.0,
+                          width:
+                              40.0, // Adjust width for like count placeholder
+                          color: Colors.grey.shade300,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+// Grid for displaying post shimmers
+  Widget _buildPostShimmerGrid() {
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: NeverScrollableScrollPhysics(),
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        childAspectRatio: 0.75,
+        crossAxisSpacing: 8.0,
+        mainAxisSpacing: 8.0,
+      ),
+      itemCount: 10, // Show 10 placeholders
+      itemBuilder: (context, index) {
+        return _buildPostShimmer(); // Display shimmer placeholders
+      },
+    );
+  }
+
+// Display shimmer grid until posts are loaded
+  Widget _buildPostGrid() {
+    bool isLoading = false; // Update this based on loading status
+
+    return isLoading
+        ? _buildPostShimmerGrid()
+        : GridView.builder(
+            shrinkWrap: true,
+            physics: NeverScrollableScrollPhysics(),
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              childAspectRatio: 0.75,
+              crossAxisSpacing: 8.0,
+              mainAxisSpacing: 8.0,
+            ),
+            itemCount: 10, // Set this number based on actual post count
+            itemBuilder: (context, index) {
+              return _buildPostUi(); // Display actual post UI
+            },
+          );
+  }
+
+// Build Post UI
+  Widget _buildPostUi() {
+    Color cardColor = Theme.of(context).brightness == Brightness.dark
+        ? Color(0xFF333333)
+        : Colors.white;
+
+    return Padding(
+      padding: EdgeInsets.all(5),
+      child: Card(
+        semanticContainer: true,
+        color: cardColor,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10.0),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Expanded(
+              child: CachedNetworkImage(
+                imageUrl:
+                    'https://firebasestorage.googleapis.com/v0/b/tripify-d8e12.appspot.com/o/GdkQDokljsVMIkPLanvtFdoshDR2%2Fpfp%2FUntitled732_20241115203206.png?alt=media&token=54a8e225-170c-470a-b531-807ab7c95d09', // Replace with dynamic image URL
+                placeholder: (context, url) => Shimmer.fromColors(
+                  baseColor: Colors.grey[300]!,
+                  highlightColor: Colors.grey[100]!,
+                  child: Container(
+                    color: Colors.white,
+                    width: double.infinity,
+                  ),
+                ),
+                errorWidget: (context, url, error) => Icon(Icons.error),
+                width: double.infinity,
+                height: double.infinity,
+                fit: BoxFit.cover,
+              ),
+            ),
+            // Text section with dynamic post title
+            Padding(
+              padding: EdgeInsets.all(10.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Post Title
+                  Text(
+                    'This is a title', // Replace with dynamic post title
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  SizedBox(
+                      height:
+                          8.0), // Adds space between the title and likes section
+
+                  // Likes Section (Right aligned)
+                  Row(
+                    mainAxisAlignment:
+                        MainAxisAlignment.end, // Align to the right
+                    children: [
+                      Icon(Icons.favorite_outline, size: 16.0),
+                      SizedBox(width: 4.0),
+                      Text(
+                        '20', // Replace with dynamic like count
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

@@ -176,26 +176,27 @@ class _ChatPageState extends State<ChatPage> {
 
     // var alignment =
     //     isCurrentUser ? Alignment.centerRight : Alignment.centerLeft;
-    return 
-    // Container(
-    //     alignment: alignment,
-        // child: 
+    return
+        // Container(
+        //     alignment: alignment,
+        // child:
         Column(
-          crossAxisAlignment:
-              isCurrentUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-          children: [
-            ChatBubble(
-              message: data['content'],
-              isCurrentUser: isCurrentUser,
-              createdAt: data['created_at'].toDate(),
-              contentType: data['content_type'],
-            ),
-            const SizedBox(
-              height: 5,
-            ),
-          ],
-        // ),
-        );
+      crossAxisAlignment:
+          isCurrentUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+      children: [
+        ChatBubble(
+          message: data['content'],
+          isCurrentUser: isCurrentUser,
+          createdAt: data['created_at'].toDate(),
+          contentType: data['content_type'],
+          fileName: data['file_name'],
+        ),
+        const SizedBox(
+          height: 5,
+        ),
+      ],
+      // ),
+    );
   }
 
   Widget _buildUserInput(String currentUserId, String conversationId) {
@@ -234,16 +235,19 @@ class _ChatPageState extends State<ChatPage> {
                           for (var pickedFile in result.files) {
                             if (pickedFile.path != null) {
                               File file = File(pickedFile.path!);
-
+                              String pdfFileName = pickedFile
+                                  .name; // This gives you the name of the file
                               String? pdfDownloadUrl =
                                   await _firebaseStorageService.saveToFirestore(
                                       file: file, storagePath: conversationId);
 
                               _conversationViewModel.sendMessage(
-                                  senderID: currentUserId,
-                                  content: pdfDownloadUrl!,
-                                  contentType: ContentType.file,
-                                  conversationId: conversationId);
+                                senderID: currentUserId,
+                                content: pdfDownloadUrl!,
+                                contentType: ContentType.file,
+                                conversationId: conversationId,
+                                fileName: pdfFileName,
+                              );
                             }
                           }
                         } else {
@@ -283,16 +287,12 @@ class _ChatPageState extends State<ChatPage> {
                                         .saveImageVideoToFirestore(
                                             file: File(file.path),
                                             storagePath: conversationId);
-                           
-
-                          
 
                                 _conversationViewModel.sendMessage(
                                   senderID: currentUserId,
                                   content: videoDownloadUrl!,
                                   contentType: ContentType.video,
                                   conversationId: conversationId,
-                                  
                                 );
                               }
                             }

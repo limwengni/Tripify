@@ -89,20 +89,22 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
-    return Consumer<ThemeNotifier>(
-      builder: (context, themeNotifier, child) {
-        print("Current themeMode: ${themeNotifier.themeMode}");
-        print(
-            "Dark theme applied: ${themeNotifier.themeMode == ThemeMode.dark}");
-        return MaterialApp(
-          theme: lightTheme,
-          darkTheme: darkTheme,
-          themeMode: themeNotifier.themeMode,
-          debugShowCheckedModeBanner: false,
-          home: FirebaseAuthStateHandler(),
-        );
-      },
-    );
+    return ChangeNotifierProvider(
+        create: (context) => ThemeNotifier(),
+        child: Consumer<ThemeNotifier>(
+          builder: (context, themeNotifier, child) {
+            print("Current themeMode: ${themeNotifier.themeMode}");
+            print(
+                "Dark theme applied: ${themeNotifier.themeMode == ThemeMode.dark}");
+            return MaterialApp(
+              theme: lightTheme,
+              darkTheme: darkTheme,
+              themeMode: themeNotifier.themeMode,
+              debugShowCheckedModeBanner: false,
+              home: FirebaseAuthStateHandler(),
+            );
+          },
+        ));
   }
 }
 
@@ -110,7 +112,8 @@ class FirebaseAuthStateHandler extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<User?>(
-      stream: FirebaseAuth.instance.authStateChanges(), // Listen for auth state changes
+      stream: FirebaseAuth.instance
+          .authStateChanges(), // Listen for auth state changes
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           // Show loading spinner while waiting for Firebase auth state
@@ -220,18 +223,17 @@ class MainPageState extends State<MainPage> {
                 duration: Duration(seconds: 2),
               ),
             );
-           
           }
         },
         child: const Icon(Icons.add),
       );
-    }else if(index == 5){
+    } else if (index == 5) {
       return FloatingActionButton(
         onPressed: () async {
           final result = await Navigator.push(
               context,
               MaterialPageRoute(
-                  builder: (builder) =>CarRentalRequirementCreatePage()));
+                  builder: (builder) => CarRentalRequirementCreatePage()));
 
           if (result != null && result is String) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -241,7 +243,6 @@ class MainPageState extends State<MainPage> {
                 duration: Duration(seconds: 2),
               ),
             );
-          
           }
         },
         child: const Icon(Icons.add),
@@ -258,20 +259,54 @@ class MainPageState extends State<MainPage> {
       // Show confirmation dialog if user is on Home page
       bool shouldExit = await showDialog(
             context: context,
-            builder: (context) => AlertDialog(
-              title: const Text('Exit App'),
-              content: const Text('Do you want to exit the app?'),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(false),
-                  child: const Text('No'),
+            builder: (BuildContext context) {
+              final bool isDarkMode =
+                  Theme.of(context).brightness == Brightness.dark;
+              final textColor = isDarkMode ? Colors.white : Colors.black;
+              final dialogBackgroundColor = isDarkMode
+                  ? const Color(0xFF333333)
+                  : Colors.white;
+
+              return AlertDialog(
+                backgroundColor:
+                    dialogBackgroundColor,
+                title: Text(
+                  'Exit App',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: textColor,
+                  ),
                 ),
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(true),
-                  child: const Text('Yes'),
+                content: Text(
+                  'Do you want to exit the app?',
+                  style: TextStyle(
+                    color: textColor,
+                  ),
                 ),
-              ],
-            ),
+                actions: [
+                  TextButton(
+                    onPressed: () =>
+                        Navigator.of(context).pop(false),
+                    child: Text(
+                      'No',
+                      style: TextStyle(
+                        color: textColor,
+                      ),
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () =>
+                        Navigator.of(context).pop(true), // Exit app
+                    child: Text(
+                      'Yes',
+                      style: TextStyle(
+                        color: textColor,
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            },
           ) ??
           false;
 
@@ -333,5 +368,3 @@ class MainPageState extends State<MainPage> {
             floatingActionButton: floatingButtonReturn(_currentIndex)));
   }
 }
-
-

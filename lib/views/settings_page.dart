@@ -37,7 +37,6 @@ class SettingsPage extends StatelessWidget {
             context,
             items: [
               "Help Center",
-              "Switch Account",
               "Log Out",
             ],
           ),
@@ -142,18 +141,27 @@ class SettingsPage extends StatelessWidget {
             showDialog(
               context: context,
               builder: (BuildContext context) {
-                final bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
-                final textColor =
-                    isDarkMode ? Colors.white : Colors.black; // Adapts to dark/light theme
+                final bool isDarkMode =
+                    Theme.of(context).brightness == Brightness.dark;
+                final textColor = isDarkMode
+                    ? Colors.white
+                    : Colors.black;
+                final dialogBackgroundColor = isDarkMode
+                    ? Color(0xFF333333)
+                    : Colors.white;
 
                 return AlertDialog(
-                  title: Text("Log Out"),
-                  content: Text("Are you sure you want to log out?"),
+                  backgroundColor:
+                      dialogBackgroundColor,
+                  title: Text("Log Out",
+                      style: TextStyle(color: textColor)),
+                  content: Text("Are you sure you want to log out?",
+                      style: TextStyle(color: textColor)),
                   actions: [
                     TextButton(
                       child: Text("Cancel", style: TextStyle(color: textColor)),
                       onPressed: () {
-                        Navigator.of(context).pop(); // Dismiss the dialog
+                        Navigator.of(context).pop();
                       },
                     ),
                     TextButton(
@@ -163,11 +171,14 @@ class SettingsPage extends StatelessWidget {
                         await Provider.of<AuthService>(context, listen: false)
                             .logout(context);
 
-                        Navigator.of(context).pop(); // Dismiss the dialog
-                        Navigator.of(context)
-                            .popUntil((route) => route.isFirst);
-                        Navigator.pushReplacement(context,
-                            MaterialPageRoute(builder: (_) => WelcomePage()));
+                        Navigator.of(context).pop();
+                        Navigator.of(context).popUntil((route) =>
+                            route.isFirst);
+                        Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                                builder: (_) =>
+                                    WelcomePage()));
                       },
                     ),
                   ],

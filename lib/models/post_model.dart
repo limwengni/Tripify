@@ -6,6 +6,10 @@ class Post {
   final String description;
   final DateTime createdAt;
   final DateTime? updatedAt;
+  final List<String> media;
+  int likesCount;
+  int commentsCount;
+  int savedCount;
 
   // Constructor
   Post({
@@ -14,6 +18,10 @@ class Post {
     required this.description,
     required this.createdAt,
     this.updatedAt,
+    required this.media,
+    required this.likesCount,
+    required this.commentsCount,
+    required this.savedCount,
   });
 
   // Method to convert a Post object to a Map for Firestore
@@ -24,6 +32,10 @@ class Post {
       'description': description,
       'createdAt': createdAt?.toIso8601String(),
       'updatedAt': updatedAt?.toIso8601String(),
+      'media': media, // Store media as an array of URLs
+      'like_count': likesCount,
+      'comment_count': commentsCount,
+      'saved_count': savedCount,
     };
   }
 
@@ -35,6 +47,34 @@ class Post {
       description: data['description'],
       createdAt: (data['created_at'] as Timestamp).toDate(),
       updatedAt: (data['updated_at'] as Timestamp?)?.toDate(),
+      media: List<String>.from(data['media'] ?? []), // Handle media array
+      likesCount: data['like_count'] ?? 0,
+      commentsCount: data['comment_count'] ?? 0,
+      savedCount: data['saved_count'] ?? 0,
+    );
+  }
+
+  Post copyWith({
+    String? userId,
+    String? title,
+    String? description,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    List<String>? media,
+    int? likesCount,
+    int? commentsCount,
+    int? savedCount,
+  }) {
+    return Post(
+      userId: userId ?? this.userId,
+      title: title ?? this.title,
+      description: description ?? this.description,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      media: media ?? this.media,
+      likesCount: likesCount ?? this.likesCount,
+      commentsCount: commentsCount ?? this.commentsCount,
+      savedCount: savedCount ?? this.savedCount,
     );
   }
 }

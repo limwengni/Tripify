@@ -85,7 +85,28 @@ class _SignupDetailsPage1State extends State<SignupDetailsPage1> {
                             // onChanged: (val) {
                             //   print(val);
                             // },
-                            validator: FormBuilderValidators.required(),
+                            validator: FormBuilderValidators.compose([
+                              FormBuilderValidators.required(
+                                  errorText: 'Username is required'),
+                              FormBuilderValidators.minLength(3,
+                                  errorText:
+                                      'Username must be at least 3 characters long'),
+                              FormBuilderValidators.maxLength(20,
+                                  errorText:
+                                      'Username cannot exceed 20 characters'),
+                              (val) {
+                                if (val == null || val.isEmpty) {
+                                  return null;
+                                }
+                                final pattern =
+                                    r'^[a-zA-Z0-9_]+$'; // Regex to allow alphanumeric and underscore only
+                                final regExp = RegExp(pattern);
+                                if (!regExp.hasMatch(val)) {
+                                  return 'Username can only contain letters, numbers, and underscores';
+                                }
+                                return null;
+                              },
+                            ]),
                           ),
                           const SizedBox(
                             height: 15,
