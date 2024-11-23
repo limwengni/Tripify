@@ -47,5 +47,8 @@ final ThemeData darkTheme = ThemeData(
     selectionHandleColor: Colors.white,
     selectionColor: Color(0xFF9F76F9),
   ),
+  drawerTheme: DrawerThemeData(
+    backgroundColor: Colors.grey[900],
+  )
   
 );
