@@ -155,11 +155,13 @@ class _PickImagesPageState extends State<PickImagesPage>
           await album.getAssetListPaged(page: page, size: pageSize);
 
       // Filter only images and videos from the assets
-      final imageAssets = assetsPage.where((asset) {
+      final imageAndVideosAssets = assetsPage.where((asset) {
         return asset.type == AssetType.image; // Only keep images
       }).toList();
 
-      allAssets.addAll(imageAssets);
+      //|| asset.type == AssetType.video
+
+      allAssets.addAll(imageAndVideosAssets);
 
       // If the number of assets fetched is less than the pageSize, we've reached the end
       hasMoreAssets = assetsPage.length == pageSize;
@@ -184,28 +186,29 @@ class _PickImagesPageState extends State<PickImagesPage>
     });
 
     // Fetch video durations asynchronously for videos
-    // final videoAssets =
-    //     allAssets.where((asset) => asset.type == AssetType.video);
+    Map<String, Duration> videoDurations = {};
+    final videoAssets =
+        allAssets.where((asset) => asset.type == AssetType.video);
 
     // Map<String, Duration> videoDurations = {};
-    // await Future.wait(videoAssets.map((asset) async {
-    //   try {
-    //     final file = await asset.file;
-    //     if (file != null) {
-    //       final info = await _videoInfo.getVideoInfo(file.path);
-    //       if (info != null && info.duration != null) {
-    //         videoDurations[asset.id] =
-    //             Duration(milliseconds: info.duration!.toInt());
-    //       }
-    //     }
-    //   } catch (e) {
-    //     print('Error fetching video info: $e');
-    //   }
-    // }));
+    await Future.wait(videoAssets.map((asset) async {
+      try {
+        final file = await asset.file;
+        if (file != null) {
+          final info = await _videoInfo.getVideoInfo(file.path);
+          if (info != null && info.duration != null) {
+            videoDurations[asset.id] =
+                Duration(milliseconds: info.duration!.toInt());
+          }
+        }
+      } catch (e) {
+        print('Error fetching video info: $e');
+      }
+    }));
 
-    // setState(() {
-    //   _videoDurations.addAll(videoDurations);
-    // });
+    setState(() {
+      _videoDurations.addAll(videoDurations);
+    });
 
     setState(() {
       _isLoading = false; // Stop loading
@@ -587,7 +590,7 @@ class _PickImagesPageState extends State<PickImagesPage>
                     );
                   },
                 )
-              : Center(child: Text('No images available')),
+              : Center(child: Text('No assets available')),
     );
   }
 }

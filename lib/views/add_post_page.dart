@@ -17,6 +17,7 @@ class NewPostPage extends StatefulWidget {
 }
 
 class _NewPostPageState extends State<NewPostPage> {
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
 
@@ -48,6 +49,7 @@ class _NewPostPageState extends State<NewPostPage> {
   }
 
   void _showImagePreview(File initialImage) {
+    // Preview the asset
     int initialIndex = widget.imagesWithIndex.keys
         .toList()
         .indexOf(initialImage); // Get the clicked image index
@@ -65,6 +67,7 @@ class _NewPostPageState extends State<NewPostPage> {
     );
   }
 
+// Use later..
   Future<void> _savePost() async {
     // Validate if fields are empty
     if (_titleController.text.isEmpty || _descriptionController.text.isEmpty) {
@@ -107,6 +110,35 @@ class _NewPostPageState extends State<NewPostPage> {
     }
   }
 
+  void _goToNextPage() {
+    if (_formKey.currentState?.validate() ?? false) {
+      // Form is valid, navigate to the next page
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => PostFormPage(
+            title: _titleController.text, // Pass the title
+            description: _descriptionController.text, // Pass the description
+            imagesWithIndex: widget.imagesWithIndex, // Pass the images
+            location: "Malaysia", // Pass the location
+            // Pass other required data
+          ),
+        ),
+      );
+    } else {
+      // Show validation errors
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            "Please enter the neccessary details before proceeding.",
+            style: TextStyle(color: Colors.white),
+          ),
+          backgroundColor: const Color.fromARGB(255, 159, 118, 249),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -125,248 +157,235 @@ class _NewPostPageState extends State<NewPostPage> {
           ),
           body: Padding(
             padding: const EdgeInsets.all(16.0),
-            child: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Display images in a grid, showing the image and its index (if needed)
-                  widget.imagesWithIndex.isNotEmpty
-                      ? SingleChildScrollView(
-                          scrollDirection:
-                              Axis.horizontal, // Allow horizontal scrolling
-                          child: Row(
-                            children: widget.imagesWithIndex.keys.map((image) {
-                              return Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal:
-                                          4), // Minimal gap between images
-                                  child: GestureDetector(
-                                    onTap: () {
-                                      // Open preview mode in a dialog when the image is tapped
-                                      _showImagePreview(image);
-                                    },
-                                    child: ClipRRect(
-                                        child: Container(
-                                      color: Theme.of(context).brightness ==
-                                              Brightness.dark
-                                          ? Colors.grey[800]
-                                          : Colors.grey[200],
-                                      child: Image.file(
-                                        image,
-                                        width:
-                                            200, // Set width for square shape
-                                        height:
-                                            200, // Set height for square shape
-                                        fit: BoxFit
-                                            .contain, // Ensure image covers the box
-                                      ),
-                                    )),
-                                  ));
-                            }).toList(),
+            child: Form(
+              key: _formKey,
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Display images/videos in a grid, showing the asssts and its index (if needed)
+                    widget.imagesWithIndex.isNotEmpty
+                        ? SingleChildScrollView(
+                            scrollDirection:
+                                Axis.horizontal, // Allow horizontal scrolling
+                            child: Row(
+                              children:
+                                  widget.imagesWithIndex.keys.map((image) {
+                                return Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal:
+                                            4), // Minimal gap between images
+                                    child: GestureDetector(
+                                      onTap: () {
+                                        // Open preview mode in a dialog when the image is tapped
+                                        _showImagePreview(image);
+                                      },
+                                      child: ClipRRect(
+                                          child: Container(
+                                        color: Theme.of(context).brightness ==
+                                                Brightness.dark
+                                            ? Colors.grey[800]
+                                            : Colors.grey[200],
+                                        child: Image.file(
+                                          image,
+                                          width:
+                                              200, // Set width for square shape
+                                          height:
+                                              200, // Set height for square shape
+                                          fit: BoxFit
+                                              .contain, // Ensure image covers the box
+                                        ),
+                                      )),
+                                    ));
+                              }).toList(),
+                            ),
+                          )
+                        : Text('No assets selected'),
+
+                    SizedBox(height: 20),
+
+                    // Title TextField
+                    TextFormField(
+                        cursorColor:
+                            Theme.of(context).brightness == Brightness.dark
+                                ? Colors.white
+                                : Colors.black,
+                        maxLength: 20,
+                        controller: _titleController,
+                        decoration: InputDecoration(
+                          hintText: 'Add a title',
+                          hintStyle: TextStyle(color: Colors.grey),
+                          border: InputBorder.none,
+                          focusedBorder: InputBorder.none,
+                          counterText: "",
+                          // Custom counter showing remaining characters
+                          suffixText:
+                              '${_maxTitleLength - _titleController.text.length}',
+                          suffixStyle: TextStyle(
+                            color: Colors.grey,
                           ),
-                        )
-                      : Text('No images selected'),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter the post title';
+                          }
 
-                  SizedBox(height: 20),
+                          if (value.length > 20) {
+                            return 'Title cannot exceed 20 characters';
+                          }
 
-                  // Title TextField
-                  TextFormField(
+                          return null;
+                        }),
+                    Container(
+                      margin: EdgeInsets.only(
+                          top: 4), // Optional margin for spacing
+                      height: 2, // Height of the divider
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.grey[800]
+                          : Colors.grey[300], // Color of the divider
+                    ),
+                    SizedBox(height: 16),
+
+                    // Description TextField
+                    TextFormField(
                       cursorColor:
                           Theme.of(context).brightness == Brightness.dark
                               ? Colors.white
                               : Colors.black,
-                      maxLength: 20,
-                      controller: _titleController,
+                      controller: _descriptionController,
+                      keyboardType: TextInputType.multiline,
+                      maxLines: null,
                       decoration: InputDecoration(
-                        hintText: 'Add a title',
+                        hintText: 'Add description',
                         hintStyle: TextStyle(color: Colors.grey),
                         border: InputBorder.none,
                         focusedBorder: InputBorder.none,
-                        counterText: "",
-                        // Custom counter showing remaining characters
-                        suffixText:
-                            '${_maxTitleLength - _titleController.text.length}',
-                        suffixStyle: TextStyle(
-                          color: Colors.grey,
-                        ),
                       ),
                       validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter a username';
-                        }
-
-                        if (value.length > 20) {
-                          return 'Title cannot exceed 20 characters';
-                        }
-
                         return null;
-                      }),
-                  Container(
-                    margin:
-                        EdgeInsets.only(top: 4), // Optional margin for spacing
-                    height: 2, // Height of the divider
-                    color: Theme.of(context).brightness == Brightness.dark
-                        ? Colors.grey[800]
-                        : Colors.grey[300], // Color of the divider
-                  ),
-                  SizedBox(height: 16),
-
-                  // Description TextField
-                  TextFormField(
-                    cursorColor: Theme.of(context).brightness == Brightness.dark
-                        ? Colors.white
-                        : Colors.black,
-                    controller: _descriptionController,
-                    keyboardType: TextInputType.multiline,
-                    maxLines: null,
-                    decoration: InputDecoration(
-                      hintText: 'Add description',
-                      hintStyle: TextStyle(color: Colors.grey),
-                      border: InputBorder.none,
-                      focusedBorder: InputBorder.none,
+                      },
                     ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter a description';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 5),
-                  // Hashtag place
-                  SingleChildScrollView(
-                    scrollDirection:
-                        Axis.horizontal, // Enables horizontal scrolling
-                    child: Row(
-                      children: _tags.map((tag) {
-                        return GestureDetector(
-                            onTap: () {
-                              // Append hashtag to the description
-                              String currentText = _descriptionController.text;
+                    const SizedBox(height: 5),
+                    // Hashtag place
+                    SingleChildScrollView(
+                      scrollDirection:
+                          Axis.horizontal, // Enables horizontal scrolling
+                      child: Row(
+                        children: _tags.map((tag) {
+                          return GestureDetector(
+                              onTap: () {
+                                // Append hashtag to the description
+                                String currentText =
+                                    _descriptionController.text;
 
-                              if (currentText.isNotEmpty) {
-                                _descriptionController.text =
-                                    '$currentText #$tag';
-                              } else {
-                                _descriptionController.text = '#$tag';
-                              }
+                                if (currentText.isNotEmpty) {
+                                  _descriptionController.text =
+                                      '$currentText #$tag';
+                                } else {
+                                  _descriptionController.text = '#$tag';
+                                }
 
-                              _descriptionController.selection =
-                                  TextSelection.fromPosition(
-                                TextPosition(
-                                    offset: _descriptionController.text.length),
-                              );
+                                _descriptionController.selection =
+                                    TextSelection.fromPosition(
+                                  TextPosition(
+                                      offset:
+                                          _descriptionController.text.length),
+                                );
 
-                              setState(() {
-                                _tags.remove(
-                                    tag); // Remove the selected tag from the list
-                              });
-                            },
-                            child: Container(
-                              margin: const EdgeInsets.only(
-                                  right: 8), // Space between pills
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 12, vertical: 6),
-                              decoration: BoxDecoration(
-                                color: Theme.of(context).brightness ==
-                                        Brightness.dark
-                                    ? Colors.grey[800]
-                                    : Colors.grey[
-                                        300], // Background color of the pill
-                                borderRadius: BorderRadius.circular(
-                                    16), // Rounded corners
-                              ),
-                              child: Text(
-                                '#$tag',
-                                style: TextStyle(
+                                setState(() {
+                                  _tags.remove(
+                                      tag); // Remove the selected tag from the list
+                                });
+                              },
+                              child: Container(
+                                margin: const EdgeInsets.only(
+                                    right: 8), // Space between pills
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 12, vertical: 6),
+                                decoration: BoxDecoration(
                                   color: Theme.of(context).brightness ==
                                           Brightness.dark
-                                      ? Colors.grey[300]
-                                      : Colors.black,
-                                  fontSize: 14,
+                                      ? Colors.grey[800]
+                                      : Colors.grey[300], // Background color of the pill
+                                  borderRadius: BorderRadius.circular(
+                                      16), // Rounded corners
                                 ),
-                              ),
-                            ));
-                      }).toList(),
-                    ),
-                  ),
-                  const SizedBox(height: 5),
-                  Container(
-                    margin:
-                        EdgeInsets.only(top: 4), // Optional margin for spacing
-                    height: 2, // Height of the divider
-                    color: Theme.of(context).brightness == Brightness.dark
-                        ? Colors.grey[800]
-                        : Colors.grey[300], // Color of the divider
-                  ),
-
-                  Padding(
-                    padding: const EdgeInsets.only(top: 14, bottom: 14),
-                    child: GestureDetector(
-                      onTap: () {
-                        // Action when tapped, e.g., show a location picker or map.
-                        print("location");
-                      },
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.location_on_outlined, // Location icon
-                            color:
-                                Theme.of(context).brightness == Brightness.dark
-                                    ? Colors.white
-                                    : Colors.black, // Color of the icon
-                            size: 24, // Size of the icon
-                          ),
-                          SizedBox(width: 8), // Space between icon and text
-                          Expanded(
-                            child: Text(
-                              'Mark location', // The text
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w500,
-                                color: Theme.of(context).brightness ==
-                                        Brightness.dark
-                                    ? Colors.white
-                                    : Colors.black,
-                              ),
-                            ),
-                          ),
-                          Icon(
-                            Icons.arrow_forward_ios, // Right arrow icon
-                            size: 18,
-                            color:
-                                Theme.of(context).brightness == Brightness.dark
-                                    ? Colors.grey[800]
-                                    : Colors.black, // Color of the arrow
-                          ),
-                        ],
+                                child: Text(
+                                  '#$tag',
+                                  style: TextStyle(
+                                    color: Theme.of(context).brightness ==
+                                            Brightness.dark
+                                        ? Colors.grey[300]
+                                        : Colors.black,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ));
+                        }).toList(),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 16),
+                    const SizedBox(height: 5),
+                    Container(
+                      margin: EdgeInsets.only(
+                          top: 4), // Optional margin for spacing
+                      height: 2, // Height of the divider
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.grey[800]
+                          : Colors.grey[300], // Color of the divider
+                    ),
 
-                  // Post and Preview Buttons in a Row
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment
-                        .spaceBetween, // Distribute space between buttons
-                    children: [
-                      // Preview Button
-                      ElevatedButton(
-                        onPressed: () {
-                          // Navigate to the PostFormPage and pass data
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => PostFormPage(
-                                title: _titleController.text, // Pass the title
-                                description: _descriptionController
-                                    .text, // Pass the description
-                                imagesWithIndex:
-                                    widget.imagesWithIndex, // Pass the images (you may need to format this if needed)
-                                location: "_location", // Pass the location
+                    // Location
+                    Padding(
+                      padding: const EdgeInsets.only(top: 14, bottom: 14),
+                      child: GestureDetector(
+                        onTap: () {
+                          // Action when tapped, e.g., show a location picker or map.
+                          print("location");
+                        },
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.location_on_outlined, // Location icon
+                              color: Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? Colors.white
+                                  : Colors.black, // Color of the icon
+                              size: 24, // Size of the icon
+                            ),
+                            SizedBox(width: 8), // Space between icon and text
+                            Expanded(
+                              child: Text(
+                                'Mark location', // The text
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w500,
+                                  color: Theme.of(context).brightness ==
+                                          Brightness.dark
+                                      ? Colors.white
+                                      : Colors.black,
+                                ),
                               ),
                             ),
-                          );
+                            Icon(
+                              Icons.arrow_forward_ios, // Right arrow icon
+                              size: 18,
+                              color: Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? Colors.grey[800]
+                                  : Colors.black, // Color of the arrow
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Preview Button
+                    Center(
+                      child: ElevatedButton(
+                        onPressed: () {
+                          // Navigate to the Preview Post and pass data
+                          _goToNextPage();
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor:
@@ -375,24 +394,11 @@ class _NewPostPageState extends State<NewPostPage> {
                           padding: const EdgeInsets.symmetric(
                               vertical: 12.0, horizontal: 24.0),
                         ),
-                        child: Text('Preview', style: TextStyle(fontSize: 16)),
+                        child: Text('Next', style: TextStyle(fontSize: 16)),
                       ),
-
-                      // Post Button
-                      ElevatedButton(
-                        onPressed: _savePost, // Save post
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor:
-                              const Color.fromARGB(255, 159, 118, 249),
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(
-                              vertical: 12.0, horizontal: 24.0),
-                        ),
-                        child: Text('Post', style: TextStyle(fontSize: 16)),
-                      ),
-                    ],
-                  )
-                ],
+                    ),
+                  ],
+                ),
               ),
             ),
           ),

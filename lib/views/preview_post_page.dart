@@ -37,8 +37,8 @@ class _PostFormPageState extends State<PostFormPage> {
     super.initState();
     // Initialize the controllers with the passed data
     _title = widget.title;
-    _description = widget.description ?? null;
-    _location = widget.location ?? null;
+    _description = widget.description ?? "";
+    _location = widget.location ?? "";
     _numOfImages = widget.imagesWithIndex.length;
 
     _pageController = PageController();
@@ -60,7 +60,7 @@ class _PostFormPageState extends State<PostFormPage> {
     return Scaffold(
       appBar: AppBar(title: Text("Preview Post")),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.only(top: 16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -82,7 +82,7 @@ class _PostFormPageState extends State<PostFormPage> {
               ),
             ),
 
-            SizedBox(height: 25),
+            SizedBox(height: 30),
             // Dot indicators
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -94,7 +94,9 @@ class _PostFormPageState extends State<PostFormPage> {
                     width: 10,
                     height: 10,
                     decoration: BoxDecoration(
-                      color: _currentPage == index ? Color.fromARGB(255, 159, 118, 249) : Colors.grey,
+                      color: _currentPage == index
+                          ? Color.fromARGB(255, 159, 118, 249)
+                          : Colors.grey,
                       shape: BoxShape.circle,
                     ),
                   ),
@@ -103,24 +105,102 @@ class _PostFormPageState extends State<PostFormPage> {
             ),
             SizedBox(height: 20),
 
-            // Title
-            Text(
-              "$_title",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 10),
+            // Post details
+            Padding(
+                padding: const EdgeInsets.only(left: 16.0, right: 16.0),
+                child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Title
+                      Text(
+                        "$_title",
+                        style: TextStyle(
+                            fontSize: 22, fontWeight: FontWeight.bold),
+                      ),
+                      SizedBox(height: 10),
 
-            // Description
-            Text(
-              "$_description",
-              style: TextStyle(fontSize: 16),
-            ),
-            SizedBox(height: 10),
+                      // Description
+                      Text(
+                        "$_description",
+                        style: TextStyle(fontSize: 18),
+                      ),
+                      SizedBox(height: 10),
 
-            // Location (if available)
-            Text(
-              "$_location",
-              style: TextStyle(fontSize: 16),
+                      // Sample time and Location (if available)
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          Text(
+                            "Just now",
+                            style: TextStyle(
+                                fontSize: 16, color: Colors.grey[500]),
+                          ),
+                          SizedBox(
+                              width: 8),
+                          Icon(
+                            Icons.circle,
+                            size: 5,
+                            color: Colors.grey[500],
+                          ),
+                          SizedBox(
+                              width: 8),
+                          Text(
+                            "$_location",
+                            style: TextStyle(
+                                fontSize: 16, color: Colors.grey[500]),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 20),
+                    ])),
+
+            Container(
+              margin: EdgeInsets.only(top: 4), // Optional margin for spacing
+              height: 2, // Height of the divider
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? Colors.grey[800]
+                  : Colors.grey[300], // Color of the divider
+            ),
+
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end, // Align to the right
+              children: [
+                // Like icon
+                IconButton(
+                  icon: Icon(Icons.favorite_border, size: 30), // Like icon
+                  onPressed: () {
+                    print("Liked!");
+                  },
+                ),
+                SizedBox(width: 1), // Space between icons
+
+                // Comment icon
+                IconButton(
+                  icon: Icon(Icons.mode_comment_outlined, size: 30), // Comment icon
+                  onPressed: () {
+                    print("Commented!");
+                  },
+                ),
+                SizedBox(width: 1), // Space between icons
+
+                // Save icon
+                IconButton(
+                  icon: Icon(Icons.bookmark_border_outlined, size: 30), // Save icon
+                  onPressed: () {
+                    print("Saved!");
+                  },
+                ),
+              ],
+            ),
+
+            SizedBox(height: 20),
+
+            Container(
+              margin: EdgeInsets.only(top: 4), // Optional margin for spacing
+              height: 2, // Height of the divider
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? Colors.grey[800]
+                  : Colors.grey[300], // Color of the divider
             ),
             SizedBox(height: 20),
 
