@@ -6,6 +6,7 @@ enum ContentType {
   file,
   pic,
   video,
+  poll,
 }
 
 class MessageModel {

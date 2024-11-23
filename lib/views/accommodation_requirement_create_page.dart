@@ -195,7 +195,6 @@ class _AccommodationRequirementCreatePageState
                 onPressed: () async {
                   if (_formKey.currentState?.saveAndValidate() ?? false) {
                     final formValues = _formKey.currentState?.value;
-                    print(formValues); // Print the form data
 
                     final accommodationRequirement =
                         AccommodationRequirementModel(

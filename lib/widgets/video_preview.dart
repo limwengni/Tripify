@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:tripify/widgets/full_screen_video_player.dart';
 import 'package:video_player/video_player.dart';
+
 class VideoPreview extends StatefulWidget {
   final String videoPath;
   final bool isCurrentUser;
@@ -43,7 +44,8 @@ class _VideoPreviewState extends State<VideoPreview> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => FullScreenVideoPlayer(videoPath: widget.videoPath),
+            builder: (context) =>
+                FullScreenVideoPlayer(videoPath: widget.videoPath),
           ),
         );
       },
@@ -52,13 +54,13 @@ class _VideoPreviewState extends State<VideoPreview> {
         children: [
           // Show a placeholder image or the first frame of the video as preview
           if (_isInitialized)
-            ClipRRect(
-              borderRadius: BorderRadius.circular(10),
-              child: AspectRatio(
-                aspectRatio: _controller.value.aspectRatio,
-                child: VideoPlayer(_controller),
-              ),
-            )
+            Container(
+                height: 200,
+                width: 200,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(10),
+                  child: VideoPlayer(_controller),
+                ))
           else
             ClipRRect(
               borderRadius: BorderRadius.circular(10),
@@ -66,7 +68,7 @@ class _VideoPreviewState extends State<VideoPreview> {
                 "", // Add your video thumbnail URL here
                 fit: BoxFit.cover,
                 height: 150, // Define the height of the preview
-                width: 150,  // Define the width of the preview
+                width: 150, // Define the width of the preview
               ),
             ),
           const Icon(

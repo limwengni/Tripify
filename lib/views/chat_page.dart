@@ -93,7 +93,7 @@ class _ChatPageState extends State<ChatPage> {
         senderID: widget.currentUserId,
         content: _messageController.text,
         contentType: ContentType.text,
-        conversationId: widget.conversation.id,
+        conversation: widget.conversation,
       );
 
       // Clear the message input
@@ -190,6 +190,8 @@ class _ChatPageState extends State<ChatPage> {
           createdAt: data['created_at'].toDate(),
           contentType: data['content_type'],
           fileName: data['file_name'],
+          senderId: data['sender_id'],
+          isGroup: widget.conversation.isGroup,
         ),
         const SizedBox(
           height: 5,
@@ -222,8 +224,8 @@ class _ChatPageState extends State<ChatPage> {
                 children: [
                   TableRow(
                     children: [
-                      _buildActionItem(
-                          Icons.camera_alt_outlined, 'Camera', () async {}),
+                      // _buildActionItem(
+                      //     Icons.camera_alt_outlined, 'Camera', () async {}),
                       _buildActionItem(Icons.file_present_outlined, 'File',
                           () async {
                         FilePickerResult? result = await FilePicker.platform
@@ -245,7 +247,7 @@ class _ChatPageState extends State<ChatPage> {
                                 senderID: currentUserId,
                                 content: pdfDownloadUrl!,
                                 contentType: ContentType.file,
-                                conversationId: conversationId,
+                                conversation: widget.conversation,
                                 fileName: pdfFileName,
                               );
                             }
@@ -279,7 +281,7 @@ class _ChatPageState extends State<ChatPage> {
                                     senderID: currentUserId,
                                     content: imgDownloadUrl!,
                                     contentType: ContentType.pic,
-                                    conversationId: conversationId);
+                                    conversation: widget.conversation);
                               } else if (['mp4', 'mov', 'avi', 'mkv']
                                   .contains(extension)) {
                                 String? videoDownloadUrl =
@@ -292,7 +294,7 @@ class _ChatPageState extends State<ChatPage> {
                                   senderID: currentUserId,
                                   content: videoDownloadUrl!,
                                   contentType: ContentType.video,
-                                  conversationId: conversationId,
+                                  conversation: widget.conversation,
                                 );
                               }
                             }

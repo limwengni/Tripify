@@ -23,10 +23,10 @@ class ConversationTile extends StatefulWidget {
 
 class _ConversationTileState extends State<ConversationTile> {
   String _conversationNameFuture = "";
-  String _conversationPicFuture = "https://flutter.github.io/assets-for-api-docs/assets/widgets/owl-3.jpg";
-  String? _latestMessageSendDateTime;
-  String? _latestMessage ;
-  int? _unreadMessage ;
+  String _conversationPicFuture =
+      "https://flutter.github.io/assets-for-api-docs/assets/widgets/owl-3.jpg";
+
+  int? _unreadMessage;
 
   @override
   void initState() {
@@ -38,9 +38,7 @@ class _ConversationTileState extends State<ConversationTile> {
   void _fetchConversationData(
       ConversationModel conversation, String currentUserId) async {
     if (widget.conversation.latestMessage != null) {
-      _latestMessageSendDateTime = DateFormat('hh:mm a')
-          .format(widget.conversation.latestMessageSendDateTime!);
-      _latestMessage = widget.conversation.latestMessage;
+      
       if (widget.conversation.unreadMessage != null &&
           widget.conversation.unreadMessage!.containsKey(currentUserId)) {
         _unreadMessage = widget.conversation.unreadMessage![currentUserId];
@@ -120,10 +118,11 @@ class _ConversationTileState extends State<ConversationTile> {
                 const Spacer(),
                 Column(
                   children: [
-                    if (_unreadMessage != 0) ...[
+                    if (  widget.conversation.unreadMessage![widget.currentUserId]!= 0) ...[
                       Row(
                         children: [
-                          Text(_latestMessageSendDateTime ?? ""),
+                          Text(DateFormat('hh:mm a').format(
+                              widget.conversation.latestMessageSendDateTime!)),
                         ],
                       ),
                       Container(
@@ -135,14 +134,20 @@ class _ConversationTileState extends State<ConversationTile> {
                         ),
                         alignment: Alignment.center,
                         child: Text(
-                          _unreadMessage?.toString() ?? '0',
+                          widget.conversation.unreadMessage![widget.currentUserId].toString(),
                           style: const TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
                       ),
-                    ]
+                    ] else
+                      Row(
+                        children: [
+                          Text(DateFormat('hh:mm a').format(
+                              widget.conversation.latestMessageSendDateTime!)),
+                        ],
+                      ),
                   ],
                 )
               ],
