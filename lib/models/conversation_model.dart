@@ -2,17 +2,17 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 class ConversationModel {
   final String id;
-  final List<String> participants;
-  final String? latestMessage;
+  List<String> participants; // Made mutable to allow updates
+  String? latestMessage;
   final String? messagePinnedId;
-  final DateTime? latestMessageSendDateTime;
+  DateTime? latestMessageSendDateTime;
   final bool isGroup;
   final String? host;
   final bool? isDeleted;
   final String? senderId;
-  final Map<String, int>? unreadMessage;  // Changed to Map<String, int>
+  final Map<String, int>? unreadMessage;
   final String? conversationPic;
-  final String? groupName;
+  String? groupName;
   final DateTime? updatedAt;
 
   ConversationModel({
@@ -26,7 +26,7 @@ class ConversationModel {
     this.isDeleted,
     this.conversationPic,
     this.senderId,
-    this.unreadMessage,  // Changed to Map<String, int>?
+    this.unreadMessage,
     this.groupName,
     required this.updatedAt,
   });
@@ -44,7 +44,7 @@ class ConversationModel {
       'is_deleted': isDeleted,
       'conversation_pic': conversationPic,
       'sender_id': senderId,
-      'unread_message': unreadMessage,  // Storing the unread_message map
+      'unread_message': unreadMessage,
       'group_name': groupName,
       'updated_at': updatedAt,
     };
@@ -57,15 +57,15 @@ class ConversationModel {
       participants: List<String>.from(data['participants']),
       latestMessage: data['latest_message'],
       messagePinnedId: data['message_pinned_id'],
-      latestMessageSendDateTime: (data['latest_message_send_date_time'] is Timestamp)
-          ? (data['latest_message_send_date_time'] as Timestamp).toDate()
-          : DateTime.parse(data['latest_message_send_date_time']),
+      latestMessageSendDateTime:
+          (data['latest_message_send_date_time'] is Timestamp)
+              ? (data['latest_message_send_date_time'] as Timestamp).toDate()
+              : DateTime.parse(data['latest_message_send_date_time']),
       isGroup: data['is_group'],
       host: data['host'],
       isDeleted: data['is_deleted'],
       conversationPic: data['conversation_pic'],
       senderId: data['sender_id'],
-      // Handle unread_message as a Map<String, int>
       unreadMessage: (data['unread_message'] != null)
           ? Map<String, int>.from(data['unread_message'])
           : null,
@@ -75,4 +75,44 @@ class ConversationModel {
           : DateTime.parse(data['updated_at']),
     );
   }
+
+  // Update the group name
+  void updateGroupName(String newGroupName) {
+    groupName = newGroupName;
+  }
+
+  // Add a participant
+  void addParticipant(String userId) {
+    if (!participants.contains(userId)) {
+      participants.add(userId);
+    }
+  }
+
+  // Remove a participant
+  void removeParticipant(String userId) {
+    participants.remove(userId);
+  }
+
+  // Replace all participants
+  void setParticipants(List<String> newParticipants) {
+    participants = newParticipants;
+  }
+
+  // Check if a user is a participant
+  bool isParticipant(String userId) {
+    return participants.contains(userId);
+  }
+
+  void setLatestMessage(String latestMessage) {
+    this.latestMessage = latestMessage;
+  }
+
+  void setLatestDateTime(DateTime latestDateTime){
+   latestMessageSendDateTime = latestDateTime;
+  }
+  
+  void clearUnreadMessage(String userId) {
+  // Set the unread message count for the user
+  unreadMessage![userId] = 0;
+}
 }

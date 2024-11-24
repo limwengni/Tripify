@@ -122,7 +122,18 @@ class FirestoreService {
       print("Error updating data: $e");
     }
   }
-
+Future<void> updateField(
+    String collection, String documentId, String field, dynamic value) async {
+  try {
+    // Update the specified field in the Firestore document
+    await _db.collection(collection).doc(documentId).update({
+      field: value,
+    });
+    print("Field '$field' updated successfully.");
+  } catch (e) {
+    print("Error updating field: $e");
+  }
+}
   // Delete Data
   Future<void> deleteData(String collection, String documentId) async {
     try {
@@ -225,6 +236,8 @@ class FirestoreService {
       return Stream.value([]);
     }
   }
+
+
   Future<bool> insertUserWithUniqueUsername(String username) async {
     final FirebaseFirestore firestore = FirebaseFirestore.instance;
 

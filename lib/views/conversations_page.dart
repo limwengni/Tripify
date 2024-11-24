@@ -4,6 +4,7 @@ import 'package:flutter/rendering.dart';
 import 'package:tripify/models/conversation_model.dart';
 import 'package:tripify/view_models/firestore_service.dart';
 import 'package:tripify/views/chat_page.dart';
+import 'package:tripify/views/group_chat_page.dart';
 import 'package:tripify/widgets/conversation_card.dart';
 import 'package:tripify/widgets/conversation_card_list.dart';
 import 'package:tripify/widgets/conversation_tile.dart';
@@ -114,61 +115,78 @@ class _ChatListPageState extends State<ChatListPage> {
     );
   }
 
- Widget _buildConversationList() {
-  return StreamBuilder<List<Map<String, dynamic>>>(
-    stream: _firestoreService.getConversationsStream(currentUserId),
-    builder: (context, snapshot) {
-      // Handle error state
-      if (snapshot.hasError) {
-        return const Text("Error");
-      }
+  Widget _buildConversationList() {
+    return StreamBuilder<List<Map<String, dynamic>>>(
+      stream: _firestoreService.getConversationsStream(currentUserId),
+      builder: (context, snapshot) {
+        // Handle error state
+        if (snapshot.hasError) {
+          return const Text("Error");
+        }
 
-      // Handle loading state
-      if (snapshot.connectionState == ConnectionState.waiting) {
-        return const Text("Loading...");
-      }
+        // Handle loading state
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Text("Loading...");
+        }
 
-      // Check if data is null or empty
-      if (!snapshot.hasData || snapshot.data!.isEmpty) {
-        return const Text("No conversations found");
-      }
+        // Check if data is null or empty
+        if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return const Text("No conversations found");
+        }
 
-      // Map to ConversationModel
-      final List<ConversationModel> conversations = snapshot.data!
-          .map<ConversationModel>((conversationData) =>
-              ConversationModel.fromMap(conversationData))
-          .toList();
+        // Map to ConversationModel
+        final List<ConversationModel> conversations = snapshot.data!
+            .map<ConversationModel>((conversationData) =>
+                ConversationModel.fromMap(conversationData))
+            .toList();
 
-    
-      conversations.sort((a, b) => b.updatedAt!.compareTo(a.updatedAt!));
+        conversations.sort((a, b) => b.updatedAt!.compareTo(a.updatedAt!));
 
-      return ListView.builder(
-        itemCount: conversations.length,
-        itemBuilder: (context, index) {
-          return _buildConversationListItem(
-            conversations[index], context, currentUserId);
-        },
-      );
-    },
-  );
-}
-
+        return ListView.builder(
+          itemCount: conversations.length,
+          itemBuilder: (context, index) {
+            return _buildConversationListItem(
+                conversations[index], context, currentUserId);
+          },
+        );
+      },
+    );
+  }
 
   Widget _buildConversationListItem(
       ConversationModel conversation, BuildContext context, currentUserId) {
     return ConversationTile(
       currentUserId: currentUserId,
       onTap: (conversationPic) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (builder) => ChatPage(
-              conversation: conversation,
-              currentUserId: currentUserId,
-              chatPic: conversationPic,
+        if (conversation.isGroup) {
+          conversation.clearUnreadMessage(currentUserId);
+          _firestoreService.updateData(
+              "Conversations", conversation.id, conversation.toMap());
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (builder) => GroupChatPage(
+                conversation: conversation,
+                currentUserId: currentUserId,
+                chatPic: conversationPic,
+              ),
             ),
-          ),
-        );
+          );
+        } else {
+           conversation.clearUnreadMessage(currentUserId);
+          _firestoreService.updateData(
+              "Conversations", conversation.id, conversation.toMap());
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (builder) => ChatPage(
+                conversation: conversation,
+                currentUserId: currentUserId,
+                chatPic: conversationPic,
+              ),
+            ),
+          );
+        }
       },
       conversation: conversation,
     );

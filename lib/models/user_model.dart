@@ -46,6 +46,7 @@ class UserModel {
       'likes_count': likesCount,
       'comments_count': commentsCount,
       'saved_count': savedCount,
+      'id': uid,
     };
   }
 

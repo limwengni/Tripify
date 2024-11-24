@@ -7,17 +7,20 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:tripify/models/conversation_model.dart';
 import 'package:tripify/models/message_model.dart';
+import 'package:tripify/models/user_model.dart';
 import 'package:tripify/view_models/conversation_view_model.dart';
 import 'package:tripify/view_models/firesbase_storage_service.dart';
 import 'package:tripify/view_models/firestore_service.dart';
+import 'package:tripify/views/create_poll_page.dart';
+import 'package:tripify/views/group_chat_management_page.dart';
 import 'package:tripify/widgets/chat_bubble.dart';
 
-class ChatPage extends StatefulWidget {
-  final ConversationModel conversation;
+class GroupChatPage extends StatefulWidget {
+  ConversationModel conversation;
   final String currentUserId;
-  final String chatPic;
+  String chatPic;
 
-  ChatPage(
+  GroupChatPage(
       {Key? key,
       required this.conversation,
       required this.currentUserId,
@@ -25,26 +28,30 @@ class ChatPage extends StatefulWidget {
       : super(key: key);
 
   @override
-  _ChatPageState createState() => _ChatPageState();
+  _GroupChatPageState createState() => _GroupChatPageState();
 }
 
-class _ChatPageState extends State<ChatPage> {
-  // FirestoreService firestoreService = FirestoreService();
+class _GroupChatPageState extends State<GroupChatPage> {
+  FirestoreService firestoreService = FirestoreService();
   FirebaseStorageService _firebaseStorageService = FirebaseStorageService();
   final TextEditingController _messageController = TextEditingController();
   final ConversationViewModel _conversationViewModel = ConversationViewModel();
   String appBarTitle = "Loading...";
   bool extraAction = false;
   final ValueNotifier<bool> _extraActionNotifier = ValueNotifier<bool>(false);
+  List<Map<String, dynamic>?> groupChatUser = [];
+  Map<String, dynamic>? user;
+  List<UserModel>? groupChatUserList = [];
 
   final ImagePicker picker = ImagePicker();
-  XFile? _imageSelected = null;
+  XFile? _imageSelected;
   String? fileName;
 
   @override
   void initState() {
     super.initState();
     _setAppBarTitle();
+    _getGroupChatUser(widget.conversation.participants);
   }
 
   Future<void> _setAppBarTitle() async {
@@ -87,14 +94,36 @@ class _ChatPageState extends State<ChatPage> {
     }
   }
 
+  void _getGroupChatUser(List<String> participantsId) async {
+    for (var userId in participantsId) {
+      user = await firestoreService.getDataById("User", userId);
+      if (user != null) {
+        groupChatUser.add(user);
+      } else {
+        print("User data not found for userId: $userId");
+      }
+    }
+
+    setState(() {
+      if (groupChatUser != null) {
+        groupChatUserList = groupChatUser.map((item) {
+          return UserModel.fromMap(item!, item['id'] ?? '');
+        }).toList();
+
+        print(groupChatUserList![1].profilePic);
+      } else {
+        print('no groupchatuserlist');
+      }
+    });
+  }
+
   void sendMessage() async {
     if (_messageController.text.isNotEmpty) {
       await _conversationViewModel.sendMessage(
-        senderID: widget.currentUserId,
-        content: _messageController.text,
-        contentType: ContentType.text,
-        conversation: widget.conversation,
-      );
+          senderID: widget.currentUserId,
+          content: _messageController.text,
+          contentType: ContentType.text,
+          conversation: widget.conversation);
 
       // Clear the message input
       setState(() {
@@ -118,22 +147,37 @@ class _ChatPageState extends State<ChatPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Row(
-          children: [
-            ClipOval(
-                child: Image.network(
-              widget.chatPic,
-              width: 40,
-              height: 40,
-              fit: BoxFit.cover,
-            )),
-            const SizedBox(
-              width: 10,
-            ),
-            Text(appBarTitle)
-          ],
-        ),
-      ),
+          title: Row(
+            children: [
+              ClipOval(
+                  child: Image.network(
+                widget.chatPic,
+                width: 40,
+                height: 40,
+                fit: BoxFit.cover,
+              )),
+              const SizedBox(
+                width: 10,
+              ),
+              Text(appBarTitle)
+            ],
+          ),
+          actions: [
+            IconButton(
+                onPressed: () {
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (builder) => GroupChatManagementPage(
+                          conversation: widget.conversation,
+                          groupChatUserList: groupChatUserList!,
+                          onGroupMemberUpdated: _updateGroupChatUserList,
+                          onGroupNameUpdated: _updateGroupName,
+                        ),
+                      ));
+                },
+                icon: const Icon(Icons.more_vert_outlined)),
+          ]),
       body: Column(
         children: [
           Expanded(
@@ -174,13 +218,7 @@ class _ChatPageState extends State<ChatPage> {
     Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
     bool isCurrentUser = data['sender_id'] == currentUserId;
 
-    // var alignment =
-    //     isCurrentUser ? Alignment.centerRight : Alignment.centerLeft;
-    return
-        // Container(
-        //     alignment: alignment,
-        // child:
-        Column(
+    return Column(
       crossAxisAlignment:
           isCurrentUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
       children: [
@@ -197,8 +235,16 @@ class _ChatPageState extends State<ChatPage> {
           height: 5,
         ),
       ],
-      // ),
     );
+  }
+
+  String? getSenderName(String senderId, List<UserModel> groupChatUserList) {
+    for (var user in groupChatUserList) {
+      if (user.uid == senderId) {
+        return user.username;
+      }
+    }
+    return null; // Return null if no match is found
   }
 
   Widget _buildUserInput(String currentUserId, String conversationId) {
@@ -303,6 +349,12 @@ class _ChatPageState extends State<ChatPage> {
                           }
                         },
                       ),
+                      _buildActionItem(Icons.add_chart, 'Poll', () async {
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute( 
+                                builder: (builder) => CreatePollPage (currentUserId: widget.currentUserId)));
+                      }),
                     ],
                   ),
                 ],
@@ -360,5 +412,18 @@ class _ChatPageState extends State<ChatPage> {
         Text(label),
       ],
     );
+  }
+
+  void _updateGroupChatUserList(UserModel userRemoved) {
+    setState(() {
+      groupChatUserList!.remove(userRemoved);
+    });
+  }
+
+  void _updateGroupName(String newGroupName) {
+    setState(() {
+      appBarTitle = newGroupName;
+      widget.conversation.updateGroupName(newGroupName);
+    });
   }
 }
