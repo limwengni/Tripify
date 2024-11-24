@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:video_player/video_player.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -26,11 +27,16 @@ class _PostFormPageState extends State<PostFormPage> {
   late String? _description;
   late String? _location;
   late int _numOfImages;
+  List<bool> _isMuted = [];
+
+  int likeCount = 0;
+  int commentCount = 0;
+  int saveCount = 0;
 
   late PageController _pageController;
-  int _currentPage = 0;
+  Map<int, VideoPlayerController> _controllers = {};
 
-  double? _imageHeight;
+  int _currentPage = 0;
 
   @override
   void initState() {
@@ -42,6 +48,62 @@ class _PostFormPageState extends State<PostFormPage> {
     _numOfImages = widget.imagesWithIndex.length;
 
     _pageController = PageController();
+    _isMuted =
+        List.generate(widget.imagesWithIndex.keys.length, (index) => false);
+  }
+
+  bool isVideo(File file) {
+    final videoExtensions = ['.mp4', '.mov', '.avi', '.mkv'];
+    return videoExtensions.any((ext) => file.path.endsWith(ext));
+  }
+
+  VideoPlayerController getVideoController(File videoFile) {
+    return VideoPlayerController.file(videoFile)
+      ..initialize().then((_) {
+        setState(() {});
+      })
+      ..setLooping(true)
+      ..play();
+  }
+
+  void _toggleMute(int index) {
+    setState(() {
+      _isMuted[index] =
+          !_isMuted[index]; // Toggle the mute state for the selected video
+      _controllers[index]!
+          .setVolume(_isMuted[index] ? 0.0 : 1.0); // Mute or unmute the video
+    });
+  }
+
+  void _showCustomSnackbar() {
+    final snackBar = Material(
+      color: Colors.transparent, // Make background transparent
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        decoration: BoxDecoration(
+          color: Colors.black.withOpacity(0.8), // Background color of pill
+          borderRadius: BorderRadius.circular(30), // Pill shape
+        ),
+        child: Text(
+          "You are in preview mode",
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 16,
+          ),
+        ),
+      ),
+    );
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Center(child: snackBar);
+      },
+    );
+
+    Future.delayed(Duration(seconds: 2), () {
+      Navigator.of(context).pop(); // Dismiss the dialog (snackbar)
+    });
   }
 
   void _submitPost() {
@@ -69,15 +131,83 @@ class _PostFormPageState extends State<PostFormPage> {
               child: PageView.builder(
                 itemCount: widget.imagesWithIndex.keys.length,
                 itemBuilder: (context, index) {
-                  File image = widget.imagesWithIndex.keys.elementAt(index);
-                  return Center(
-                    child: Image.file(image, fit: BoxFit.contain),
-                  );
+                  File file = widget.imagesWithIndex.keys.elementAt(index);
+
+                  if (isVideo(file)) {
+                    // Initialize video controller for the current visible video
+                    if (!_controllers.containsKey(index)) {
+                      // If controller for this index does not exist, create a new one
+                      _controllers[index] = getVideoController(file);
+                    }
+
+                    return Stack(
+                      children: [
+                        // Video Player
+                        Center(
+                          child: _controllers[index] != null &&
+                                  _controllers[index]!.value.isInitialized
+                              ? AspectRatio(
+                                  aspectRatio:
+                                      _controllers[index]!.value.aspectRatio,
+                                  child: VideoPlayer(_controllers[index]!),
+                                )
+                              : CircularProgressIndicator(
+                                  color: Color.fromARGB(255, 159, 118,
+                                      249)), // Show loading while initializing
+                        ),
+
+                        // Mute/Unmute Icon
+                        Positioned(
+                          bottom: 20,
+                          left: 20,
+                          child: GestureDetector(
+                            onTap: () => _toggleMute(
+                                index), // Call _toggleMute when tapped
+                            child: Container(
+                              padding:
+                                  EdgeInsets.all(8), // Space around the icon
+                              decoration: BoxDecoration(
+                                color: Colors.grey[700], // Background color
+                                shape: BoxShape.circle, // Circular background
+                              ),
+                              child: Icon(
+                                _isMuted[index]
+                                    ? Icons.volume_off
+                                    : Icons.volume_up,
+                                color: Colors.white, // Icon color
+                                size: 25, // Icon size
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    );
+                  } else {
+                    // If the file is an image, display it normally
+                    return Center(
+                      child: Image.file(
+                        file,
+                        fit: BoxFit.contain,
+                      ),
+                    );
+                  }
                 },
                 onPageChanged: (index) {
                   setState(() {
-                    _currentPage = index; // Update the current page index
+                    _currentPage = index;
                   });
+
+                  if (_controllers.containsKey(_currentPage) &&
+                      _controllers[_currentPage]!.value.isInitialized) {
+                    // Pause the current video before changing the page
+                    _controllers[_currentPage]!.pause();
+                  }
+
+                  // Dispose of the video controller when it's no longer needed
+                  if (_controllers.containsKey(index) &&
+                      _controllers[index]!.value.isInitialized) {
+                    _controllers[index]!.play();
+                  }
                 },
               ),
             ),
@@ -135,15 +265,14 @@ class _PostFormPageState extends State<PostFormPage> {
                             style: TextStyle(
                                 fontSize: 16, color: Colors.grey[500]),
                           ),
-                          SizedBox(
-                              width: 8),
-                          Icon(
-                            Icons.circle,
-                            size: 5,
-                            color: Colors.grey[500],
-                          ),
-                          SizedBox(
-                              width: 8),
+                          SizedBox(width: 8),
+                          if (_location !='') // Check if _location is not empty
+                            Icon(
+                              Icons.circle,
+                              size: 5,
+                              color: Colors.grey[500],
+                            ),
+                          SizedBox(width: 8),
                           Text(
                             "$_location",
                             style: TextStyle(
@@ -167,29 +296,62 @@ class _PostFormPageState extends State<PostFormPage> {
               children: [
                 // Like icon
                 IconButton(
-                  icon: Icon(Icons.favorite_border, size: 30), // Like icon
+                  icon: Icon(Icons.favorite_border, size: 30),
                   onPressed: () {
-                    print("Liked!");
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          "You are in preview mode.",
+                          style: TextStyle(color: Colors.white),
+                        ),
+                        backgroundColor:
+                            const Color.fromARGB(255, 159, 118, 249),
+                      ),
+                    );
                   },
                 ),
-                SizedBox(width: 1), // Space between icons
+                Text("$likeCount", style: TextStyle(fontSize: 16)),
+                SizedBox(width: 10), // Space between icons
 
                 // Comment icon
                 IconButton(
-                  icon: Icon(Icons.mode_comment_outlined, size: 30), // Comment icon
+                  icon: Icon(Icons.mode_comment_outlined,
+                      size: 30), // Comment icon
                   onPressed: () {
-                    print("Commented!");
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          "You are in preview mode.",
+                          style: TextStyle(color: Colors.white),
+                        ),
+                        backgroundColor:
+                            const Color.fromARGB(255, 159, 118, 249),
+                      ),
+                    );
                   },
                 ),
-                SizedBox(width: 1), // Space between icons
+                Text("$commentCount", style: TextStyle(fontSize: 16)),
+                SizedBox(width: 10), // Space between icons
 
                 // Save icon
                 IconButton(
-                  icon: Icon(Icons.bookmark_border_outlined, size: 30), // Save icon
+                  icon: Icon(Icons.bookmark_border_outlined,
+                      size: 30), // Save icon
                   onPressed: () {
-                    print("Saved!");
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          "You are in preview mode.",
+                          style: TextStyle(color: Colors.white),
+                        ),
+                        backgroundColor:
+                            const Color.fromARGB(255, 159, 118, 249),
+                      ),
+                    );
                   },
                 ),
+                Text("$saveCount", style: TextStyle(fontSize: 16)),
+                SizedBox(width: 15),
               ],
             ),
 

@@ -156,7 +156,7 @@ class _PickImagesPageState extends State<PickImagesPage>
 
       // Filter only images and videos from the assets
       final imageAndVideosAssets = assetsPage.where((asset) {
-        return asset.type == AssetType.image; // Only keep images
+        return asset.type == AssetType.image || asset.type == AssetType.video;
       }).toList();
 
       //|| asset.type == AssetType.video
