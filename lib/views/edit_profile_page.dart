@@ -159,7 +159,10 @@ class _EditProfilePageState extends State<EditProfilePage>
           newProfilePicPath: _newProfilePicPath,
         );
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Profile updated successfully!')),
+          SnackBar(
+            content: Text('Profile updated successfully!'),
+            backgroundColor: const Color.fromARGB(255, 159, 118, 249),
+          ),
         );
         Navigator.pop(context, true);
       }

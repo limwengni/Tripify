@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:video_player/video_player.dart';
+// import 'package:video_player/video_player.dart';
+import 'package:flutter_vlc_player/flutter_vlc_player.dart';
 
 class ImagePreviewScreen extends StatefulWidget {
   final List<File> files;
@@ -82,69 +83,69 @@ class VideoPreview extends StatefulWidget {
 }
 
 class _VideoPreviewState extends State<VideoPreview> {
-  late VideoPlayerController _videoController;
+  late VlcPlayerController _vlcController;
   bool _isMuted = false;
 
   @override
   void initState() {
     super.initState();
-    _videoController = VideoPlayerController.file(widget.file)
-      ..initialize().then((_) {
-        setState(() {});
-        _videoController.play();
-        _videoController.setLooping(true);
-      });
+    String encodedPath = Uri.file(widget.file.path).toString();
+
+    _vlcController = VlcPlayerController.network(
+      encodedPath,
+      hwAcc: HwAcc.full,
+      autoPlay: true,
+      options: VlcPlayerOptions(),
+    );
   }
 
   void _toggleMute() {
     setState(() {
       _isMuted = !_isMuted;
-      _videoController
-          .setVolume(_isMuted ? 0.0 : 1.0); // Mute or unmute the video
+      _vlcController.setVolume(_isMuted ? 0 : 100); // Mute or unmute the video
     });
   }
 
   @override
   void dispose() {
-    _videoController.dispose();
+    _vlcController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return _videoController.value.isInitialized
-        ? Stack(
-            children: [
-              // Video player
-              AspectRatio(
-                aspectRatio: _videoController.value.aspectRatio,
-                child: VideoPlayer(_videoController),
+    return Stack(
+      children: [
+        // Video player
+        VlcPlayer(
+            controller: _vlcController,
+            aspectRatio: 9/16,
+            placeholder: Center(
+              child: CircularProgressIndicator(
+                color: Color.fromARGB(255, 159, 118, 249),
               ),
-              // Mute/Unmute Icon
-              Positioned(
-                bottom: 20,
-                left: 20,
-                child: GestureDetector(
-                  onTap: _toggleMute,
-                  child: Container(
-                    padding: EdgeInsets.all(8), // Space around the icon
-                    decoration: BoxDecoration(
-                      color: Colors.grey[700], // Background color
-                      shape: BoxShape.circle, // Circular background
-                    ),
-                    child: Icon(
-                      _isMuted ? Icons.volume_off : Icons.volume_up,
-                      color: Colors.white, // Icon color
-                      size: 30, // Icon size
-                    ),
-                  ),
-                ),
+            )),
+        // Mute/Unmute Icon
+        Positioned(
+          bottom: 20,
+          left: 20,
+          child: GestureDetector(
+            onTap: _toggleMute,
+            child: Container(
+              padding: EdgeInsets.all(8), // Space around the icon
+              decoration: BoxDecoration(
+                color: Colors.grey[700], // Background color
+                shape: BoxShape.circle, // Circular background
               ),
-            ],
-          )
-        : Center(
-            child: CircularProgressIndicator(
-                color: Color.fromARGB(255, 159, 118, 249)),
-          );
+              child: Icon(
+                _isMuted ? Icons.volume_off : Icons.volume_up,
+                color: Colors.white, // Icon color
+                size: 30, // Icon size
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
   }
 }

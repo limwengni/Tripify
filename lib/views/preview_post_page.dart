@@ -3,6 +3,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:video_player/video_player.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:tripify/views/profile_page.dart';
+import 'package:tripify/models/post_model.dart';
+import 'package:tripify/view_models/post_provider.dart';
 
 class PostFormPage extends StatefulWidget {
   final String title;
@@ -26,7 +29,9 @@ class _PostFormPageState extends State<PostFormPage> {
   late String _title;
   late String? _description;
   late String? _location;
+  late Map<File, int> _imagesWithIndex;
   late int _numOfImages;
+  String location = "";
   List<bool> _isMuted = [];
 
   int likeCount = 0;
@@ -45,7 +50,7 @@ class _PostFormPageState extends State<PostFormPage> {
     _title = widget.title;
     _description = widget.description ?? "";
     _location = widget.location ?? "";
-    _numOfImages = widget.imagesWithIndex.length;
+    _imagesWithIndex = widget.imagesWithIndex;
 
     _pageController = PageController();
     _isMuted =
@@ -106,14 +111,71 @@ class _PostFormPageState extends State<PostFormPage> {
     });
   }
 
-  void _submitPost() {
-    // Implement your actual post submission logic here
-    print("Post submitted!");
+  void _submitPost() async {
+    // Filter out the hashtag from description then store in list
+    String title = _title;
+    String description = _description ?? "";
+    List<String> hashtags =
+        description.isNotEmpty ? _extractHashtags(description) : [];
+    Map<File, int> imagesWithIndex = _imagesWithIndex;
+    String? location = _location;
+
+    String descriptionWithEscapedNewlines =
+        description.replaceAll('\n', '\\n').trim();
+
+    PostProvider postProvider = PostProvider();
+
+    try {
+      String? userId = FirebaseAuth.instance.currentUser?.uid;
+
+      if (userId == null) {
+        print("User is not authenticated");
+        return;
+      }
+
+      await postProvider.submitPost(
+        userId: userId,
+        title: title,
+        description: descriptionWithEscapedNewlines,
+        mediaWithIndex: imagesWithIndex,
+        hashtags: hashtags,
+        location: location,
+      );
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Post submitted successfully!'),
+          backgroundColor: const Color.fromARGB(255, 159, 118, 249),
+        ),
+      );
+
+      Navigator.pop(context);
+      Navigator.pop(context);
+      Navigator.pop(context);
+    } catch (e) {
+      print("Error submitting post: $e");
+    }
+  }
+
+  List<String> _extractHashtags(String description) {
+    RegExp hashtagRegex = RegExp(r'#\w+');
+    return hashtagRegex
+        .allMatches(description)
+        .map((match) => match.group(0)!.substring(1))
+        .toList();
   }
 
   @override
   void dispose() {
     _pageController.dispose();
+
+    _controllers.forEach((index, controller) {
+      controller.pause();
+      controller.setVolume(0.0);
+      controller.dispose();
+    });
+    _controllers.clear();
+
     super.dispose();
   }
 
@@ -126,9 +188,12 @@ class _PostFormPageState extends State<PostFormPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            SizedBox(
-              height: 300,
+            Center(
+                child: SizedBox(
+              height: 400,
+              width: 500,
               child: PageView.builder(
+                controller: PageController(),
                 itemCount: widget.imagesWithIndex.keys.length,
                 itemBuilder: (context, index) {
                   File file = widget.imagesWithIndex.keys.elementAt(index);
@@ -197,20 +262,29 @@ class _PostFormPageState extends State<PostFormPage> {
                     _currentPage = index;
                   });
 
-                  if (_controllers.containsKey(_currentPage) &&
-                      _controllers[_currentPage]!.value.isInitialized) {
-                    // Pause the current video before changing the page
-                    _controllers[_currentPage]!.pause();
-                  }
+                  _controllers.forEach((key, controller) {
+                    if (key != index && controller.value.isInitialized) {
+                      controller.pause();
+                      controller.setVolume(0.0);
+                    }
+                  });
 
                   // Dispose of the video controller when it's no longer needed
-                  if (_controllers.containsKey(index) &&
-                      _controllers[index]!.value.isInitialized) {
-                    _controllers[index]!.play();
+                  if (_controllers.containsKey(index)) {
+                    File file = widget.imagesWithIndex.keys.elementAt(index);
+                    if (isVideo(file)) {
+                      _controllers[index] = getVideoController(file);
+                    }
+                  } else {
+                    final controller = _controllers[index];
+                    if (controller!.value.isInitialized) {
+                      controller.play();
+                      controller.setVolume(1.0);
+                    }
                   }
                 },
               ),
-            ),
+            )),
 
             SizedBox(height: 30),
             // Dot indicators
@@ -266,7 +340,8 @@ class _PostFormPageState extends State<PostFormPage> {
                                 fontSize: 16, color: Colors.grey[500]),
                           ),
                           SizedBox(width: 8),
-                          if (_location !='') // Check if _location is not empty
+                          if (_location !=
+                              '') // Check if _location is not empty
                             Icon(
                               Icons.circle,
                               size: 5,

@@ -9,7 +9,9 @@ import 'package:tripify/views/select_location_page.dart';
 import 'package:tripify/views/image_preview_page.dart';
 import 'package:tripify/views/preview_post_page.dart';
 import 'package:tripify/models/post_model.dart';
-import 'package:tripify/view_models/post_provider.dart'; // Import PostService
+import 'package:tripify/models/hashtag_model.dart';
+import 'package:tripify/view_models/hashtag_provider.dart';
+import 'package:tripify/view_models/post_provider.dart';
 
 class NewPostPage extends StatefulWidget {
   final Map<File, int> imagesWithIndex; // Accept Map<File, int>
@@ -29,26 +31,13 @@ class _NewPostPageState extends State<NewPostPage> {
 
   String selectedLocation = '';
 
-  List<String> _tags = [
-    'Travel',
-    'Adventure',
-    'Nature',
-    'Photography',
-    'Hiking',
-    'ABC'
-  ];
-
-  // Function to shuffle tags and return a random list
-  List<String> _getRandomizedTags() {
-    List<String> shuffledTags =
-        List.from(_tags); // Copy the list to avoid modifying the original
-    shuffledTags.shuffle(Random()); // Shuffle the list
-    return shuffledTags;
-  }
+  List<String> _tags = [];
 
   final int _maxTitleLength = 20;
   int hashtagCount = 0;
   bool _isListenerEnabled = true;
+
+  final HashtagProvider _hashtagProvider = HashtagProvider();
 
   @override
   void initState() {
@@ -81,6 +70,20 @@ class _NewPostPageState extends State<NewPostPage> {
     _descriptionController.addListener(() {
       _checkHashtagLimit(_descriptionController.text);
     });
+
+    _loadHashtags();
+  }
+
+  Future<void> _loadHashtags() async {
+    try {
+      List<Hashtag> hashtags = await _hashtagProvider.getHashtags();
+      setState(() {
+        // Store the hashtags in the _tags list
+        _tags = hashtags.map((hashtag) => hashtag.name).toList();
+      });
+    } catch (e) {
+      print("Error loading hashtags: $e");
+    }
   }
 
   void _checkHashtagLimit(String text) {
@@ -89,8 +92,6 @@ class _NewPostPageState extends State<NewPostPage> {
 
     setState(() {
       hashtagCount = count;
-
-      print("hashtag count: $hashtagCount");
 
       // If hashtag count exceeds 5, we trim the text or show a warning
       if (hashtagCount > 5) {
@@ -128,12 +129,12 @@ class _NewPostPageState extends State<NewPostPage> {
 
   Future<void> _generateThumbnail(File file) async {
     try {
-      final thumbnail = await genThumbnailFile(file.path); // Generate thumbnail
+      final thumbnail = await genThumbnailFile(file.path);
       thumbnailCache[file]?.value =
-          thumbnail; // Update the ValueNotifier with the generated thumbnail
+          thumbnail;
     } catch (e) {
       print(
-          "Error generating thumbnail: $e"); // Handle any error in thumbnail generation
+          "Error generating thumbnail: $e");
     }
   }
 
@@ -165,49 +166,6 @@ class _NewPostPageState extends State<NewPostPage> {
         ),
       ),
     );
-  }
-
-// Use later..
-  Future<void> _savePost() async {
-    // Validate if fields are empty
-    if (_titleController.text.isEmpty || _descriptionController.text.isEmpty) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Please fill in all fields')));
-      return;
-    }
-
-    final newPost = Post(
-      userId: FirebaseAuth.instance.currentUser?.uid ?? 'unknown_user',
-      title: _titleController.text,
-      description: _descriptionController.text,
-      createdAt: DateTime.now(),
-      updatedAt: null,
-      media: [], // This will be updated with media URLs later
-      likesCount: 0,
-      commentsCount: 0,
-      savedCount: 0,
-    );
-
-    final postProvider = Provider.of<PostProvider>(context, listen: false);
-
-    try {
-      final user = FirebaseAuth.instance.currentUser;
-
-      if (user != null) {
-        // Call the createPost method to save the post, passing images and media
-        // await postProvider.createPost(user.uid, newPost, widget.imagesWithIndex);
-      }
-
-      // Clear fields and navigate back after saving
-      _titleController.clear();
-      _descriptionController.clear();
-
-      Navigator.pop(context);
-    } catch (e) {
-      // Handle errors when saving the post
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Error saving post: $e')));
-    }
   }
 
   void _goToNextPage() {
@@ -291,10 +249,9 @@ class _NewPostPageState extends State<NewPostPage> {
                                             : Colors.grey[200],
                                         child: ValueListenableBuilder<File?>(
                                           valueListenable: thumbnailCache[
-                                              file]!, // Listen for updates to the thumbnail
+                                              file]!,
                                           builder: (context, thumbnail, child) {
                                             if (thumbnail != null) {
-                                              // If the thumbnail is generated, show it
                                               return Image.file(
                                                 thumbnail,
                                                 width: 200,
@@ -302,7 +259,6 @@ class _NewPostPageState extends State<NewPostPage> {
                                                 fit: BoxFit.contain,
                                               );
                                             } else {
-                                              // If the thumbnail is not ready, show a loading indicator
                                               return Center(
                                                   child:
                                                       CircularProgressIndicator(

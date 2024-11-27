@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tripify/view_models/auth_service.dart';
 import 'package:tripify/views/about_page.dart';
+import 'package:tripify/views/account_security_page.dart';
 import 'package:tripify/views/welcome_page.dart';
 import 'package:tripify/views/theme_selection_page.dart';
 import '../theme_notifier.dart';
@@ -87,6 +88,30 @@ class SettingsPage extends StatelessWidget {
       contentPadding: EdgeInsets.zero,
       onTap: () {
         switch (title) {
+          case "Account Security":
+            Navigator.push(
+              context,
+              PageRouteBuilder(
+                pageBuilder: (context, animation, secondaryAnimation) =>
+                    AccountSecurityPage(),
+                transitionsBuilder:
+                    (context, animation, secondaryAnimation, child) {
+                  const begin = Offset(1.0, 0.0);
+                  const end = Offset.zero;
+                  const curve = Curves.easeInOut;
+
+                  var tween = Tween(begin: begin, end: end)
+                      .chain(CurveTween(curve: curve));
+                  var offsetAnimation = animation.drive(tween);
+
+                  return SlideTransition(
+                    position: offsetAnimation,
+                    child: child,
+                  );
+                },
+              ),
+            );
+            break;
           case "Theme":
             Navigator.push(
               context,

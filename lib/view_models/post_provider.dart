@@ -2,59 +2,174 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:tripify/models/hashtag_model.dart';
 import 'package:tripify/models/post_model.dart';
+import 'package:tripify/view_models/hashtag_provider.dart';
 
 class PostProvider with ChangeNotifier {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  // Method to create a new post
-  Future<void> createPost(String userId, Post post, List<File> images) async {
-    try {
-      // Upload images and get their URLs
-      List<String> mediaUrls = [];
+  bool isLoading = true;
+  List<Post> _userPosts = [];
 
-      for (var image in images) {
-        String imageUrl = await _uploadImage(image, userId);
-        mediaUrls.add(imageUrl);
+  List<Post> get userPosts => _userPosts;
+
+  // Method to create a new post
+  Future<void> submitPost({
+    required String userId,
+    required String title,
+    String? description,
+    required Map<File, int> mediaWithIndex,
+    List<String>? hashtags,
+    String? location,
+  }) async {
+    try {
+      List<String> mediaUrls = await _uploadMedia(mediaWithIndex, userId);
+      HashtagProvider hashtagProvider = new HashtagProvider();
+
+      if (hashtags != null && hashtags.isNotEmpty) {
+        for (String hashtag in hashtags) {
+          await hashtagProvider.addHashtag(hashtag);
+        }
       }
 
-      // Create the post map with the image URLs
-      final postData = post.copyWith(media: mediaUrls).toMap();
+      Post newPost = Post(
+        userId: userId,
+        title: title,
+        description: description,
+        createdAt: DateTime.now(),
+        updatedAt: null,
+        media: mediaUrls,
+        hashtags: hashtags,
+        location: location,
+        likesCount: 0,
+        commentsCount: 0,
+        savedCount: 0,
+      );
 
-      // Add the post data to Firestore
-      await _firestore.collection('Post').add(postData);
-
-      // Optionally, notify listeners or return a success message
+      await _firestore.collection('Post').add(newPost.toMap());
     } catch (e) {
-      throw Exception('Failed to create post: $e');
+      print("Error submitting post: $e");
     }
   }
 
-  // Method to upload an image to Firebase Storage and return the URL
-  Future<String> _uploadImage(File image, String userId) async {
-    try {
-      final storageRef = FirebaseStorage.instance
-          .ref()
-          .child('${userId}/media/${DateTime.now().millisecondsSinceEpoch}');
+  Future<List<String>> _uploadMedia(
+      Map<File, int> mediaWithIndex, String userId) async {
+    List<String> mediaUrls = [];
 
-      final uploadTask = storageRef.putFile(image);
-      await uploadTask.whenComplete(() {});
-      
-      final imageUrl = await storageRef.getDownloadURL();
-      return imageUrl;
+    try {
+      for (var entry in mediaWithIndex.entries) {
+        File mediaFile = entry.key;
+        String fileName = mediaFile.uri.pathSegments.last;
+        String fileExtension = fileName.split('.').last.toLowerCase();
+
+        Reference mediaRef =
+            FirebaseStorage.instance.ref().child('${userId}/media/$fileName');
+
+        UploadTask uploadTask = mediaRef.putFile(mediaFile);
+
+        TaskSnapshot snapshot = await uploadTask;
+        String downloadUrl = await snapshot.ref.getDownloadURL();
+
+        mediaUrls.add(downloadUrl);
+      }
     } catch (e) {
-      print("Error uploading image: $e");
-      return '';
+      print('Error uploading image: $e');
     }
+
+    return mediaUrls;
   }
 
-  // Method to fetch all posts
-  Future<List<Post>> fetchPosts() async {
+  Future<void> fetchPostsForLoginUser(String uid) async {
+    isLoading = true;
+    notifyListeners();
+
     try {
-      final snapshot = await _firestore.collection('posts').get();
-      return snapshot.docs.map((doc) => Post.fromMap(doc.data())).toList();
+      final snapshot = await _firestore
+          .collection('Post')
+          .where('user_id', isEqualTo: uid)
+          .get();
+
+      if (snapshot.docs.isNotEmpty) {
+        _userPosts = snapshot.docs
+            .where((doc) => doc.exists)
+            .map((doc) => Post.fromMap(doc.data()))
+            .toList();
+      } else {
+        _userPosts = [];
+      }
+
+      notifyListeners();
     } catch (e) {
+      print("Error fetching user posts: $e");
       throw Exception('Failed to fetch posts: $e');
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> likePost(String postId, String userId) async {
+    try {
+      final postLikeDoc = await _firestore
+          .collection('PostLike')
+          .doc(
+              '$userId-$postId') // This document represents the user's like on this post
+          .get();
+
+      if (postLikeDoc.exists) {
+        // If the document exists, it means the user already liked the post
+        // "unlike" it: delete the like entry and update the like count
+        await _firestore.collection('PostLike').doc('$userId-$postId').delete();
+
+        // Decrease the like count in the Post collection
+        await _firestore.collection('Post').doc(postId).update({
+          'like_count': FieldValue.increment(-1),
+        });
+
+        // Decrease the owner's likes count (in the User collection)
+        final postDoc = await _firestore.collection('Post').doc(postId).get();
+        if (postDoc.exists) {
+          final postData = postDoc.data()!;
+          await _updateUserLikesCount(postData['userId'], -1);
+        }
+      } else {
+        // If the document does not exist, it means the user has not liked the post yet
+        // "like" the post: add an entry to the PostLike table and update the like count
+        await _firestore.collection('PostLike').doc('$userId-$postId').set({
+          'userId': userId,
+          'postId': postId,
+        });
+
+        // Increase the like count in the Post collection
+        await _firestore.collection('Post').doc(postId).update({
+          'like_count': FieldValue.increment(1),
+        });
+
+        // Increase the owner's likes count (in the User collection)
+        final postDoc = await _firestore.collection('Post').doc(postId).get();
+        if (postDoc.exists) {
+          final postData = postDoc.data()!;
+          await _updateUserLikesCount(postData['userId'], 1);
+        }
+      }
+    } catch (e) {
+      print("Error liking/unliking post: $e");
+    }
+  }
+
+  Future<void> _updateUserLikesCount(String userId, int increment) async {
+    try {
+      // Update the likes count in the user's document
+      final userDoc = await _firestore.collection('User').doc(userId).get();
+
+      if (userDoc.exists) {
+        await _firestore.collection('User').doc(userId).update({
+          'likes_count': FieldValue.increment(increment),
+        });
+      }
+    } catch (e) {
+      print("Error updating user likes count: $e");
     }
   }
 

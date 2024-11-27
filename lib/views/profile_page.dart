@@ -1,15 +1,19 @@
 import 'dart:ffi';
-
+import 'dart:io';
+import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shimmer/shimmer.dart';
-import 'package:tripify/view_models/user_provider.dart'; // Adjust the import based on your structure
+import 'package:tripify/view_models/post_provider.dart';
+import 'package:tripify/view_models/user_provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:get_thumbnail_video/video_thumbnail.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:intl/intl.dart';
 import 'package:tripify/models/post_model.dart';
 import 'package:tripify/views/edit_profile_page.dart';
-import 'package:tripify/views/add_post_page.dart';
+import 'package:tripify/views/post_detail_page.dart';
 import 'package:tripify/views/pick_image_page.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/gestures.dart';
@@ -30,10 +34,12 @@ class _ProfilePageState extends State<ProfilePage> {
 
   Future<void> _fetchUserData() async {
     final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final postProvider = Provider.of<PostProvider>(context, listen: false);
     final user = FirebaseAuth.instance.currentUser;
 
     if (user != null) {
       await userProvider.fetchUserDetails(user.uid);
+      await postProvider.fetchPostsForLoginUser(user.uid);
 
       // // After fetching user details, the _profileImageUrl is updated in the provider
       // setState(() {
@@ -55,6 +61,7 @@ class _ProfilePageState extends State<ProfilePage> {
   Widget build(BuildContext context) {
     // Access UserProvider
     final userProvider = Provider.of<UserProvider>(context);
+    final postProvider = Provider.of<PostProvider>(context);
 
     return Scaffold(
       body: RefreshIndicator(
@@ -77,7 +84,7 @@ class _ProfilePageState extends State<ProfilePage> {
             const SizedBox(height: 10.0), // Spacing below title
 
             // Grid for displaying user posts
-            _buildPostGrid(),
+            _buildPostGrid(postProvider),
           ],
         ),
       ),
@@ -98,7 +105,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
   Widget _buildUserSection(UserProvider userProvider) {
     if (userProvider.isLoading) {
-      return _buildShimmerPlaceholder(); // Show shimmer while loading
+      return _buildShimmerPlaceholder();
     }
 
     String userBio = userProvider.userModel?.bio ?? '';
@@ -539,97 +546,189 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
 // Display shimmer grid until posts are loaded
-  Widget _buildPostGrid() {
-    bool isLoading = false; // Update this based on loading status
+  Widget _buildPostGrid(PostProvider postProvider) {
+    if (postProvider.isLoading) {
+      return _buildPostShimmerGrid();
+    }
 
-    return isLoading
-        ? _buildPostShimmerGrid()
-        : GridView.builder(
-            shrinkWrap: true,
-            physics: NeverScrollableScrollPhysics(),
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              childAspectRatio: 0.75,
-              crossAxisSpacing: 8.0,
-              mainAxisSpacing: 8.0,
-            ),
-            itemCount: 10, // Set this number based on actual post count
-            itemBuilder: (context, index) {
-              return _buildPostUi(); // Display actual post UI
-            },
-          );
+    List<Post> userPosts = postProvider.userPosts;
+
+    if (userPosts.isEmpty) {
+      // Show a message if no posts are available
+      return Center(child: Text('No posts available'));
+    }
+
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: NeverScrollableScrollPhysics(),
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        childAspectRatio: 0.75,
+        crossAxisSpacing: 8.0,
+        mainAxisSpacing: 8.0,
+      ),
+      itemCount: userPosts.length,
+      itemBuilder: (context, index) {
+        return _buildPostUi(userPosts[index]);
+      },
+    );
   }
 
 // Build Post UI
-  Widget _buildPostUi() {
+  Widget _buildPostUi(Post post) {
     Color cardColor = Theme.of(context).brightness == Brightness.dark
         ? Color(0xFF333333)
         : Colors.white;
 
     return Padding(
-      padding: EdgeInsets.all(5),
-      child: Card(
-        semanticContainer: true,
-        color: cardColor,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10.0),
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Expanded(
-              child: CachedNetworkImage(
-                imageUrl:
-                    'https://firebasestorage.googleapis.com/v0/b/tripify-d8e12.appspot.com/o/GdkQDokljsVMIkPLanvtFdoshDR2%2Fpfp%2FUntitled732_20241115203206.png?alt=media&token=54a8e225-170c-470a-b531-807ab7c95d09', // Replace with dynamic image URL
-                placeholder: (context, url) => Shimmer.fromColors(
-                  baseColor: Colors.grey[300]!,
-                  highlightColor: Colors.grey[100]!,
-                  child: Container(
-                    color: Colors.white,
-                    width: double.infinity,
-                  ),
-                ),
-                errorWidget: (context, url, error) => Icon(Icons.error),
-                width: double.infinity,
-                height: double.infinity,
-                fit: BoxFit.cover,
+        padding: EdgeInsets.all(5),
+        child: GestureDetector(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => PostDetailPage(
+                    post: post),
               ),
+            );
+          },
+          child: Card(
+            semanticContainer: true,
+            color: cardColor,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10.0),
             ),
-            // Text section with dynamic post title
-            Padding(
-              padding: EdgeInsets.all(10.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Post Title
-                  Text(
-                    'This is a title', // Replace with dynamic post title
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  SizedBox(
-                      height:
-                          8.0), // Adds space between the title and likes section
-
-                  // Likes Section (Right aligned)
-                  Row(
-                    mainAxisAlignment:
-                        MainAxisAlignment.end, // Align to the right
+            clipBehavior: Clip.antiAlias,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Expanded(
+                  child: post.media.isNotEmpty
+                      ? Stack(children: [
+                          FutureBuilder<String>(
+                            future: generateThumbnail(post.media[0]),
+                            builder: (context, snapshot) {
+                              if (snapshot.connectionState ==
+                                      ConnectionState.done &&
+                                  snapshot.hasData) {
+                                return Stack(
+                                    alignment: Alignment.center,
+                                    children: [
+                                      Image.file(
+                                        File(snapshot.data!),
+                                        width: double.infinity,
+                                        height: double.infinity,
+                                        fit: BoxFit.cover,
+                                      ),
+                                      CircleAvatar(
+                                        radius: 20,
+                                        backgroundColor: Colors.grey[800],
+                                        child: Icon(
+                                          Icons.play_arrow,
+                                          size: 35,
+                                          color: Colors.white,
+                                        ),
+                                      )
+                                    ]);
+                              } else if (snapshot.connectionState ==
+                                  ConnectionState.waiting) {
+                                return Shimmer.fromColors(
+                                  baseColor: Colors.grey[300]!,
+                                  highlightColor: Colors.grey[100]!,
+                                  child: Container(
+                                    color: Colors.white,
+                                    width: double.infinity,
+                                  ),
+                                );
+                              } else {
+                                return CachedNetworkImage(
+                                  imageUrl: post.media[0],
+                                  placeholder: (context, url) =>
+                                      Shimmer.fromColors(
+                                    baseColor: Colors.grey[300]!,
+                                    highlightColor: Colors.grey[100]!,
+                                    child: Container(
+                                      color: Colors.white,
+                                      width: double.infinity,
+                                    ),
+                                  ),
+                                  errorWidget: (context, url, error) =>
+                                      Icon(Icons.error),
+                                  width: double.infinity,
+                                  height: double.infinity,
+                                  fit: BoxFit.cover,
+                                );
+                              }
+                            },
+                          )
+                        ])
+                      : Container(
+                          color: Colors.grey[200],
+                          width: double.infinity,
+                          height: double.infinity,
+                          child: Icon(Icons.image_not_supported),
+                        ),
+                ),
+                // Text section with dynamic post title
+                Padding(
+                  padding: EdgeInsets.all(10.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(Icons.favorite_outline, size: 16.0),
-                      SizedBox(width: 4.0),
+                      // Post Title
                       Text(
-                        '20', // Replace with dynamic like count
+                        post.title,
                         style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      SizedBox(height: 8.0),
+
+                      // Likes Section (Right aligned)
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          Icon(Icons.favorite_outline, size: 16.0),
+                          SizedBox(width: 4.0),
+                          Text(
+                            '${post.likesCount}',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                        ],
                       ),
                     ],
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-          ],
-        ),
-      ),
-    );
+          ),
+        ));
+  }
+
+  Future<String> generateThumbnail(String videoUrl) async {
+    try {
+      final tempDir = await getTemporaryDirectory();
+      final response = await http.get(Uri.parse(videoUrl));
+
+      if (response.statusCode == 200) {
+        final videoFile = File('${tempDir.path}/video.mp4');
+        await videoFile.writeAsBytes(response.bodyBytes);
+
+        final XFile? thumbnail = await VideoThumbnail.thumbnailFile(
+          video: videoFile.path,
+          thumbnailPath: tempDir.path,
+          maxWidth: 100,
+          quality: 75,
+        );
+
+        if (thumbnail != null) {
+          return thumbnail.path; // Return the path to the thumbnail
+        } else {
+          throw Exception("Failed to generate thumbnail.");
+        }
+      } else {
+        throw Exception("Failed to load video for thumbnail");
+      }
+    } catch (e) {
+      throw Exception("Error generating video thumbnail: $e");
+    }
   }
 }
