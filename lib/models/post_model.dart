@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Post {
-  final String userId; // User ID referencing the User document
+  final String userId;
   final String title;
   final String? description;
   final DateTime createdAt;

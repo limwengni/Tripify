@@ -11,8 +11,10 @@ class PostProvider with ChangeNotifier {
 
   bool isLoading = true;
   List<Post> _userPosts = [];
+  List<String> _id = [];
 
   List<Post> get userPosts => _userPosts;
+  List<String> get postsId => _id;
 
   // Method to create a new post
   Future<void> submitPost({
@@ -80,7 +82,52 @@ class PostProvider with ChangeNotifier {
     return mediaUrls;
   }
 
-  Future<void> fetchPostsForLoginUser(String uid) async {
+  Future<List<Map<String, dynamic>>> fetchPostsForAllUsersExceptLoggedIn(
+      String uid) async {
+    isLoading = true;
+    notifyListeners();
+
+    try {
+      // Fetch all posts except the ones belonging to the logged-in user
+      final snapshot = await _firestore
+          .collection('Post')
+          .where('user_id',
+              isNotEqualTo: uid) // Exclude posts from the logged-in user
+          .get();
+
+      if (snapshot.docs.isNotEmpty) {
+        // Convert Firestore docs to a list of maps containing post data and post ID
+        final postsWithIds = snapshot.docs
+            .where((doc) => doc.exists)
+            .map((doc) => {
+                  'id': doc.id, // Document ID
+                  'post': Post.fromMap(doc.data()), // Post object
+                })
+            .toList();
+
+        _userPosts = postsWithIds.map((e) => e['post'] as Post).toList();
+        _id = postsWithIds.map((e) => e['id'] as String).toList();
+
+        // Randomize the posts for recommender
+        postsWithIds.shuffle(); // Shuffle the posts to randomize them
+
+        notifyListeners();
+        return postsWithIds;
+      } else {
+        _userPosts = [];
+        notifyListeners();
+        return [];
+      }
+    } catch (e) {
+      print("Error fetching posts: $e");
+      throw Exception('Failed to fetch posts: $e');
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> fetchPostsForLoginUser(String uid) async {
     isLoading = true;
     notifyListeners();
 
@@ -91,15 +138,24 @@ class PostProvider with ChangeNotifier {
           .get();
 
       if (snapshot.docs.isNotEmpty) {
-        _userPosts = snapshot.docs
+        final postsWithIds = snapshot.docs
             .where((doc) => doc.exists)
-            .map((doc) => Post.fromMap(doc.data()))
+            .map((doc) => {
+                  'id': doc.id, // Document ID
+                  'post': Post.fromMap(doc.data()), // Post object
+                })
             .toList();
+
+        _userPosts = postsWithIds.map((e) => e['post'] as Post).toList();
+        _id = postsWithIds.map((e) => e['id'] as String).toList();
+
+        notifyListeners();
+        return postsWithIds;
       } else {
         _userPosts = [];
+        notifyListeners();
+        return [];
       }
-
-      notifyListeners();
     } catch (e) {
       print("Error fetching user posts: $e");
       throw Exception('Failed to fetch posts: $e');
@@ -119,7 +175,6 @@ class PostProvider with ChangeNotifier {
 
       if (postLikeDoc.exists) {
         // If the document exists, it means the user already liked the post
-        // "unlike" it: delete the like entry and update the like count
         await _firestore.collection('PostLike').doc('$userId-$postId').delete();
 
         // Decrease the like count in the Post collection
@@ -131,11 +186,11 @@ class PostProvider with ChangeNotifier {
         final postDoc = await _firestore.collection('Post').doc(postId).get();
         if (postDoc.exists) {
           final postData = postDoc.data()!;
-          await _updateUserLikesCount(postData['userId'], -1);
+          await _updateUserLikesCount(postData['user_id'], -1);
+          print("User's like count updated.");
         }
       } else {
         // If the document does not exist, it means the user has not liked the post yet
-        // "like" the post: add an entry to the PostLike table and update the like count
         await _firestore.collection('PostLike').doc('$userId-$postId').set({
           'userId': userId,
           'postId': postId,
@@ -150,11 +205,25 @@ class PostProvider with ChangeNotifier {
         final postDoc = await _firestore.collection('Post').doc(postId).get();
         if (postDoc.exists) {
           final postData = postDoc.data()!;
-          await _updateUserLikesCount(postData['userId'], 1);
+          await _updateUserLikesCount(postData['user_id'], 1);
         }
       }
     } catch (e) {
       print("Error liking/unliking post: $e");
+    }
+  }
+
+  Future<bool> isPostLiked(String postId, String userId) async {
+    try {
+      // Check if the user has liked the post
+      final doc = await _firestore
+          .collection('PostLike')
+          .doc('$userId-$postId') // Use the correct document ID format
+          .get();
+      return doc.exists;
+    } catch (e) {
+      print("Error checking like status: $e");
+      return false;
     }
   }
 
@@ -167,6 +236,8 @@ class PostProvider with ChangeNotifier {
         await _firestore.collection('User').doc(userId).update({
           'likes_count': FieldValue.increment(increment),
         });
+      } else {
+        print("cnt update likes_cpunt");
       }
     } catch (e) {
       print("Error updating user likes count: $e");

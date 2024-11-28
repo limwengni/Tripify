@@ -3,24 +3,31 @@ import 'dart:ui';
 import 'package:intl/intl.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:http/http.dart' as http;
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:tripify/view_models/post_provider.dart';
+import 'package:tripify/view_models/user_provider.dart';
 import 'package:tripify/models/post_model.dart';
+import 'package:tripify/views/user_profile_page.dart';
 import 'package:video_player/video_player.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
 class PostDetailPage extends StatefulWidget {
   final Post post;
+  final String id;
 
   // Constructor to accept the post object
-  PostDetailPage({required this.post});
+  PostDetailPage({required this.post, required this.id});
 
   @override
   _PostDetailPageState createState() => _PostDetailPageState();
 }
 
 class _PostDetailPageState extends State<PostDetailPage> {
+  late String _id;
   late String _title;
   late String _description;
   late String _location;
@@ -32,12 +39,15 @@ class _PostDetailPageState extends State<PostDetailPage> {
   int _currentPage = 0;
   final Map<int, VideoPlayerController> _controllers = {};
   final Map<int, bool> _isMuted = {};
+  bool isLiked = false;
+  bool liked = false;
 
   @override
   void initState() {
     super.initState();
 
     // Initialize post details from widget.post
+    _id = widget.id;
     _title = widget.post.title;
     _description = widget.post.description ?? '';
     _location = widget.post.location ?? '';
@@ -58,6 +68,10 @@ class _PostDetailPageState extends State<PostDetailPage> {
     for (int i = 0; i < widget.post.media.length; i++) {
       _isMuted[i] = false;
     }
+
+    final user = FirebaseAuth.instance.currentUser;
+
+    _checkIfLiked(_id, user!.uid);
   }
 
   String formatPostDate(DateTime createdAt) {
@@ -78,7 +92,8 @@ class _PostDetailPageState extends State<PostDetailPage> {
     } else if (difference.inDays == 1) {
       return "1 Day Ago"; // After 1 day then show date
     } else {
-      return DateFormat('d MMMM yyyy').format(localCreatedAt); // "4 August 2023"
+      return DateFormat('d MMMM yyyy')
+          .format(localCreatedAt); // "4 August 2023"
     }
   }
 
@@ -146,10 +161,79 @@ class _PostDetailPageState extends State<PostDetailPage> {
     return videoExtensions.contains('.$urlExtension');
   }
 
+  Future<void> _checkIfLiked(String postId, String userId) async {
+    final postProvider = PostProvider();
+
+    bool liked = await postProvider.isPostLiked(postId, userId);
+    setState(() {
+      isLiked = liked;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    String postAuthorId = widget.post.userId;
+    final user = FirebaseAuth.instance.currentUser;
+    String currentUserId = user!.uid;
+
     return Scaffold(
-      appBar: AppBar(title: Text("My Post")),
+      appBar: AppBar(
+        title: Row(
+          children: [
+            Text(
+              postAuthorId == currentUserId ? "My Post" : "",
+            ),
+            if (postAuthorId != currentUserId)
+              GestureDetector(
+                onTap: () {
+                  // Navigate to the user profile page when tapped
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => UserProfilePage(
+                        userId: postAuthorId ?? '',
+                      ),
+                    ),
+                  );
+                },
+                child: FutureBuilder<String?>(
+                  future: userProvider.fetchUsername(postAuthorId),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return Center(
+                        child: Shimmer.fromColors(
+                          baseColor: Colors.grey[300]!,
+                          highlightColor: Colors.grey[100]!,
+                          child: Container(
+                            width: 200,
+                            height: 20,
+                            color: Colors.white,
+                          ),
+                        ),
+                      );
+                    }
+
+                    if (snapshot.hasError || !snapshot.hasData) {
+                      return Text("Error loading username");
+                    }
+
+                    var username = snapshot.data;
+
+                    return Text(
+                      "@${username ?? 'Unknown'}'s Post",
+                      style: TextStyle(
+                        color: const Color.fromARGB(255, 159, 118,
+                            249), // Make it look like a clickable link
+                        fontWeight: FontWeight.bold,
+                      ),
+                    );
+                  },
+                ),
+              ),
+          ],
+        ),
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.only(top: 16.0),
         child: Column(
@@ -329,17 +413,22 @@ class _PostDetailPageState extends State<PostDetailPage> {
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 IconButton(
-                  icon: Icon(Icons.favorite_border, size: 30),
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          "You are in preview mode.",
-                          style: TextStyle(color: Colors.white),
-                        ),
-                        backgroundColor: Color.fromARGB(255, 159, 118, 249),
-                      ),
-                    );
+                  icon: Icon(
+                    isLiked ? Icons.favorite : Icons.favorite_border,
+                    size: 30,
+                    color: isLiked ? Colors.red : null,
+                  ),
+                  onPressed: () async {
+                    final postId = _id;
+                    final userId = userProvider.user!.uid;
+
+                    setState(() {
+                      isLiked = !isLiked;
+                      likeCount = isLiked ? likeCount + 1 : likeCount - 1;
+                    });
+
+                    PostProvider postProvider = PostProvider();
+                    await postProvider.likePost(postId, userId);
                   },
                 ),
                 Text("$likeCount", style: TextStyle(fontSize: 16)),
