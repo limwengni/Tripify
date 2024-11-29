@@ -1,9 +1,11 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:tripify/view_models/stripe_key.dart';
 import 'package:tripify/views/accommodation_requirement_create_page.dart';
 import 'package:tripify/views/car_rental_requirement_create_page.dart';
 import 'package:tripify/views/car_rental_requirement_page.dart';
@@ -43,6 +45,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   try {
+    await _setup();
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
@@ -79,6 +82,11 @@ void main() async {
   );
 }
 
+Future<void> _setup() async{
+  WidgetsFlutterBinding.ensureInitialized();
+  Stripe.publishableKey = stripePublishableKey;
+}
+ 
 class MyApp extends StatefulWidget {
   const MyApp({super.key});
 

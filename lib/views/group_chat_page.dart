@@ -230,6 +230,8 @@ class _GroupChatPageState extends State<GroupChatPage> {
           fileName: data['file_name'],
           senderId: data['sender_id'],
           isGroup: widget.conversation.isGroup,
+          conversation: widget.conversation,
+          currentUser: currentUserId,
         ),
         const SizedBox(
           height: 5,
@@ -353,7 +355,7 @@ class _GroupChatPageState extends State<GroupChatPage> {
                         Navigator.push(
                             context,
                             MaterialPageRoute( 
-                                builder: (builder) => CreatePollPage (currentUserId: widget.currentUserId)));
+                                builder: (builder) => CreatePollPage (currentUserId: widget.currentUserId,conversation: widget.conversation,)));
                       }),
                     ],
                   ),

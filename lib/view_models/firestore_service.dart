@@ -94,6 +94,28 @@ class FirestoreService {
     }
   }
 
+  Future<String> insertSubCollectionDataWithAutoIDReturnValue(String collection,
+      String subCollection, String docId, Map<String, dynamic> data) async {
+    try {
+      // Create a new document reference with an auto-generated ID
+      DocumentReference docRef =
+          _db.collection(collection).doc(docId).collection(subCollection).doc();
+
+      // Add the document ID to the data map
+      data['id'] = docRef.id;
+
+      // Insert the data into Firestore, including the document ID as an attribute
+      await docRef.set(data);
+
+      print("Data inserted successfully with document ID as an attribute.");
+      return docRef.id;
+    } catch (e) {
+      print("Error inserting data: $e");
+    }
+
+    return "";
+  }
+
   // Insert user data
   Future<void> insertUserData(
       String collection, Map<String, dynamic> data) async {
@@ -122,18 +144,33 @@ class FirestoreService {
       print("Error updating data: $e");
     }
   }
-Future<void> updateField(
-    String collection, String documentId, String field, dynamic value) async {
-  try {
-    // Update the specified field in the Firestore document
-    await _db.collection(collection).doc(documentId).update({
-      field: value,
-    });
-    print("Field '$field' updated successfully.");
-  } catch (e) {
-    print("Error updating field: $e");
+
+  Future<void> updateField(
+      String collection, String documentId, String field, dynamic value) async {
+    try {
+      // Update the specified field in the Firestore document
+      await _db.collection(collection).doc(documentId).update({
+        field: value,
+      });
+      print("Field '$field' updated successfully.");
+    } catch (e) {
+      print("Error updating field: $e");
+    }
   }
-}
+
+   Future<void> updateSubCollectionField({
+      required String collection,required String documentId,required String subCollection,required String subDocumentId,required String field, required dynamic value}) async {
+    try {
+      // Update the specified field in the Firestore document
+      await _db.collection(collection).doc(documentId).collection(subCollection).doc(subDocumentId).update({
+        field: value,
+      });
+      print("Field '$field' updated successfully.");
+    } catch (e) {
+      print("Error updating field: $e");
+    }
+  }
+
   // Delete Data
   Future<void> deleteData(String collection, String documentId) async {
     try {
@@ -181,6 +218,28 @@ Future<void> updateField(
     }
   }
 
+  Future<Map<String, dynamic>?> getSubCollectionDataById({
+    required String collection,
+    required String subCollection,
+    required String docId,
+    required String subDocId,
+  }) async{
+    
+     try {
+      final docSnapshot =
+          await _db.collection(collection).doc(docId).collection(subCollection).doc(subDocId).get();
+      if (docSnapshot.exists) {
+        return docSnapshot.data() as Map<String, dynamic>;
+      } else {
+        print("Document not found.");
+        return null;
+      }
+    } catch (e) {
+      print("Error fetching document: $e");
+      return null;
+    }
+  }
+
   // Select Data (Get by Document ID)
   Future<Map<String, dynamic>?> getDataById(
       String collection, String documentId) async {
@@ -215,6 +274,36 @@ Future<void> updateField(
       return [];
     }
   }
+Future<Map<String, dynamic>?> getSubCollectionOneDataByFields(
+  String parentCollection,
+  String parentDocId,
+  String subCollection,
+  String field,
+  dynamic value,
+) async {
+  try {
+    final querySnapshot = await _db
+        .collection(parentCollection) // Parent collection
+        .doc(parentDocId) // Parent document ID
+        .collection(subCollection) // Subcollection
+        .where(field, isEqualTo: value) // Filter by field
+        .get();
+
+    // Check if any documents exist in the query
+    if (querySnapshot.docs.isNotEmpty) {
+      // Return the first matching document's data
+      return querySnapshot.docs.first.data() as Map<String, dynamic>;
+    } else {
+      print("No matching documents found in the subcollection.");
+      return null;
+    }
+  } catch (e) {
+    print("Error fetching data from subcollection by field: $e");
+    return null;
+  }
+}
+
+
 
 // Stream Data (Get Conversations Stream)
   Stream<List<Map<String, dynamic>>> getConversationsStream(
@@ -236,7 +325,6 @@ Future<void> updateField(
       return Stream.value([]);
     }
   }
-
 
   Future<bool> insertUserWithUniqueUsername(String username) async {
     final FirebaseFirestore firestore = FirebaseFirestore.instance;

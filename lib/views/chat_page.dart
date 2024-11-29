@@ -192,6 +192,8 @@ class _ChatPageState extends State<ChatPage> {
           fileName: data['file_name'],
           senderId: data['sender_id'],
           isGroup: widget.conversation.isGroup,
+          conversation: widget.conversation,
+          currentUser: currentUserId,
         ),
         const SizedBox(
           height: 5,

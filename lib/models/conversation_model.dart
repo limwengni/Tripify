@@ -14,6 +14,7 @@ class ConversationModel {
   final String? conversationPic;
   String? groupName;
   final DateTime? updatedAt;
+  String? latestMessageType;
 
   ConversationModel({
     required this.id,
@@ -29,6 +30,7 @@ class ConversationModel {
     this.unreadMessage,
     this.groupName,
     required this.updatedAt,
+    this.latestMessageType,
   });
 
   // Convert the ConversationModel instance to a Map
@@ -47,6 +49,7 @@ class ConversationModel {
       'unread_message': unreadMessage,
       'group_name': groupName,
       'updated_at': updatedAt,
+      'latest_message_type': latestMessageType,
     };
   }
 
@@ -73,6 +76,8 @@ class ConversationModel {
       updatedAt: (data['updated_at'] is Timestamp)
           ? (data['updated_at'] as Timestamp).toDate()
           : DateTime.parse(data['updated_at']),
+
+          latestMessageType: data['latest_message_type']
     );
   }
 

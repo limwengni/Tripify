@@ -4,13 +4,13 @@ class PollModel {
   final String id;
   final DateTime createdAt;
   final DateTime endAt;
-  final Map<int, String> options; // Option ID mapped to its description
-  final String question; 
-  final Map<String, int>? answers; // User ID mapped to chosen option ID
+  final List<String> options; // List of options as strings
+  final String question;
+  final Map<String, int>? answers; // User ID mapped to chosen option index
   final String createdBy;
 
   PollModel({
-    required this.createdBy, 
+    required this.createdBy,
     required this.id,
     required this.createdAt,
     required this.endAt,
@@ -27,12 +27,14 @@ class PollModel {
       createdAt: (data['created_at'] is Timestamp)
           ? (data['created_at'] as Timestamp).toDate()
           : DateTime.parse(data['create_at']),
-      endAt:  (data['end_at'] is Timestamp)
+      endAt: (data['end_at'] is Timestamp)
           ? (data['end_at'] as Timestamp).toDate()
           : DateTime.parse(data['end_at']),
-      options: Map<int, String>.from(data['options'] as Map),
+      options: List<String>.from(data['options']),
       question: data['question'] as String,
-      answers: Map<String, int>.from(data['answers'] as Map),
+      answers: data['answers'] != null
+          ? Map<String, int>.from(data['answers'] as Map)
+          : null,
     );
   }
 
@@ -40,8 +42,9 @@ class PollModel {
   Map<String, dynamic> toMap() {
     return {
       'id': id,
-      'createdAt': createdAt.toIso8601String(),
-      'endAt': endAt.toIso8601String(),
+      'created_by': createdBy,
+      'created_at': createdAt,
+      'end_at': endAt,
       'options': options,
       'question': question,
       'answers': answers,
@@ -55,18 +58,19 @@ class PollModel {
 
   /// Calculates the total votes for the poll
   int totalVotes() {
-    return answers!.length;
+    return answers?.length ?? 0;
   }
 
   /// Returns the percentage of votes for each option
   Map<int, double> calculateVotePercentages() {
     final int total = totalVotes();
-    if (total == 0) return options.map((key, _) => MapEntry(key, 0.0));
+    if (total == 0) return {for (int i = 0; i < options.length; i++) i: 0.0};
 
     final Map<int, double> percentages = {};
-    for (final entry in options.entries) {
-      final int votes = answers!.values.where((value) => value == entry.key).length;
-      percentages[entry.key] = (votes / total) * 100;
+    for (int i = 0; i < options.length; i++) {
+      final int votes =
+          answers?.values.where((value) => value == i).length ?? 0;
+      percentages[i] = (votes / total) * 100;
     }
     return percentages;
   }

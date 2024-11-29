@@ -38,7 +38,6 @@ class _ConversationTileState extends State<ConversationTile> {
   void _fetchConversationData(
       ConversationModel conversation, String currentUserId) async {
     if (widget.conversation.latestMessage != null) {
-      
       if (widget.conversation.unreadMessage != null &&
           widget.conversation.unreadMessage!.containsKey(currentUserId)) {
         _unreadMessage = widget.conversation.unreadMessage![currentUserId];
@@ -109,16 +108,77 @@ class _ConversationTileState extends State<ConversationTile> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      _conversationNameFuture,
+                      _conversationNameFuture, // This appears to be a future, might need to await the value
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
-                    Text(widget.conversation.latestMessage ?? ""),
+                    if (widget.conversation.latestMessageType == 'text')
+                      Text(widget.conversation.latestMessage ?? "")
+                    else if (widget.conversation.latestMessageType == 'poll')
+                      const Row(
+                        children: [
+                          Icon(
+                            Icons.poll, // Choose an appropriate icon here
+                            color:
+                                Colors.blue, // Optional: Set color of the icon
+                          ),
+                          SizedBox(
+                              width:
+                                  8), // Optional: Space between the icon and the text
+                          Text('Poll'),
+                        ],
+                      )
+                    else if (widget.conversation.latestMessageType == 'pic')
+                      const Row(
+                        children: [
+                          Icon(
+                            Icons.image, // Choose an appropriate icon here
+                            color:
+                                Colors.blue, // Optional: Set color of the icon
+                          ),
+                          SizedBox(
+                              width:
+                                  8), // Optional: Space between the icon and the text
+                          Text('Pic'),
+                        ],
+                      )
+                    else if (widget.conversation.latestMessageType == 'video')
+                      const Row(
+                        children: [
+                          Icon(
+                            Icons
+                                .video_camera_back_rounded, // Choose an appropriate icon here
+                            color:
+                                Colors.blue, 
+                          ),
+                          SizedBox(
+                              width:
+                                  8), 
+                          Text('Video'),
+                        ],
+                      )
+                    else if (widget.conversation.latestMessageType == 'file')
+                      const Row(
+                        children: [
+                          Icon(
+                            Icons
+                                .file_copy_rounded, 
+                            color:
+                                Colors.blue, 
+                          ),
+                          SizedBox(
+                              width:
+                                  8), 
+                          Text('File'),
+                        ],
+                      ),
                   ],
                 ),
                 const Spacer(),
                 Column(
                   children: [
-                    if (  widget.conversation.unreadMessage![widget.currentUserId]!= 0) ...[
+                    if (widget.conversation
+                            .unreadMessage![widget.currentUserId] !=
+                        0) ...[
                       Row(
                         children: [
                           Text(DateFormat('hh:mm a').format(
@@ -134,7 +194,9 @@ class _ConversationTileState extends State<ConversationTile> {
                         ),
                         alignment: Alignment.center,
                         child: Text(
-                          widget.conversation.unreadMessage![widget.currentUserId].toString(),
+                          widget
+                              .conversation.unreadMessage![widget.currentUserId]
+                              .toString(),
                           style: const TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.bold,

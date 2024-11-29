@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
+import 'package:tripify/models/conversation_model.dart';
 import 'package:tripify/models/poll_model.dart';
+import 'package:tripify/view_models/conversation_view_model.dart';
 import 'package:tripify/view_models/firestore_service.dart';
 
 class CreatePollPage extends StatefulWidget {
   final String currentUserId;
-  const CreatePollPage({Key? key, required this.currentUserId})
+  final ConversationModel conversation;
+  const CreatePollPage(
+      {Key? key, required this.currentUserId, required this.conversation})
       : super(key: key);
 
   @override
@@ -18,6 +22,7 @@ class _CreatePollPageState extends State<CreatePollPage> {
   List<String> options = [''];
   final _formKey = GlobalKey<FormBuilderState>();
   FirestoreService _firestoreService = FirestoreService();
+  ConversationViewModel conversationViewModel = ConversationViewModel();
 
   @override
   Widget build(BuildContext context) {
@@ -83,26 +88,28 @@ class _CreatePollPageState extends State<CreatePollPage> {
                   ),
                   const SizedBox(height: 16),
                   ElevatedButton(
-                    onPressed: () {
+                    onPressed: () async{
                       if (_formKey.currentState?.saveAndValidate() ?? false) {
                         final formValues = _formKey.currentState?.value;
                         // Generate a map of options from the list
-                        final Map<int, String> optionMap = {
-                          for (int i = 0; i < options.length; i++) 
-                          i: formValues!['option${i+1}']
-                        };
-                        print('Option Map: $optionMap');
+                        final List<String> optionList =[];
+                          for (int i = 0; i < options.length; i++){
+                           optionList.add(formValues!['option${i + 1}']);
+                        }
                         final poll = PollModel(
                             createdBy: widget.currentUserId,
                             id: '',
                             createdAt: DateTime.now(),
                             endAt:
                                 DateTime.now().add(const Duration(hours: 24)),
-                            options: optionMap,
+                            options: optionList,
                             question: formValues?['question'] ?? '',
                             answers: null);
 
+                        await conversationViewModel.sendPollMessage(
+                            poll: poll, conversation: widget.conversation);
 
+                            
                       }
                     },
                     child: const Text('Create Poll'),
