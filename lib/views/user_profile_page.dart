@@ -18,12 +18,16 @@ import 'package:tripify/views/pick_image_page.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/gestures.dart';
 
-class ProfilePage extends StatefulWidget {
+class UserProfilePage extends StatefulWidget {
+  final String userId;
+
+  UserProfilePage({required this.userId});
+
   @override
-  _ProfilePageState createState() => _ProfilePageState();
+  _UserProfilePageState createState() => _UserProfilePageState();
 }
 
-class _ProfilePageState extends State<ProfilePage> {
+class _UserProfilePageState extends State<UserProfilePage> {
   late String? _profileImageUrl;
 
   @override
@@ -35,11 +39,11 @@ class _ProfilePageState extends State<ProfilePage> {
   Future<void> _fetchUserData() async {
     final userProvider = Provider.of<UserProvider>(context, listen: false);
     final postProvider = Provider.of<PostProvider>(context, listen: false);
-    final user = FirebaseAuth.instance.currentUser;
+    final userId = widget.userId;
 
-    if (user != null) {
-      await userProvider.fetchUserDetails(user.uid);
-      final postsWithIds = await postProvider.fetchPostsForLoginUser(user.uid);
+    if (userId != null) {
+      await userProvider.fetchUserDetails(widget.userId);
+      final postsWithIds = await postProvider.fetchPostsForLoginUser(userId);
 
       for (var postEntry in postsWithIds) {
         print('Doc ID: ${postEntry['id']}');
@@ -70,6 +74,16 @@ class _ProfilePageState extends State<ProfilePage> {
     final postProvider = Provider.of<PostProvider>(context);
 
     return Scaffold(
+      appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.pop(context); // Pops the current screen and goes back
+          },
+        ),
+        title: Text(
+            '@${userProvider.userModel!.username}'), // You can customize this title as needed
+      ),
       body: RefreshIndicator(
         onRefresh: _refreshData,
         color: Colors.white,
@@ -233,20 +247,6 @@ class _ProfilePageState extends State<ProfilePage> {
                       ],
                     )
                   ],
-                ),
-                // Edit Profile Button
-                ElevatedButton(
-                  onPressed: () {
-                    _navigateToEditProfile();
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color.fromARGB(255, 159, 118, 249),
-                    foregroundColor: Colors.white,
-                  ),
-                  child: const Text(
-                    'Edit Profile',
-                    style: TextStyle(fontSize: 16),
-                  ),
                 ),
               ],
             ),
@@ -597,8 +597,7 @@ class _ProfilePageState extends State<ProfilePage> {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) =>
-                    PostDetailPage(post: post, id: postId),
+                builder: (context) => PostDetailPage(post: post, id: postId),
               ),
             );
           },

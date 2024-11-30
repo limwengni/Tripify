@@ -1,12 +1,14 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Post {
-  final String userId; // User ID referencing the User document
+  final String userId;
   final String title;
-  final String description;
+  final String? description;
   final DateTime createdAt;
-  final DateTime? updatedAt;
+  DateTime? updatedAt;
   final List<String> media;
+  List<String>? hashtags;
+  String? location;
   int likesCount;
   int commentsCount;
   int savedCount;
@@ -15,10 +17,12 @@ class Post {
   Post({
     required this.userId,
     required this.title,
-    required this.description,
+    this.description,
     required this.createdAt,
     this.updatedAt,
     required this.media,
+    this.hashtags,
+    this.location,
     required this.likesCount,
     required this.commentsCount,
     required this.savedCount,
@@ -27,12 +31,14 @@ class Post {
   // Method to convert a Post object to a Map for Firestore
   Map<String, dynamic> toMap() {
     return {
-      'userId': userId,
+      'user_id': userId,
       'title': title,
       'description': description,
-      'createdAt': createdAt?.toIso8601String(),
-      'updatedAt': updatedAt?.toIso8601String(),
-      'media': media, // Store media as an array of URLs
+      'created_at': Timestamp.fromDate(DateTime.now()),
+      'updated_at': null,
+      'media': media,
+      'hashtags': hashtags,
+      'location': location,
       'like_count': likesCount,
       'comment_count': commentsCount,
       'saved_count': savedCount,
@@ -44,10 +50,18 @@ class Post {
     return Post(
       userId: data['user_id'],
       title: data['title'],
-      description: data['description'],
-      createdAt: (data['created_at'] as Timestamp).toDate(),
-      updatedAt: (data['updated_at'] as Timestamp?)?.toDate(),
+      description: data['description'] ?? '',
+      createdAt: (data['created_at'] is Timestamp)
+          ? (data['created_at'] as Timestamp).toDate()
+          : DateTime.parse(data['created_at']),
+      updatedAt: (data['updated_at'] is Timestamp)
+          ? (data['updated_at'] as Timestamp).toDate()
+          : (data['updated_at'] != null
+              ? DateTime.parse(data['updated_at'])
+              : null),
       media: List<String>.from(data['media'] ?? []), // Handle media array
+      hashtags: List<String>.from(data['hashtags'] ?? []),
+      location: data['location'] ?? '',
       likesCount: data['like_count'] ?? 0,
       commentsCount: data['comment_count'] ?? 0,
       savedCount: data['saved_count'] ?? 0,
@@ -61,6 +75,8 @@ class Post {
     DateTime? createdAt,
     DateTime? updatedAt,
     List<String>? media,
+    List<String>? hashtags,
+    String? location,
     int? likesCount,
     int? commentsCount,
     int? savedCount,
@@ -72,6 +88,8 @@ class Post {
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       media: media ?? this.media,
+      hashtags: hashtags ?? this.hashtags,
+      location: location ?? this.location,
       likesCount: likesCount ?? this.likesCount,
       commentsCount: commentsCount ?? this.commentsCount,
       savedCount: savedCount ?? this.savedCount,

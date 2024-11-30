@@ -6,6 +6,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:tripify/models/conversation_model.dart';
 import 'package:tripify/models/travel_package_model.dart';
 import 'package:tripify/view_models/firesbase_storage_service.dart';
 import 'package:tripify/view_models/firestore_service.dart';
@@ -207,28 +208,41 @@ class _TravelPackageCreatePageState extends State<TravelPackageCreatePage> {
                           }
                         }
                       }
-                      print(formValues?['travel_package_name']);
+
+                      ConversationModel conversationModel = ConversationModel(
+                          id: '',
+                          participants: [currentUserId],
+                          isGroup: true,
+                          updatedAt: DateTime.now(),
+                          groupName: formValues?['travel_package_name'],
+                          host: currentUserId,
+                          unreadMessage: {currentUserId: 0});
+                      String conversationId =
+                          await _firestoreService.insertDataWithReturnAutoID(
+                              'Conversations', conversationModel.toMap());
+
                       TravelPackageModel travelPackageModel =
                           TravelPackageModel(
-                        id: '',
-                        name: formValues?['travel_package_name'] ?? '',
-                        itinerary: formValues?['itinerary'] ?? '',
-                        price:
-                            double.tryParse(formValues?['price'] ?? '0') ?? 0.0,
-                        startDate: travelDate.start,
-                        endDate: travelDate.end,
-                        quantity:
-                            int.tryParse(formValues?['quantity'] ?? '0') ?? 0,
-                        images: downloadUrlList ?? null,
-                        createdBy: currentUserId,
-                      );
+                              id: '',
+                              name: formValues?['travel_package_name'] ?? '',
+                              itinerary: formValues?['itinerary'] ?? '',
+                              price: double.tryParse(
+                                      formValues?['price'] ?? '0') ??
+                                  0.0,
+                              startDate: travelDate.start,
+                              endDate: travelDate.end,
+                              quantity: int.tryParse(
+                                      formValues?['quantity'] ?? '0') ??
+                                  0,
+                              images: downloadUrlList ?? null,
+                              createdBy: currentUserId,
+                              groupChatId: conversationId);
 
                       await _firestoreService.insertDataWithAutoID(
                           'Travel_Packages', travelPackageModel.toMap());
 
-                          ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                    content: Text('Successfully On Shelves')));
+                      ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Successfully On Shelves')));
                     } else {
                       debugPrint('Validation failed');
                     }

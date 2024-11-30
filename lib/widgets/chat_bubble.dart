@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:shimmer/shimmer.dart';
 import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
 import 'package:tripify/models/conversation_model.dart';
 import 'package:tripify/models/poll_model.dart';
@@ -43,6 +44,8 @@ class _ChatBubbleState extends State<ChatBubble> {
   FirestoreService firestoreService = FirestoreService();
   bool isPoll = false;
   int? pollAns;
+  bool _isLoading = true;
+
   @override
   void initState() {
     super.initState();
@@ -152,11 +155,54 @@ class _ChatBubbleState extends State<ChatBubble> {
                       style: const TextStyle(color: Colors.white),
                     )
                   else if (widget.contentType == "pic")
-                    Image.network(
-                      widget.message,
-                      width: 200,
-                      height: 200,
-                      fit: BoxFit.cover,
+                    // Image.network(
+                    //   widget.message,
+                    //   width: 200,
+                    //   height: 200,
+                    //   fit: BoxFit.cover,
+                    // )
+
+                    Stack(
+                      children: [
+                        // Loading circle (visible when loading)
+                        if (_isLoading)
+                          Center(
+                            child: SizedBox(
+                              width: 200,
+                              height: 200,
+                              child: CircularProgressIndicator(
+                                color: Colors
+                                    .blue, // Customize the color of the loading circle
+                                strokeWidth: 3.0,
+                              ),
+                            ),
+                          ),
+                        // The actual image
+                        Image.network(
+                          widget.message,
+                          width: 200,
+                          height: 200,
+                          fit: BoxFit.cover,
+                          loadingBuilder: (context, child, loadingProgress) {
+                            if (loadingProgress == null) {
+                              // Loading finished
+                              _isLoading = false;
+                              return child;
+                            }
+                            return const SizedBox(); // Return empty space while loading
+                          },
+                          errorBuilder: (context, error, stackTrace) {
+                            // Display an error placeholder if the image fails to load
+                            _isLoading = false;
+                            return Container(
+                              width: 200,
+                              height: 200,
+                              color: Colors.grey,
+                              child: const Icon(Icons.error, color: Colors.red),
+                            );
+                          },
+                        ),
+                      ],
                     )
                   else if (widget.contentType == "video")
                     VideoPreview(
@@ -303,13 +349,13 @@ class _ChatBubbleState extends State<ChatBubble> {
                                                       Map<String, int>?
                                                           answerMap =
                                                           poll!.answers;
-                                                     
+
                                                       answerMap?.addEntries([
                                                         MapEntry(
                                                             widget.currentUser,
                                                             optionKey),
                                                       ]);
-                                                     
+
                                                       await firestoreService
                                                           .updateSubCollectionField(
                                                               collection:
@@ -356,13 +402,12 @@ class _ChatBubbleState extends State<ChatBubble> {
                                       else
                                         Table(
                                           columnWidths: const {
-                                            0: FixedColumnWidth(
-                                                30),
+                                            0: FixedColumnWidth(30),
                                             1: FixedColumnWidth(100),
-                                            2: FixedColumnWidth(
-                                                60), 
+                                            2: FixedColumnWidth(60),
                                           },
-                                          defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+                                          defaultVerticalAlignment:
+                                              TableCellVerticalAlignment.middle,
                                           children: [
                                             ...poll!.options.map((option) {
                                               Map<int, int> answerMap =
@@ -418,16 +463,17 @@ class _ChatBubbleState extends State<ChatBubble> {
                                                     ),
                                                   ),
                                                   Padding(
-                                                    padding: const EdgeInsets.fromLTRB(5.0,0,5,0),
+                                                    padding: const EdgeInsets
+                                                        .fromLTRB(5.0, 0, 5, 0),
                                                     child: Material(
                                                       elevation: 5,
                                                       borderRadius:
                                                           BorderRadius.circular(
                                                               10),
                                                       child: TextButton(
-                                                        onPressed:                                                         null,
-                                                        style:
-                                                            TextButton.styleFrom(
+                                                        onPressed: null,
+                                                        style: TextButton
+                                                            .styleFrom(
                                                           backgroundColor:
                                                               Colors.white,
                                                           foregroundColor: Colors
@@ -442,7 +488,8 @@ class _ChatBubbleState extends State<ChatBubble> {
                                                               RoundedRectangleBorder(
                                                             borderRadius:
                                                                 BorderRadius
-                                                                    .circular(10),
+                                                                    .circular(
+                                                                        10),
                                                           ),
                                                         ),
                                                         child: Text(option),

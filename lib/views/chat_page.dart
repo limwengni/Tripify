@@ -36,10 +36,12 @@ class _ChatPageState extends State<ChatPage> {
   String appBarTitle = "Loading...";
   bool extraAction = false;
   final ValueNotifier<bool> _extraActionNotifier = ValueNotifier<bool>(false);
-
   final ImagePicker picker = ImagePicker();
   XFile? _imageSelected = null;
   String? fileName;
+
+  //
+  final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
@@ -109,6 +111,7 @@ class _ChatPageState extends State<ChatPage> {
 
   @override
   void dispose() {
+    _scrollController.dispose();
     _messageController.dispose();
     _extraActionNotifier.dispose();
     super.dispose();
@@ -161,8 +164,16 @@ class _ChatPageState extends State<ChatPage> {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Text('Loading...');
           }
-
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            // Scroll to the bottom when new messages arrive
+            if (_scrollController.hasClients) {
+              _scrollController
+                  .jumpTo(_scrollController.position.minScrollExtent);
+            }
+          });
           return ListView(
+            controller: _scrollController,
+            reverse: true, // Show the latest messages at the bottom
             children: snapshot.data!.docs
                 .map<Widget>((doc) => _buildMessageItem(doc, currentUserId))
                 .toList(),

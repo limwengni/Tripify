@@ -153,42 +153,46 @@ class _ChatListPageState extends State<ChatListPage> {
     );
   }
 
-  Widget _buildConversationListItem(
-      ConversationModel conversation, BuildContext context, currentUserId) {
-    return ConversationTile(
-      currentUserId: currentUserId,
-      onTap: (conversationPic) {
-        if (conversation.isGroup) {
-          conversation.clearUnreadMessage(currentUserId);
-          _firestoreService.updateData(
-              "Conversations", conversation.id, conversation.toMap());
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (builder) => GroupChatPage(
-                conversation: conversation,
-                currentUserId: currentUserId,
-                chatPic: conversationPic,
-              ),
+ Widget _buildConversationListItem(
+  ConversationModel conversation, BuildContext context, currentUserId) {
+  // Safely handle null values for conversationPic (assuming this might be null)
+  String conversationPic = conversation.conversationPic ?? ''; // Default to empty string if null
+  return ConversationTile(
+    currentUserId: currentUserId,
+    onTap: (conversationPic) {
+      if (conversation.isGroup ?? false) { // Use null-aware operator to prevent null check errors
+        conversation.clearUnreadMessage(currentUserId);
+        
+        _firestoreService.updateData(
+            "Conversations", conversation.id, conversation.toMap());
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (builder) => GroupChatPage(
+              conversation: conversation,
+              currentUserId: currentUserId,
+              chatPic: conversationPic,
             ),
-          );
-        } else {
-           conversation.clearUnreadMessage(currentUserId);
-          _firestoreService.updateData(
-              "Conversations", conversation.id, conversation.toMap());
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (builder) => ChatPage(
-                conversation: conversation,
-                currentUserId: currentUserId,
-                chatPic: conversationPic,
-              ),
+          ),
+        );
+      } else {
+        conversation.clearUnreadMessage(currentUserId);
+        _firestoreService.updateData(
+            "Conversations", conversation.id, conversation.toMap());
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (builder) => ChatPage(
+              conversation: conversation,
+              currentUserId: currentUserId,
+              chatPic: conversationPic,
             ),
-          );
-        }
-      },
-      conversation: conversation,
-    );
-  }
+          ),
+        );
+      }
+    },
+    conversation: conversation,
+  );
+}
+
 }

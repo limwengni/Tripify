@@ -46,6 +46,7 @@ class _GroupChatPageState extends State<GroupChatPage> {
   final ImagePicker picker = ImagePicker();
   XFile? _imageSelected;
   String? fileName;
+  final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
@@ -138,6 +139,7 @@ class _GroupChatPageState extends State<GroupChatPage> {
 
   @override
   void dispose() {
+    _scrollController.dispose();
     _messageController.dispose();
     _extraActionNotifier.dispose();
     super.dispose();
@@ -205,8 +207,16 @@ class _GroupChatPageState extends State<GroupChatPage> {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Text('Loading...');
           }
-
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            // Scroll to the bottom when new messages arrive
+            if (_scrollController.hasClients) {
+              _scrollController
+                  .jumpTo(_scrollController.position.minScrollExtent);
+            }
+          });
           return ListView(
+            controller: _scrollController,
+                      reverse: true, // Show the latest messages at the bottom
             children: snapshot.data!.docs
                 .map<Widget>((doc) => _buildMessageItem(doc, currentUserId))
                 .toList(),
@@ -354,8 +364,11 @@ class _GroupChatPageState extends State<GroupChatPage> {
                       _buildActionItem(Icons.add_chart, 'Poll', () async {
                         Navigator.push(
                             context,
-                            MaterialPageRoute( 
-                                builder: (builder) => CreatePollPage (currentUserId: widget.currentUserId,conversation: widget.conversation,)));
+                            MaterialPageRoute(
+                                builder: (builder) => CreatePollPage(
+                                      currentUserId: widget.currentUserId,
+                                      conversation: widget.conversation,
+                                    )));
                       }),
                     ],
                   ),

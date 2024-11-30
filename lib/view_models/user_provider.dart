@@ -55,6 +55,41 @@ class UserProvider with ChangeNotifier {
     }
   }
 
+  Future<String?> fetchUsername(String uid) async {
+    isLoading = true;
+    notifyListeners();
+
+    try {
+      // Fetch the document from the User collection using the provided UID
+      DocumentSnapshot userDoc =
+          await FirebaseFirestore.instance.collection('User').doc(uid).get();
+
+      if (userDoc.exists) {
+        var userData = userDoc.data() as Map<String, dynamic>?;
+
+        if (userData != null && userData.containsKey('username')) {
+          // Fetch the username directly from the user data
+          String username = userData['username'];
+
+          notifyListeners();
+          return username; // Return the username
+        } else {
+          print("Username field is not available in the user data.");
+          return null;
+        }
+      } else {
+        print("User document does not exist!");
+        return null;
+      }
+    } catch (e) {
+      print("Failed to fetch username: $e");
+      throw e; // Rethrow error if necessary
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
+  }
+
   Future<String> fetchProfileImageUrl() async {
     if (_userModel?.profilePic != null && _userModel!.profilePic.isNotEmpty) {
       return _userModel!.profilePic;
@@ -101,8 +136,8 @@ class UserProvider with ChangeNotifier {
                 .split('?')[0]; // Get the old profile pic first
 
             // Reference the file to delete it
-            final oldProfilePicRef = FirebaseStorage.instance.ref().child(
-                oldProfilePicPath);
+            final oldProfilePicRef =
+                FirebaseStorage.instance.ref().child(oldProfilePicPath);
 
             // Delete the file
             await oldProfilePicRef.delete();

@@ -170,7 +170,9 @@ class _ConversationTileState extends State<ConversationTile> {
                                   8), 
                           Text('File'),
                         ],
-                      ),
+                      )
+                      else
+                      Text(''),
                   ],
                 ),
                 const Spacer(),
@@ -181,6 +183,7 @@ class _ConversationTileState extends State<ConversationTile> {
                         0) ...[
                       Row(
                         children: [
+                          if(widget.conversation.latestMessageSendDateTime!=null)
                           Text(DateFormat('hh:mm a').format(
                               widget.conversation.latestMessageSendDateTime!)),
                         ],
@@ -206,6 +209,7 @@ class _ConversationTileState extends State<ConversationTile> {
                     ] else
                       Row(
                         children: [
+                          if(widget.conversation.latestMessageSendDateTime!=null)
                           Text(DateFormat('hh:mm a').format(
                               widget.conversation.latestMessageSendDateTime!)),
                         ],

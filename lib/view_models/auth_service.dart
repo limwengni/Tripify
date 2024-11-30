@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import '../theme_notifier.dart';
 import 'package:flutter/material.dart';
 import 'package:tripify/models/user_model.dart';
+import 'package:tripify/views/login_page.dart';
 
 class AuthService extends ChangeNotifier {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -31,7 +32,8 @@ class AuthService extends ChangeNotifier {
 
       // Fetch user theme preference from Firestore
       final FirestoreService firestoreService = FirestoreService();
-      String theme = await firestoreService.getUserTheme(FirebaseAuth.instance.currentUser!.uid);
+      String theme = await firestoreService
+          .getUserTheme(FirebaseAuth.instance.currentUser!.uid);
 
       final themeNotifier = Provider.of<ThemeNotifier>(context, listen: false);
 
@@ -41,13 +43,25 @@ class AuthService extends ChangeNotifier {
       } else {
         themeNotifier.setTheme(ThemeMode.light);
       }
+
+      String accountStatus = await getAccountStatus();
+
+      if (accountStatus == 'disabled') {
+        await FirebaseAuth.instance.signOut();
+        return 'Your account has been disabled. Please contact support if you believe this is a mistake.';
+      } else if (accountStatus == 'error' || accountStatus == 'not_found') {
+        return 'An error occurred while checking your account. Please try again later.';
+      }
+
       return 'Success'; // Return a success message
     } on FirebaseAuthException catch (e) {
       // Handle specific Firebase authentication exceptions
       if (e.code == 'user-not-found' || e.code == 'invalid-credential') {
         return 'Invalid email or password.';
+      } else if (e.code == 'user-disabled') {
+        return 'Your account has been disabled. Please contact support if you believe this is a mistake.';
       } else {
-        return 'An internal error has occurred.'; // Return any other error message
+        return 'Unable to sign in. Please verify your credentials or contact support for assistance.';
       }
     } catch (e) {
       // Handle any other exceptions
@@ -74,9 +88,9 @@ class AuthService extends ChangeNotifier {
       await FirebaseAuth.instance.signOut(); // Directly sign out from Firebase
       _user = null;
 
-      final themeNotifier = Provider.of<ThemeNotifier>(context, listen: false);
-      themeNotifier
-          .setTheme(ThemeMode.light); // Set theme to light after logout
+      // final themeNotifier = Provider.of<ThemeNotifier>(context, listen: false);
+      // themeNotifier
+      //     .setTheme(ThemeMode.light); // Set theme to light after logout
       notifyListeners();
     } catch (e) {
       // Handle any errors that occur during sign out
@@ -99,6 +113,35 @@ class AuthService extends ChangeNotifier {
     } catch (e) {
       // General error handling
       return 'An unknown error occurred.';
+    }
+  }
+
+  Future<String> getAccountStatus() async {
+    try {
+      User? user = FirebaseAuth.instance.currentUser;
+
+      if (user != null) {
+        // Retrieve the user document from Firestore
+        DocumentSnapshot userDoc = await FirebaseFirestore.instance
+            .collection('User')
+            .doc(user.uid)
+            .get();
+
+        if (userDoc.exists) {
+          Map<String, dynamic> userData =
+              userDoc.data() as Map<String, dynamic>;
+
+          return userData['status'] ?? 'active';
+        } else {
+          print("User document not found.");
+          return 'not_found'; // Optional: Handle cases where the document doesn't exist
+        }
+      } else {
+        return 'no_user'; // Optional: Handle cases where no user is logged in
+      }
+    } catch (e) {
+      print("Error checking account status: $e");
+      return 'error'; // Optional: Return error status for exceptions
     }
   }
 

@@ -55,6 +55,6 @@ class ConversationViewModel {
         collection: "Conversations",
         subCollection: "Messages",
         docId: conversationId,
-        descending: false);
+        descending: true);
   }
 }

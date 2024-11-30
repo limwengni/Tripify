@@ -75,6 +75,26 @@ class FirestoreService {
     }
   }
 
+    Future<String> insertDataWithReturnAutoID(
+      String collection, Map<String, dynamic> data) async {
+    try {
+      // Create a new document reference with an auto-generated ID
+      DocumentReference docRef = _db.collection(collection).doc();
+
+      // Add the document ID to the data map
+      data['id'] = docRef.id;
+
+      // Insert the data into Firestore, including the document ID as an attribute
+      await docRef.set(data);
+
+      print("Data inserted successfully with document ID as an attribute.");
+      return docRef.id;
+    } catch (e) {
+      print("Error inserting data: $e");
+    }
+    return '';
+  }
+
   Future<void> insertSubCollectionDataWithAutoID(String collection,
       String subCollection, String docId, Map<String, dynamic> data) async {
     try {
@@ -274,6 +294,56 @@ class FirestoreService {
       return [];
     }
   }
+
+
+// Select Data (Get by two Field Values)
+Future<List<Map<String, dynamic>>> getDataByTwoFields(
+    String collection, String field1, dynamic value1, String field2, dynamic value2) async {
+  try {
+    final querySnapshot = await _db
+        .collection(collection)
+        .where(field1, isEqualTo: value1)
+        .where(field2, isEqualTo: value2)
+        .get();
+
+    List<Map<String, dynamic>> dataList = [];
+    for (var doc in querySnapshot.docs) {
+      dataList.add(doc.data() as Map<String, dynamic>);
+    }
+    return dataList;
+  } catch (e) {
+    print("Error fetching data by fields: $e");
+    return [];
+  }
+}
+
+Future<List<Map<String, dynamic>>?>? getSubCollectionData(
+  String collection, 
+  String documentId, // Document ID of the parent document
+  String subCollection, // Name of the subcollection
+) async {
+  try {
+    // Access the parent document first
+    final parentDocRef = _db.collection(collection).doc(documentId);
+
+    // Get the subcollection from the parent document
+    final querySnapshot = await parentDocRef
+        .collection(subCollection)
+        .get();
+
+    List<Map<String, dynamic>> dataList = [];
+    for (var doc in querySnapshot.docs) {
+      dataList.add(doc.data() as Map<String, dynamic>);
+    }
+
+    return dataList;
+  } catch (e) {
+    print("Error fetching subcollection data: $e");
+    return null;
+  }
+}
+
+
 Future<Map<String, dynamic>?> getSubCollectionOneDataByFields(
   String parentCollection,
   String parentDocId,

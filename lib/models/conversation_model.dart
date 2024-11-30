@@ -38,48 +38,51 @@ class ConversationModel {
     return {
       'id': id,
       'participants': participants,
-      'latest_message': latestMessage,
-      'message_pinned_id': messagePinnedId,
+      'latest_message': latestMessage??'',
+      'message_pinned_id': messagePinnedId??'',
       'latest_message_send_date_time': latestMessageSendDateTime,
       'is_group': isGroup,
-      'host': host,
-      'is_deleted': isDeleted,
-      'conversation_pic': conversationPic,
-      'sender_id': senderId,
-      'unread_message': unreadMessage,
-      'group_name': groupName,
-      'updated_at': updatedAt,
-      'latest_message_type': latestMessageType,
+      'host': host??'',
+      'is_deleted': isDeleted??false,
+      'conversation_pic': conversationPic??'',
+      'sender_id': senderId??'',
+      'unread_message': unreadMessage??'',
+      'group_name': groupName??'',
+      'updated_at': updatedAt??'',
+      'latest_message_type': latestMessageType??'',
     };
   }
 
   // Create a ConversationModel instance from a Map
-  factory ConversationModel.fromMap(Map<String, dynamic> data) {
-    return ConversationModel(
-      id: data['id'],
-      participants: List<String>.from(data['participants']),
-      latestMessage: data['latest_message'],
-      messagePinnedId: data['message_pinned_id'],
-      latestMessageSendDateTime:
-          (data['latest_message_send_date_time'] is Timestamp)
-              ? (data['latest_message_send_date_time'] as Timestamp).toDate()
-              : DateTime.parse(data['latest_message_send_date_time']),
-      isGroup: data['is_group'],
-      host: data['host'],
-      isDeleted: data['is_deleted'],
-      conversationPic: data['conversation_pic'],
-      senderId: data['sender_id'],
-      unreadMessage: (data['unread_message'] != null)
-          ? Map<String, int>.from(data['unread_message'])
-          : null,
-      groupName: data['group_name'],
-      updatedAt: (data['updated_at'] is Timestamp)
-          ? (data['updated_at'] as Timestamp).toDate()
-          : DateTime.parse(data['updated_at']),
-
-          latestMessageType: data['latest_message_type']
-    );
-  }
+factory ConversationModel.fromMap(Map<String, dynamic> data) {
+  return ConversationModel(
+    id: data['id'] ?? '',  // Default empty string if null
+    participants: List<String>.from(data['participants'] ?? []),  // Default empty list if null
+    latestMessage: data['latest_message'] ?? '',  // Default empty string if null
+    messagePinnedId: data['message_pinned_id'] ?? '',  // Default empty string if null
+    latestMessageSendDateTime:
+        (data['latest_message_send_date_time'] is Timestamp)
+            ? (data['latest_message_send_date_time'] as Timestamp).toDate()
+            : (data['latest_message_send_date_time'] != null
+                ? DateTime.parse(data['latest_message_send_date_time'])
+                : null), // Handle null case for DateTime
+    isGroup: data['is_group'] ?? false,  // Default false if null
+    host: data['host'] ?? '',  // Default empty string if null
+    isDeleted: data['is_deleted'] ?? false,  // Default false if null
+    conversationPic: data['conversation_pic'] ?? '',  // Default empty string if null
+    senderId: data['sender_id'] ?? '',  // Default empty string if null
+    unreadMessage: (data['unread_message'] != null)
+        ? Map<String, int>.from(data['unread_message'])
+        : null,  // Handle null case for unread messages
+    groupName: data['group_name'] ?? '',  // Default empty string if null
+    updatedAt: (data['updated_at'] is Timestamp)
+        ? (data['updated_at'] as Timestamp).toDate()
+        : (data['updated_at'] != null
+            ? DateTime.parse(data['updated_at'])
+            : null),  // Handle null case for DateTime
+    latestMessageType: data['latest_message_type'] ?? '',  // Default empty string if null
+  );
+}
 
   // Update the group name
   void updateGroupName(String newGroupName) {

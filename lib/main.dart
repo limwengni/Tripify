@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:tripify/view_models/stripe_key.dart';
+import 'package:tripify/view_models/hashtag_provider.dart';
 import 'package:tripify/views/accommodation_requirement_create_page.dart';
 import 'package:tripify/views/car_rental_requirement_create_page.dart';
 import 'package:tripify/views/car_rental_requirement_page.dart';
@@ -59,6 +60,7 @@ void main() async {
       providers: [
         ChangeNotifierProvider(create: (context) => AuthService()),
         ChangeNotifierProvider(create: (context) => ThemeNotifier()),
+        ChangeNotifierProvider(create: (context) => HashtagProvider()),
         ChangeNotifierProvider(
             create: (context) => UserProvider(UserModel(
                   username: 'Guest', // Default or placeholder values

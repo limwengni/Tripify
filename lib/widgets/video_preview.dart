@@ -52,25 +52,33 @@ class _VideoPreviewState extends State<VideoPreview> {
       child: Stack(
         alignment: Alignment.center,
         children: [
-          // Show a placeholder image or the first frame of the video as preview
-          if (_isInitialized)
+          // Show a circular progress indicator while loading
+          if (!_isInitialized)
             Container(
-                height: 200,
-                width: 200,
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(10),
-                  child: VideoPlayer(_controller),
-                ))
+              height: 200,
+              width: 200,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(10),
+                color: Colors.grey[200], // Background for loading placeholder
+              ),
+              child: const Center(
+                child: CircularProgressIndicator(
+                  color: Colors.blue,
+                  strokeWidth: 3.0,
+                ),
+              ),
+            )
           else
-            ClipRRect(
-              borderRadius: BorderRadius.circular(10),
-              child: Image.network(
-                "", // Add your video thumbnail URL here
-                fit: BoxFit.cover,
-                height: 150, // Define the height of the preview
-                width: 150, // Define the width of the preview
+            // Show the video player preview after initialization
+            Container(
+              height: 200,
+              width: 200,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(10),
+                child: VideoPlayer(_controller),
               ),
             ),
+          // Always show the play icon overlay
           const Icon(
             Icons.play_circle_fill,
             color: Colors.white,
