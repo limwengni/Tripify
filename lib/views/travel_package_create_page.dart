@@ -210,33 +210,35 @@ class _TravelPackageCreatePageState extends State<TravelPackageCreatePage> {
                       }
 
                       ConversationModel conversationModel = ConversationModel(
-                          id: '',
-                          participants: [currentUserId],
-                          isGroup: true,
-                          updatedAt: DateTime.now(),
-                          groupName: formValues?['travel_package_name'],
-                          host: currentUserId,
-                          unreadMessage: {currentUserId: 0});
+                        id: '',
+                        participants: [currentUserId],
+                        isGroup: true,
+                        updatedAt: DateTime.now(),
+                        groupName: formValues?['travel_package_name'],
+                        host: currentUserId,
+                        unreadMessage: {currentUserId: 0},
+                      );
                       String conversationId =
                           await _firestoreService.insertDataWithReturnAutoID(
                               'Conversations', conversationModel.toMap());
 
                       TravelPackageModel travelPackageModel =
                           TravelPackageModel(
-                              id: '',
-                              name: formValues?['travel_package_name'] ?? '',
-                              itinerary: formValues?['itinerary'] ?? '',
-                              price: double.tryParse(
-                                      formValues?['price'] ?? '0') ??
-                                  0.0,
-                              startDate: travelDate.start,
-                              endDate: travelDate.end,
-                              quantity: int.tryParse(
-                                      formValues?['quantity'] ?? '0') ??
-                                  0,
-                              images: downloadUrlList ?? null,
-                              createdBy: currentUserId,
-                              groupChatId: conversationId);
+                        id: '',
+                        name: formValues?['travel_package_name'] ?? '',
+                        itinerary: formValues?['itinerary'] ?? '',
+                        price:
+                            double.tryParse(formValues?['price'] ?? '0') ?? 0.0,
+                        startDate: travelDate.start,
+                        endDate: travelDate.end,
+                        quantity:
+                            int.tryParse(formValues?['quantity'] ?? '0') ?? 0,
+                        images: downloadUrlList ?? null,
+                        createdBy: currentUserId,
+                        groupChatId: conversationId,
+                        quantityAvailable:
+                            int.tryParse(formValues?['quantity'] ?? '0') ?? 0,
+                      );
 
                       await _firestoreService.insertDataWithAutoID(
                           'Travel_Packages', travelPackageModel.toMap());

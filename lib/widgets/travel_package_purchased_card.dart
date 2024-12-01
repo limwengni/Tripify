@@ -2,6 +2,7 @@ import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
+import 'package:image_cropper/image_cropper.dart';
 import 'package:intl/intl.dart';
 import 'package:shimmer/shimmer.dart'; // Import shimmer package
 import 'package:tripify/models/travel_package_model.dart';
@@ -83,50 +84,7 @@ class _TravelPackagePurchasedCardState
     }
   }
 
-  // void fetchTravelPackageAndTravelCompany() async {
-  //   Map<String, dynamic>? travelPackageMap;
-  //   travelPackageMap = await _firestoreService.getDataById(
-  //       'Travel_Packages', widget.travelPackagePurchased.travelPackageId);
-  //   // List<Map<String, dynamic>>? travelPackageResaleMapList;
-  //   // travelPackageResaleMapList = await _firestoreService.getDataByTwoFields(
-  //   //     'Travel_Packages',
-  //   //     'reseller_id',
-  //   //     widget.currentUserId,
-  //   //     'travel_package_id_for_resale',
-  //   //     widget.travelPackagePurchased.id);
 
-  //   setState(() {
-  //     if (travelPackageMap != null) {
-  //       travelPackage = TravelPackageModel.fromMap(travelPackageMap);
-  //     }
-  //   });
-  //   Map<String, dynamic>? userMap;
-  //   if (travelPackage != null) {
-  //     userMap =
-  //         await _firestoreService.getDataById('User', travelPackage!.createdBy);
-  //   }
-  //   setState(() {
-  //     if (travelPackageMap != null) {
-  //       travelPackage = TravelPackageModel.fromMap(travelPackageMap);
-  //     }
-  //     // if (travelPackageResaleMapList != null) {
-  //     //   for (int i = 0; i < travelPackageResaleMapList.length; i++) {
-  //     //     travelPackageResale =
-  //     //         TravelPackageModel.fromMap(travelPackageResaleMapList[i]);
-  //     //     resaleQuantity = resaleQuantity + travelPackageResale!.quantity;
-  //     //   }
-  //     // }
-  //     if (userMap != null) {
-  //       user = UserModel.fromMap(userMap, userMap['id']);
-  //       print(user);
-  //       if (user != null) {
-  //         userLoaded = true;
-  //       }
-  //     }
-
-  //     ownQuantity = widget.travelPackagePurchased.quantity;
-  //   });
-  // }
 
   @override
   Widget build(BuildContext context) {
@@ -139,7 +97,7 @@ class _TravelPackagePurchasedCardState
           context,
           MaterialPageRoute(
             builder: (context) => TravelPackageDetailsPage(
-              travelPackage: travelPackage!,
+              travelPackage: travelPackage!,currentUserId: widget.currentUserId,
             ),
           ),
         );
@@ -255,7 +213,8 @@ class _TravelPackagePurchasedCardState
                       Spacer(),
                       TextButton(
                         onPressed: () {
-                          if (resaleQuantity >= widget.travelPackagePurchased.quantity) {
+                          if (resaleQuantity >=
+                              widget.travelPackagePurchased.quantity) {
                             showDialog(
                               context: context,
                               builder: (BuildContext context) {
@@ -420,18 +379,27 @@ class _TravelPackagePurchasedCardState
                       createdBy: travelPackage!.createdBy,
                       groupChatId: travelPackage!.groupChatId,
                       resellerId: widget.currentUserId,
-                      isResale: true);
+                      isResale: true,
+                      quantityAvailable:quantity);
                   try {
                     await _firestoreService.insertDataWithAutoID(
                         'Travel_Packages', travelPackageResale.toMap());
 
+                    int newResaleQuantity = resaleQuantity + quantity;
+                    await _firestoreService.updateSubCollectionField(
+                        collection: "User",
+                        documentId: widget.currentUserId,
+                        subCollection: 'Travel_Packages_Purchased',
+                        subDocumentId: widget.travelPackagePurchased.id,
+                        field: 'resale_quantity',
+                        value: newResaleQuantity);
                     setState(() {
-                      resaleQuantity = resaleQuantity + quantity;
+                      resaleQuantity = newResaleQuantity;
                     });
                   } catch (e) {}
                   Navigator.of(context).pop();
                   ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Successfully On Shelves')));
+                     const SnackBar(content: Text('Successfully On Shelves')));
                 }
               },
               child: const Text('Confirm'),

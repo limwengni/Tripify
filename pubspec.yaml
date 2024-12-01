@@ -112,6 +112,7 @@ flutter:
     - assets/icons/message_icon_dark.svg
     - assets/icons/itinerary_icon_outlined.svg
     - assets/dummy.pdf
+    - assets/images/groupchat_default_pic.jpg
     # - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see

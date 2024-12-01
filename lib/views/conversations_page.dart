@@ -157,6 +157,7 @@ class _ChatListPageState extends State<ChatListPage> {
   ConversationModel conversation, BuildContext context, currentUserId) {
   // Safely handle null values for conversationPic (assuming this might be null)
   String conversationPic = conversation.conversationPic ?? ''; // Default to empty string if null
+  
   return ConversationTile(
     currentUserId: currentUserId,
     onTap: (conversationPic) {

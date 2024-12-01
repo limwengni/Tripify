@@ -12,8 +12,10 @@ import 'package:tripify/views/payment_success_page.dart';
 
 class TravelPackageDetailsPage extends StatefulWidget {
   final TravelPackageModel travelPackage; // Identifier for the travel package
+  final String currentUserId;
 
-  const TravelPackageDetailsPage({Key? key, required this.travelPackage})
+  const TravelPackageDetailsPage(
+      {Key? key, required this.travelPackage, required this.currentUserId})
       : super(key: key);
 
   @override
@@ -134,7 +136,27 @@ class _TravelPackageDetailsPageState extends State<TravelPackageDetailsPage> {
             ),
             ElevatedButton(
               onPressed: () {
-                if (widget.travelPackage.quantityAvailable != 0) {
+                if (widget.travelPackage.createdBy == widget.currentUserId) {
+                  showDialog(
+                    context: context,
+                    builder: (BuildContext context) => AlertDialog(
+                      title: const Text(
+                        'Error',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      content: const Text(
+                          'You can\'t purchased the travel package that created by you!'),
+                      actions: <Widget>[
+                        TextButton(
+                          onPressed: () => Navigator.pop(context, 'OK'),
+                          child: const Text('OK'),
+                        ),
+                      ],
+                    ),
+                  );
+                } else if (widget.travelPackage.quantityAvailable != 0) {
                   _showDialog(context);
                 } else {
                   showDialog(
@@ -265,12 +287,13 @@ class _TravelPackageDetailsPageState extends State<TravelPackageDetailsPage> {
 
                     print(travelPackagePurchasedBeforeMap['id']);
                     firestoreService.updateSubCollectionField(
-                        collection: 'User',
-                        documentId: currentUser,
-                        subCollection: 'Travel_Packages_Purchased',
-                        subDocumentId: travelPackagePurchasedBeforeMap['id'],
-                        field: 'quantity',
-                        value: updatedQuantity);
+                      collection: 'User',
+                      documentId: currentUser,
+                      subCollection: 'Travel_Packages_Purchased',
+                      subDocumentId: travelPackagePurchasedBeforeMap['id'],
+                      field: 'quantity',
+                      value: updatedQuantity,
+                    );
                   }
 
                   int quantityLeft =

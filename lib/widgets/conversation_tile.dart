@@ -95,12 +95,23 @@ class _ConversationTileState extends State<ConversationTile> {
                   radius: 30,
                   backgroundColor: Colors.grey.shade200,
                   child: ClipOval(
-                    child: Image.network(
-                      _conversationPicFuture,
-                      width: 60,
-                      height: 60,
-                      fit: BoxFit.cover,
-                    ),
+                    child: _conversationPicFuture != ''
+                        ? Image.network(
+                            _conversationPicFuture,
+                            width: 60,
+                            height: 60,
+                            fit: BoxFit.cover,
+                          )
+                        : Container(
+                            width: 60,
+                            height: 60,
+                            color: Colors.grey, // Fallback color or placeholder
+                            child: Icon(
+                              Icons.person,
+                              size: 40,
+                              color: Colors.white,
+                            ),
+                          ),
                   ),
                 ),
                 const SizedBox(width: 10),
@@ -147,12 +158,9 @@ class _ConversationTileState extends State<ConversationTile> {
                           Icon(
                             Icons
                                 .video_camera_back_rounded, // Choose an appropriate icon here
-                            color:
-                                Colors.blue, 
+                            color: Colors.blue,
                           ),
-                          SizedBox(
-                              width:
-                                  8), 
+                          SizedBox(width: 8),
                           Text('Video'),
                         ],
                       )
@@ -160,18 +168,14 @@ class _ConversationTileState extends State<ConversationTile> {
                       const Row(
                         children: [
                           Icon(
-                            Icons
-                                .file_copy_rounded, 
-                            color:
-                                Colors.blue, 
+                            Icons.file_copy_rounded,
+                            color: Colors.blue,
                           ),
-                          SizedBox(
-                              width:
-                                  8), 
+                          SizedBox(width: 8),
                           Text('File'),
                         ],
                       )
-                      else
+                    else
                       Text(''),
                   ],
                 ),
@@ -183,9 +187,10 @@ class _ConversationTileState extends State<ConversationTile> {
                         0) ...[
                       Row(
                         children: [
-                          if(widget.conversation.latestMessageSendDateTime!=null)
-                          Text(DateFormat('hh:mm a').format(
-                              widget.conversation.latestMessageSendDateTime!)),
+                          if (widget.conversation.latestMessageSendDateTime !=
+                              null)
+                            Text(DateFormat('hh:mm a').format(widget
+                                .conversation.latestMessageSendDateTime!)),
                         ],
                       ),
                       Container(
@@ -209,9 +214,10 @@ class _ConversationTileState extends State<ConversationTile> {
                     ] else
                       Row(
                         children: [
-                          if(widget.conversation.latestMessageSendDateTime!=null)
-                          Text(DateFormat('hh:mm a').format(
-                              widget.conversation.latestMessageSendDateTime!)),
+                          if (widget.conversation.latestMessageSendDateTime !=
+                              null)
+                            Text(DateFormat('hh:mm a').format(widget
+                                .conversation.latestMessageSendDateTime!)),
                         ],
                       ),
                   ],

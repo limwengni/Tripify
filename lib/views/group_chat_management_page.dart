@@ -51,12 +51,24 @@ class _GroupChatManagementPageState extends State<GroupChatManagementPage> {
                   children: [
                     // Image inside ClipOval
                     ClipOval(
-                      child: Image.network(
-                        widget.conversation.conversationPic!,
-                        width: 200,
-                        height: 200,
-                        fit: BoxFit.cover,
-                      ),
+                      child: widget.conversation.conversationPic != ''
+                          ? Image.network(
+                              widget.conversation.conversationPic!,
+                              width: 180,
+                              height: 180,
+                              fit: BoxFit.cover,
+                            )
+                          : Container(
+                              width: 180,
+                              height: 180,
+                              color:
+                                  Colors.grey, // Fallback color or placeholder
+                              child: const Icon(
+                                Icons.person,
+                                size: 80,
+                                color: Colors.white,
+                              ),
+                            ),
                     ),
                     // Edit icon on top of the image
                     Positioned(

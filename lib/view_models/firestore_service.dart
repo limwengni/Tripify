@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:tripify/models/conversation_model.dart';
 import 'package:tripify/models/user_model.dart';
 
 class FirestoreService {
@@ -75,7 +76,7 @@ class FirestoreService {
     }
   }
 
-    Future<String> insertDataWithReturnAutoID(
+  Future<String> insertDataWithReturnAutoID(
       String collection, Map<String, dynamic> data) async {
     try {
       // Create a new document reference with an auto-generated ID
@@ -178,11 +179,21 @@ class FirestoreService {
     }
   }
 
-   Future<void> updateSubCollectionField({
-      required String collection,required String documentId,required String subCollection,required String subDocumentId,required String field, required dynamic value}) async {
+  Future<void> updateSubCollectionField(
+      {required String collection,
+      required String documentId,
+      required String subCollection,
+      required String subDocumentId,
+      required String field,
+      required dynamic value}) async {
     try {
       // Update the specified field in the Firestore document
-      await _db.collection(collection).doc(documentId).collection(subCollection).doc(subDocumentId).update({
+      await _db
+          .collection(collection)
+          .doc(documentId)
+          .collection(subCollection)
+          .doc(subDocumentId)
+          .update({
         field: value,
       });
       print("Field '$field' updated successfully.");
@@ -243,11 +254,14 @@ class FirestoreService {
     required String subCollection,
     required String docId,
     required String subDocId,
-  }) async{
-    
-     try {
-      final docSnapshot =
-          await _db.collection(collection).doc(docId).collection(subCollection).doc(subDocId).get();
+  }) async {
+    try {
+      final docSnapshot = await _db
+          .collection(collection)
+          .doc(docId)
+          .collection(subCollection)
+          .doc(subDocId)
+          .get();
       if (docSnapshot.exists) {
         return docSnapshot.data() as Map<String, dynamic>;
       } else {
@@ -295,85 +309,79 @@ class FirestoreService {
     }
   }
 
-
 // Select Data (Get by two Field Values)
-Future<List<Map<String, dynamic>>> getDataByTwoFields(
-    String collection, String field1, dynamic value1, String field2, dynamic value2) async {
-  try {
-    final querySnapshot = await _db
-        .collection(collection)
-        .where(field1, isEqualTo: value1)
-        .where(field2, isEqualTo: value2)
-        .get();
+  Future<List<Map<String, dynamic>>> getDataByTwoFields(String collection,
+      String field1, dynamic value1, String field2, dynamic value2) async {
+    try {
+      final querySnapshot = await _db
+          .collection(collection)
+          .where(field1, isEqualTo: value1)
+          .where(field2, isEqualTo: value2)
+          .get();
 
-    List<Map<String, dynamic>> dataList = [];
-    for (var doc in querySnapshot.docs) {
-      dataList.add(doc.data() as Map<String, dynamic>);
+      List<Map<String, dynamic>> dataList = [];
+      for (var doc in querySnapshot.docs) {
+        dataList.add(doc.data() as Map<String, dynamic>);
+      }
+      return dataList;
+    } catch (e) {
+      print("Error fetching data by fields: $e");
+      return [];
     }
-    return dataList;
-  } catch (e) {
-    print("Error fetching data by fields: $e");
-    return [];
   }
-}
 
-Future<List<Map<String, dynamic>>?>? getSubCollectionData(
-  String collection, 
-  String documentId, // Document ID of the parent document
-  String subCollection, // Name of the subcollection
-) async {
-  try {
-    // Access the parent document first
-    final parentDocRef = _db.collection(collection).doc(documentId);
+  Future<List<Map<String, dynamic>>?>? getSubCollectionData(
+    String collection,
+    String documentId, // Document ID of the parent document
+    String subCollection, // Name of the subcollection
+  ) async {
+    try {
+      // Access the parent document first
+      final parentDocRef = _db.collection(collection).doc(documentId);
 
-    // Get the subcollection from the parent document
-    final querySnapshot = await parentDocRef
-        .collection(subCollection)
-        .get();
+      // Get the subcollection from the parent document
+      final querySnapshot = await parentDocRef.collection(subCollection).get();
 
-    List<Map<String, dynamic>> dataList = [];
-    for (var doc in querySnapshot.docs) {
-      dataList.add(doc.data() as Map<String, dynamic>);
-    }
+      List<Map<String, dynamic>> dataList = [];
+      for (var doc in querySnapshot.docs) {
+        dataList.add(doc.data() as Map<String, dynamic>);
+      }
 
-    return dataList;
-  } catch (e) {
-    print("Error fetching subcollection data: $e");
-    return null;
-  }
-}
-
-
-Future<Map<String, dynamic>?> getSubCollectionOneDataByFields(
-  String parentCollection,
-  String parentDocId,
-  String subCollection,
-  String field,
-  dynamic value,
-) async {
-  try {
-    final querySnapshot = await _db
-        .collection(parentCollection) // Parent collection
-        .doc(parentDocId) // Parent document ID
-        .collection(subCollection) // Subcollection
-        .where(field, isEqualTo: value) // Filter by field
-        .get();
-
-    // Check if any documents exist in the query
-    if (querySnapshot.docs.isNotEmpty) {
-      // Return the first matching document's data
-      return querySnapshot.docs.first.data() as Map<String, dynamic>;
-    } else {
-      print("No matching documents found in the subcollection.");
+      return dataList;
+    } catch (e) {
+      print("Error fetching subcollection data: $e");
       return null;
     }
-  } catch (e) {
-    print("Error fetching data from subcollection by field: $e");
-    return null;
   }
-}
 
+  Future<Map<String, dynamic>?> getSubCollectionOneDataByFields(
+    String parentCollection,
+    String parentDocId,
+    String subCollection,
+    String field,
+    dynamic value,
+  ) async {
+    try {
+      final querySnapshot = await _db
+          .collection(parentCollection) // Parent collection
+          .doc(parentDocId) // Parent document ID
+          .collection(subCollection) // Subcollection
+          .where(field, isEqualTo: value) // Filter by field
+          .get();
 
+      // Check if any documents exist in the query
+      if (querySnapshot.docs.isNotEmpty) {
+        // Return the first matching document's data
+        return querySnapshot.docs.first.data() as Map<String, dynamic>;
+      } else {
+        print("No matching documents found in the subcollection.");
+        return null;
+      }
+    } catch (e) {
+      print("Error fetching data from subcollection by field: $e");
+      return null;
+    }
+  }
 
 // Stream Data (Get Conversations Stream)
   Stream<List<Map<String, dynamic>>> getConversationsStream(
@@ -393,6 +401,49 @@ Future<Map<String, dynamic>?> getSubCollectionOneDataByFields(
     } catch (e) {
       print("Error fetching conversations stream: $e");
       return Stream.value([]);
+    }
+  }
+
+  Future<Map<String, dynamic>?> getFilteredDataDirectly(
+      String collection, String field, List<String> targetValues) async {
+    try {
+      if (targetValues.length != 2) {
+        throw ArgumentError('Target values must contain exactly two items.');
+      }
+
+      // Fetch documents with `array-contains` for the first value
+      final querySnapshot = await _db
+          .collection(collection)
+          .where(field,
+              arrayContains: targetValues[0]) // Only one array-contains
+          .get();
+
+      // List<Map<String, dynamic>> dataList = [];
+      // for (var doc in querySnapshot.docs) {
+      //   dataList.add(doc.data() as Map<String, dynamic>);
+      // }
+
+      // List<ConversationModel> conversationList =
+      //     dataList.map((item) => ConversationModel.fromMap(item)).toList();
+
+      // Filter locally to match both values and ensure list length is 2
+      for (var doc in querySnapshot.docs) {
+        final data = doc.data() as Map<String, dynamic>;
+        final listField = List<String>.from(doc['participants'] ?? []);
+        print('&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&' + listField.toString());
+
+        if (listField != null &&
+            listField.length == 2 &&
+            listField.toSet().containsAll(targetValues)) {
+          return data; // Return the first valid match
+        }
+      }
+
+      // If no valid document is found, return null
+      return null;
+    } catch (e) {
+      print("Error fetching filtered data: $e");
+      return null;
     }
   }
 

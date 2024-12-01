@@ -152,12 +152,24 @@ class _GroupChatPageState extends State<GroupChatPage> {
           title: Row(
             children: [
               ClipOval(
-                  child: Image.network(
-                widget.chatPic,
-                width: 40,
-                height: 40,
-                fit: BoxFit.cover,
-              )),
+                child: widget.chatPic != ''
+                    ? Image.network(
+                        widget.chatPic,
+                        width: 40,
+                        height: 40,
+                        fit: BoxFit.cover,
+                      )
+                    : Container(
+                        width: 40,
+                        height: 40,
+                        color: Colors.grey, // Fallback color or placeholder
+                        child: Icon(
+                          Icons.person,
+                          size: 20,
+                          color: Colors.white,
+                        ),
+                      ),
+              ),
               const SizedBox(
                 width: 10,
               ),
@@ -216,7 +228,7 @@ class _GroupChatPageState extends State<GroupChatPage> {
           });
           return ListView(
             controller: _scrollController,
-                      reverse: true, // Show the latest messages at the bottom
+            reverse: true, // Show the latest messages at the bottom
             children: snapshot.data!.docs
                 .map<Widget>((doc) => _buildMessageItem(doc, currentUserId))
                 .toList(),

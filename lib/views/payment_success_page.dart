@@ -55,7 +55,8 @@ class PaymentSuccessPage extends StatelessWidget {
               ElevatedButton(
                 onPressed: () {
                   // Navigate back or to another screen (e.g., Home or Orders Page)
-                  Navigator.of(context).popUntil((route) => route.isFirst);
+                  Navigator.push(context,
+                      MaterialPageRoute(builder: (builder) => MainPage()));
                 },
                 child: const Text('Back to Home'),
               ),

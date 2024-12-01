@@ -6,7 +6,8 @@ import 'package:tripify/widgets/travel_package_card.dart';
 
 class TravelPackageCardList extends StatefulWidget {
   final List<TravelPackageModel> travelPackagesList;
-  const TravelPackageCardList({super.key, required this.travelPackagesList});
+  final String currentUserId;
+  const TravelPackageCardList({super.key, required this.travelPackagesList, required this.currentUserId});
 
   @override
   State<StatefulWidget> createState() {
@@ -24,7 +25,7 @@ class _TravelPackageCardListState
         : ListView.builder(
             itemCount: widget.travelPackagesList.length,
             itemBuilder: (context, index) => TravelPackageCard(
-            travelPackage    : widget.travelPackagesList[index]),
+            travelPackage    : widget.travelPackagesList[index], currentUserId: widget.currentUserId,),
           );
   }
 }

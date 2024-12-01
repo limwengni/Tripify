@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:tripify/models/travel_package_model.dart';
 import 'package:tripify/view_models/firestore_service.dart';
@@ -13,6 +14,8 @@ class _MarketplacePageState extends State<MarketplacePage> {
   // List to hold travel packages
   List<TravelPackageModel> travelPackagesList = [];
   FirestoreService firestoreService = FirestoreService();
+      String currentUserId = FirebaseAuth.instance.currentUser!.uid;
+
 
   @override
   void initState() {
@@ -39,7 +42,7 @@ class _MarketplacePageState extends State<MarketplacePage> {
         child: Column(
       children: [
         Expanded(
-          child: TravelPackageCardList(travelPackagesList: travelPackagesList),
+          child: TravelPackageCardList(travelPackagesList: travelPackagesList,currentUserId: currentUserId,),
         ),
       ],
     ));
