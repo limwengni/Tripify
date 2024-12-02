@@ -39,12 +39,22 @@ class _ProfilePageState extends State<ProfilePage> {
 
     if (user != null) {
       await userProvider.fetchUserDetails(user.uid);
-      final postsWithIds = await postProvider.fetchPostsForLoginUser(user.uid);
 
-      for (var postEntry in postsWithIds) {
-        print('Doc ID: ${postEntry['id']}');
-        final post = postEntry['post'] as Post;
-        print('Post Title: ${post.title}');
+      print('user log in ID: ${user.uid}');
+
+      try {
+        final postsWithIds =
+            await postProvider.fetchPostsForLoginUser(user.uid);
+
+        postProvider.setUserPosts(postsWithIds);
+
+        for (var postEntry in postsWithIds) {
+          final post = postEntry['post'] as Post;
+          print('Doc ID: ${postEntry['id']}');
+          print('Post Title: ${post.title}');
+        }
+      } catch (e) {
+        print("Error fetching posts for user: $e");
       }
 
       // // After fetching user details, the _profileImageUrl is updated in the provider
@@ -598,7 +608,6 @@ class _ProfilePageState extends State<ProfilePage> {
         padding: EdgeInsets.all(5),
         child: GestureDetector(
           onTap: () {
-            print("postId: $postId");
             Navigator.push(
               context,
               MaterialPageRoute(

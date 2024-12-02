@@ -121,9 +121,7 @@ class _CommentSectionState extends State<CommentSection> {
       // Upload comment to the database
       await PostProvider().uploadComment(newComment, context);
 
-      setState(() {
-        comments.insert(0, newComment);
-      });
+      await _loadComments();
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(

@@ -43,12 +43,19 @@ class _UserProfilePageState extends State<UserProfilePage> {
 
     if (userId != null) {
       await userProvider.fetchUserDetails(widget.userId);
-      final postsWithIds = await postProvider.fetchPostsForLoginUser(userId);
 
-      for (var postEntry in postsWithIds) {
-        print('Doc ID: ${postEntry['id']}');
-        final post = postEntry['post'] as Post;
-        print('Post Title: ${post.title}');
+      try {
+        final postsWithIds = await postProvider.fetchPostsForUser(userId);
+
+        postProvider.setOtherProfPosts(postsWithIds);
+
+        for (var postEntry in postsWithIds) {
+          print('Doc ID: ${postEntry['id']}');
+          final post = postEntry['post'] as Post;
+          print('Post Title: ${post.title}');
+        }
+      } catch (e) {
+        print("Error fetching posts for user: $e");
       }
 
       // // After fetching user details, the _profileImageUrl is updated in the provider
@@ -571,8 +578,8 @@ class _UserProfilePageState extends State<UserProfilePage> {
       return _buildPostShimmerGrid();
     }
 
-    List<Post> userPosts = postProvider.userPosts;
-    List<String> postIds = postProvider.postsId;
+    List<Post> userPosts = postProvider.profilePosts;
+    List<String> postIds = postProvider.otherProfId;
 
     if (userPosts.isEmpty) {
       // Show a message if no posts are available

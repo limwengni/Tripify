@@ -13,6 +13,7 @@ import 'package:tripify/view_models/user_provider.dart';
 import 'package:tripify/models/post_model.dart';
 import 'package:tripify/models/comment_model.dart';
 import 'package:tripify/views/user_profile_page.dart';
+import 'package:tripify/views/edit_post_page.dart';
 import 'package:tripify/views/comment_section.dart';
 import 'package:video_player/video_player.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -44,6 +45,8 @@ class _PostDetailPageState extends State<PostDetailPage>
   final Map<int, bool> _isMuted = {};
   bool isLiked = false;
   bool liked = false;
+  bool isSaved = false;
+  bool saved = false;
   String? username;
   List<PostComment> comments = [];
   bool isLoading = false;
@@ -84,6 +87,8 @@ class _PostDetailPageState extends State<PostDetailPage>
 
     _checkIfLiked(_id, user!.uid);
 
+    _checkIfSaved(_id, user!.uid);
+
     WidgetsBinding.instance.addObserver(this);
 
     _fetchUsernameAndPfp();
@@ -97,7 +102,12 @@ class _PostDetailPageState extends State<PostDetailPage>
   Future<void> _fetchUsernameAndPfp() async {
     // Access userProvider here using context
     final userProvider = Provider.of<UserProvider>(context, listen: false);
-    await userProvider.fetchUserDetails(widget.post.userId);
+
+    if (widget.post.userId == FirebaseAuth.instance.currentUser?.uid) {
+      await userProvider.fetchUserDetails(widget.post.userId);
+    } else {
+      await userProvider.fetchOtherUserDetails(widget.post.userId);
+    }
   }
 
   String formatPostDate(DateTime createdAt) {
@@ -260,6 +270,15 @@ class _PostDetailPageState extends State<PostDetailPage>
     });
   }
 
+  Future<void> _checkIfSaved(String postId, String userId) async {
+    final postProvider = PostProvider();
+
+    bool saved = await postProvider.isPostSaved(postId, userId);
+    setState(() {
+      isSaved = saved;
+    });
+  }
+
   void displaySheet(BuildContext context, String postId) {
     showModalBottomSheet(
       context: context,
@@ -290,6 +309,14 @@ class _PostDetailPageState extends State<PostDetailPage>
     );
   }
 
+  Future<void> _deletePost(String postId) async {
+    final postProvider = Provider.of<PostProvider>(context, listen: false);
+    await postProvider.deletePost(postId, context);
+
+    Navigator.pop(context, true);
+    Navigator.pop(context, true);
+  }
+
   @override
   Widget build(BuildContext context) {
     final userProvider = Provider.of<UserProvider>(context, listen: false);
@@ -297,7 +324,11 @@ class _PostDetailPageState extends State<PostDetailPage>
     final user = FirebaseAuth.instance.currentUser;
     String currentUserId = user!.uid;
 
-    String username = userProvider.userModel?.username ?? '';
+    String username = userProvider.otherUserModel?.username ?? '';
+
+    if (postAuthorId != currentUserId && username.isEmpty) {
+      userProvider.fetchUserDetails(postAuthorId);
+    }
 
     return GestureDetector(
         onTap: () {
@@ -329,7 +360,7 @@ class _PostDetailPageState extends State<PostDetailPage>
                         ),
                       );
                     },
-                    child: username == null
+                    child: username.isEmpty
                         ? Center(
                             child: Shimmer.fromColors(
                               baseColor: Colors.grey[300]!,
@@ -357,7 +388,7 @@ class _PostDetailPageState extends State<PostDetailPage>
                               ),
                               SizedBox(width: 10),
                               Text(
-                                "@$username",
+                                "@${userProvider.otherUserModel?.username}",
                                 style: TextStyle(
                                   color: Theme.of(context).brightness ==
                                           Brightness.dark
@@ -367,6 +398,84 @@ class _PostDetailPageState extends State<PostDetailPage>
                               ),
                             ],
                           ),
+                  ),
+                Spacer(),
+                if (postAuthorId == currentUserId)
+                  IconButton(
+                    icon: Icon(Icons.more_vert),
+                    onPressed: () {
+                      showModalBottomSheet(
+                        context: context,
+                        isScrollControlled: true,
+                        shape: RoundedRectangleBorder(
+                          borderRadius:
+                              BorderRadius.vertical(top: Radius.circular(16.0)),
+                        ),
+                        builder: (context) {
+                          return FractionallySizedBox(
+                            heightFactor: 0.15,
+                            child: ListView(
+                              children: [
+                                ListTile(
+                                  leading: Icon(Icons.edit),
+                                  title: Text('Edit Post'),
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            EditPostPage(postId: _id),
+                                      ),
+                                    );
+                                  },
+                                ),
+                                ListTile(
+                                  leading:
+                                      Icon(Icons.delete, color: Colors.red),
+                                  title: Text('Delete Post',
+                                      style: TextStyle(color: Colors.red)),
+                                  onTap: () async {
+                                    // Confirm delete action
+                                    bool? confirm = await showDialog(
+                                      context: context,
+                                      builder: (BuildContext context) {
+                                        return AlertDialog(
+                                          title: Text('Delete Post'),
+                                          content: Text(
+                                              'Are you sure you want to delete this post?'),
+                                          actions: <Widget>[
+                                            TextButton(
+                                              child: Text('Cancel'),
+                                              onPressed: () {
+                                                Navigator.of(context)
+                                                    .pop(false);
+                                              },
+                                            ),
+                                            TextButton(
+                                              child: Text('Delete',
+                                                  style: TextStyle(
+                                                      color: Colors.red)),
+                                              onPressed: () {
+                                                Navigator.of(context).pop(true);
+                                              },
+                                            ),
+                                          ],
+                                        );
+                                      },
+                                    );
+
+                                    if (confirm == true) {
+                                      // Call your delete function here
+                                      await _deletePost(_id);
+                                    }
+                                  },
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      );
+                    },
                   ),
               ],
             ),
@@ -514,18 +623,23 @@ class _PostDetailPageState extends State<PostDetailPage>
                                 fontSize: 16, color: Colors.grey[500]),
                           ),
                           SizedBox(width: 8),
-                          if (_location.isNotEmpty)
-                            Icon(
-                              Icons.circle,
-                              size: 5,
-                              color: Colors.grey[500],
-                            ),
+                          _location.isNotEmpty
+                              ? Icon(
+                                  Icons.circle,
+                                  size: 5,
+                                  color: Colors.grey[500],
+                                )
+                              : SizedBox.shrink(),
                           SizedBox(width: 8),
                           Text(
-                            _location,
+                            (_location.length) > 15
+                                ? "${_location.substring(0, 15)}..."
+                                : (_location),
                             style: TextStyle(
-                                fontSize: 16, color: Colors.grey[500]),
-                          ),
+                              fontSize: 16,
+                              color: Colors.grey[500],
+                            ),
+                          )
                         ],
                       ),
                       SizedBox(height: 20),
@@ -599,17 +713,21 @@ class _PostDetailPageState extends State<PostDetailPage>
                     Text("$commentCount", style: TextStyle(fontSize: 16)),
                     SizedBox(width: 10),
                     IconButton(
-                      icon: Icon(Icons.bookmark_border_outlined, size: 30),
-                      onPressed: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              "You are in preview mode.",
-                              style: TextStyle(color: Colors.white),
-                            ),
-                            backgroundColor: Color.fromARGB(255, 159, 118, 249),
-                          ),
-                        );
+                      icon: Icon(
+                        isSaved? Icons.bookmark : Icons.bookmark_border_outlined, 
+                        size: 30,
+                        color: isSaved ? const Color.fromARGB(246, 247, 195, 9) : null),
+                      onPressed: () async {
+                        final postId = _id;
+                        final userId = userProvider.user!.uid;
+
+                        setState(() {
+                          isSaved = !isSaved;
+                          saveCount = isSaved ? saveCount + 1 : saveCount - 1;
+                        });
+
+                        PostProvider postProvider = PostProvider();
+                        await postProvider.savePost(postId, userId);
                       },
                     ),
                     Text("$saveCount", style: TextStyle(fontSize: 16)),

@@ -11,10 +11,13 @@ class UserProvider with ChangeNotifier {
   User? _user;
 
   UserModel? _userModel;
+  UserModel? _otherUserModel;
+
   bool isLoading = true;
 
   User? get user => _auth.currentUser;
   UserModel? get userModel => _userModel;
+  UserModel? get otherUserModel => _otherUserModel;
 
   UserProvider(this._userModel);
 
@@ -45,6 +48,43 @@ class UserProvider with ChangeNotifier {
       } else {
         print("User document does not exist!");
         _userModel = null;
+      }
+    } catch (e) {
+      print("Failed to fetch user details: $e");
+      throw e; // Rethrow error if necessary
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> fetchOtherUserDetails(String uid) async {
+    isLoading = true;
+    notifyListeners();
+
+    try {
+      DocumentSnapshot userDoc =
+          await FirebaseFirestore.instance.collection('User').doc(uid).get();
+
+      if (userDoc.exists) {
+        var userData = userDoc.data() as Map<String, dynamic>?;
+
+        if (userData != null) {
+          _otherUserModel = UserModel.fromMap(userData, uid);
+
+          // Fetch the profile image URL after getting user details
+          String profilePicUrl = await fetchProfileImageUrl();
+
+          _profilePicUrl = profilePicUrl;
+
+          notifyListeners();
+        } else {
+          print("User data is null!");
+          _otherUserModel = null;
+        }
+      } else {
+        print("User document does not exist!");
+        _otherUserModel = null;
       }
     } catch (e) {
       print("Failed to fetch user details: $e");
