@@ -7,13 +7,11 @@ import 'package:tripify/widgets/group_chat_user_card.dart';
 class GroupChatUserCardList extends StatefulWidget {
   final List<UserModel> userList;
   final Function(ConversationModel) onConversationUpdated;
-  final bool addToGroup;
   final ConversationModel conversation;
 
   const GroupChatUserCardList(
       {super.key,
       required this.userList,
-      required this.addToGroup,
       required this.conversation,
       required this.onConversationUpdated});
 
@@ -31,7 +29,7 @@ class _GroupChatUserCardListState extends State<GroupChatUserCardList> {
       itemBuilder: (context, index) => GroupChatUserCard(
         conversation: widget.conversation,
         user: widget.userList[index],
-        addToGroup: widget.addToGroup,
+        addToGroup: false,
         onConversationUpdated: widget.onConversationUpdated,
       ),
     );

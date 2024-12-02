@@ -52,23 +52,25 @@ class MessageModel {
   }
 
   // Convert Map to Message
-  factory MessageModel.fromMap(Map<String, dynamic> data) {
-    return MessageModel(
-      id: data['id'],
-      senderId: data['sender_id'],
-      contentType: ContentType.values.firstWhere(
-        (e) => e.toString().split('.').last == data['content_type'],
-        orElse: () => ContentType.text, // Default to text if not found
-      ),
-      content: data['content'],
-      isDeleted: data['is_deleted'],
+factory MessageModel.fromMap(Map<String, dynamic> data) {
+  return MessageModel(
+    id: data['id'] ?? '',  // Default to an empty string if 'id' is null
+    senderId: data['sender_id'] ?? '',  // Default to an empty string if 'sender_id' is null
+    contentType: ContentType.values.firstWhere(
+      (e) => e.toString().split('.').last == (data['content_type'] ?? ''),
+      orElse: () => ContentType.text,  // Default to text if 'content_type' is null or not found
+    ),
+    content: data['content'] ?? '',  // Default to an empty string if 'content' is null
+    isDeleted: data['is_deleted'] ?? false,  // Default to false if 'is_deleted' is null
+    createdAt: (data['create_at'] is Timestamp)
+        ? (data['create_at'] as Timestamp).toDate()
+        : (data['create_at'] != null
+            ? DateTime.parse(data['create_at'] as String)
+            : DateTime.now()),  // Default to current time if 'create_at' is null
+    conversationId: data['conversation_id'] ?? '',  // Default to an empty string if 'conversation_id' is null
+    thumbnailDownloadUrl: data['thumbnail_download_url'] ?? '',  // Default to an empty string if 'thumbnail_download_url' is null
+    fileName: data['file_name'] ?? '',  // Default to an empty string if 'file_name' is null
+  );
+}
 
-      createdAt: (data['create_at'] is Timestamp)
-          ? (data['create_at'] as Timestamp).toDate()
-          : DateTime.parse(data['create_at']),
-      conversationId: data['conversation_id'],
-      thumbnailDownloadUrl: data['thumbnail_download_url'],
-      fileName: data['file_name']
-    );
-  }
 }

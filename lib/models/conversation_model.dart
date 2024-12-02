@@ -11,7 +11,7 @@ class ConversationModel {
   final bool? isDeleted;
   final String? senderId;
   final Map<String, int>? unreadMessage;
-  final String? conversationPic;
+  String? conversationPic;
   String? groupName;
   final DateTime? updatedAt;
   String? latestMessageType;
@@ -87,6 +87,9 @@ factory ConversationModel.fromMap(Map<String, dynamic> data) {
   // Update the group name
   void updateGroupName(String newGroupName) {
     groupName = newGroupName;
+  }
+  void updateGroupPic(String newGroupPic) {
+    conversationPic = newGroupPic;
   }
 
   // Add a participant

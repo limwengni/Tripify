@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:tripify/models/car_rental_requirement_model.dart';
 import 'package:tripify/models/conversation_model.dart';
 import 'package:tripify/view_models/firestore_service.dart';
@@ -66,14 +67,15 @@ class _CarRentalRequirementCardState extends State<CarRentalRequirementCard> {
                         await _firestoreService.insertDataWithAutoID(
                             'Conversations', conversationModel.toMap());
 
-                             conversationMap =
+                        conversationMap =
                             await _firestoreService.getFilteredDataDirectly(
                                 'Conversations', 'participants', participants);
 
-                                conversation = ConversationModel.fromMap(conversationMap!);
-                      }else{
-                                                        conversation = ConversationModel.fromMap(conversationMap!);
-
+                        conversation =
+                            ConversationModel.fromMap(conversationMap!);
+                      } else {
+                        conversation =
+                            ConversationModel.fromMap(conversationMap!);
                       }
 
                       Map<String, dynamic>? user =
@@ -84,7 +86,7 @@ class _CarRentalRequirementCardState extends State<CarRentalRequirementCard> {
                         conversationPic = user['profile_picture'];
                       }
 
-                    print('last');
+                      print('last');
 
                       Navigator.push(
                         context,
@@ -92,12 +94,11 @@ class _CarRentalRequirementCardState extends State<CarRentalRequirementCard> {
                           builder: (builder) => ChatPage(
                             conversation: conversation!,
                             currentUserId: currentUserId,
-                            chatPic: conversationPic!, // Use 'conversationPic' or default to an empty string
+                            chatPic:
+                                conversationPic!, // Use 'conversationPic' or default to an empty string
                           ),
                         ),
                       );
-
-               
                     },
                     icon: const Icon(
                       Icons.keyboard_arrow_right_outlined,
@@ -114,8 +115,8 @@ class _CarRentalRequirementCardState extends State<CarRentalRequirementCard> {
                 TableRow(children: [
                   const Text("Pickup Location:"),
                   Padding(
-                    padding:
-                        const EdgeInsets.only(left: 10.0), // Add space here
+                    padding: const EdgeInsets.only(
+                        left: 10.0, bottom: 5), // Add space here
                     child:
                         Text("${widget.carRentalRequirement.pickupLocation}"),
                   ),
@@ -123,8 +124,8 @@ class _CarRentalRequirementCardState extends State<CarRentalRequirementCard> {
                 TableRow(children: [
                   const Text("Return Location:"),
                   Padding(
-                    padding:
-                        const EdgeInsets.only(left: 10.0), // Add space here
+                    padding: const EdgeInsets.only(
+                        left: 10.0, bottom: 5), // Add space here
                     child:
                         Text("${widget.carRentalRequirement.returnLocation}"),
                   ),
@@ -132,40 +133,42 @@ class _CarRentalRequirementCardState extends State<CarRentalRequirementCard> {
                 TableRow(children: [
                   const Text("Pickup Date:"),
                   Padding(
-                    padding:
-                        const EdgeInsets.only(left: 10.0), // Add space here
-                    child: Text("${widget.carRentalRequirement.pickupDate}"),
+                    padding: const EdgeInsets.only(
+                        left: 10.0, bottom: 5), // Add space here
+                    child: Text(
+                        "${DateFormat('yyyy-MM-dd').format(widget.carRentalRequirement.pickupDate)}"),
                   ),
                 ]),
                 TableRow(children: [
                   const Text("Return Date:"),
                   Padding(
-                    padding:
-                        const EdgeInsets.only(left: 10.0), // Add space here
-                    child: Text("${widget.carRentalRequirement.returnDate}"),
+                    padding: const EdgeInsets.only(
+                        left: 10.0, bottom: 5), // Add space here
+                    child: Text(
+                        "${DateFormat('yyyy-MM-dd').format(widget.carRentalRequirement.returnDate)}"),
                   ),
                 ]),
                 TableRow(children: [
                   const Text("Car Type:"),
                   Padding(
-                    padding:
-                        const EdgeInsets.only(left: 10.0), // Add space here
+                    padding: const EdgeInsets.only(
+                        left: 10.0, bottom: 5), // Add space here
                     child: Text("${widget.carRentalRequirement.carType}"),
                   ),
                 ]),
                 TableRow(children: [
                   const Text("Budget:"),
                   Padding(
-                    padding:
-                        const EdgeInsets.only(left: 10.0), // Add space here
+                    padding: const EdgeInsets.only(
+                        left: 10.0, bottom: 5), // Add space here
                     child: Text("${widget.carRentalRequirement.budget}"),
                   ),
                 ]),
                 TableRow(children: [
                   const Text("Additional Requirement:"),
                   Padding(
-                    padding:
-                        const EdgeInsets.only(left: 10.0), // Add space here
+                    padding: const EdgeInsets.only(
+                        left: 10.0, bottom: 5), // Add space here
                     child: Text(
                         "${widget.carRentalRequirement.additionalRequirement}"),
                   ),

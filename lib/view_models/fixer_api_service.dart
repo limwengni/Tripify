@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 class FixerApiService {
-  final String apiKey = '9aXFQiQdDaWIoA29YLOr2iCZ92ex646w';
+  final String apiKey = 'IX2eoD4pnZVQozdEvF8UKhNUOynskYZu';
   final String baseUrl = 'https://api.apilayer.com/exchangerates_data';
 
   /// Fetch the latest exchange rates.

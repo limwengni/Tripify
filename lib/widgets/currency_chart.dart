@@ -3,18 +3,18 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:tripify/view_models/fixer_api_service.dart'; // For date formatting
 
-class LineChartSample2 extends StatefulWidget {
+class CurrencyChart extends StatefulWidget {
   final String baseCurrency;
   final String symbols;
 
-  const LineChartSample2(
+  const CurrencyChart(
       {super.key, required this.baseCurrency, required this.symbols});
 
   @override
-  State<LineChartSample2> createState() => _LineChartSample2State();
+  State<CurrencyChart> createState() => _CurrencyChartState();
 }
 
-class _LineChartSample2State extends State<LineChartSample2> {
+class _CurrencyChartState extends State<CurrencyChart> {
   final FixerApiService apiService = FixerApiService();
 
   double? lowestRate;

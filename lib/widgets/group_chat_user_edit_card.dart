@@ -5,33 +5,30 @@ import 'package:intl/intl.dart';
 import 'package:tripify/models/conversation_model.dart';
 import 'package:tripify/models/user_model.dart';
 import 'package:tripify/view_models/firestore_service.dart';
-
-class GroupChatUserCard extends StatefulWidget {
-  ConversationModel conversation;
+class GroupChatUserEditCard extends StatefulWidget {
   final UserModel user;
   final bool addToGroup;
-  final Function(ConversationModel)
-      onConversationUpdated; // Callback for updating conversation
+  final ConversationModel conversation;
+  final Function(ConversationModel) onConversationUpdated;
+  final Function(UserModel) onUserAdded; // Callback when a user is added
+  final Function(UserModel) onUserRemoved; // Callback when a user is removed
 
-  GroupChatUserCard({
+  GroupChatUserEditCard({
     super.key,
     required this.user,
     required this.addToGroup,
     required this.conversation,
     required this.onConversationUpdated,
+    required this.onUserAdded,
+    required this.onUserRemoved,
   });
 
   @override
-  _GroupChatUserCardState createState() => _GroupChatUserCardState();
+  _GroupChatUserEditCardState createState() => _GroupChatUserEditCardState();
 }
 
-class _GroupChatUserCardState extends State<GroupChatUserCard> {
-  FirestoreService _firestoreService = FirestoreService();
+class _GroupChatUserEditCardState extends State<GroupChatUserEditCard> {
   bool added = false;
-  @override
-  void initState() {
-    super.initState();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -58,26 +55,23 @@ class _GroupChatUserCardState extends State<GroupChatUserCard> {
               const Spacer(),
               IconButton(
                 onPressed: () async {
-                  if (widget.addToGroup) {
-                    widget.conversation.addParticipant(widget.user.uid);
-
-                    setState(() {
-                      added = true;
-                    });
-                    widget.onConversationUpdated(widget.conversation);
-                  } else {
+                  if (added) {
+                    // Remove the user
                     widget.conversation.removeParticipant(widget.user.uid);
-                    _firestoreService.updateData("Conversations", widget.conversation.id, widget.conversation.toMap());
-                                        widget.onConversationUpdated(widget.conversation);
-
+                    widget.onUserRemoved(widget.user); // Notify parent
+                  } else {
+                    // Add the user
+                    widget.conversation.addParticipant(widget.user.uid);
+                    widget.onUserAdded(widget.user); // Notify parent
                   }
+                  widget.onConversationUpdated(widget.conversation);
+                  setState(() {
+                    added = !added;
+                  });
                 },
                 icon: added
-                    ? Icon(Icons
-                        .check) // Use a different icon to indicate it has been added
-                    : (widget.addToGroup
-                        ? Icon(Icons.add)
-                        : Icon(Icons.remove)),
+                    ? Icon(Icons.check)
+                    : Icon(widget.addToGroup ? Icons.add : Icons.remove),
               ),
             ],
           ),

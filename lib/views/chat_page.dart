@@ -11,6 +11,7 @@ import 'package:tripify/view_models/conversation_view_model.dart';
 import 'package:tripify/view_models/firesbase_storage_service.dart';
 import 'package:tripify/view_models/firestore_service.dart';
 import 'package:tripify/widgets/chat_bubble.dart';
+import 'package:tripify/widgets/pin_message.dart';
 
 class ChatPage extends StatefulWidget {
   final ConversationModel conversation;
@@ -31,6 +32,7 @@ class ChatPage extends StatefulWidget {
 class _ChatPageState extends State<ChatPage> {
   // FirestoreService firestoreService = FirestoreService();
   FirebaseStorageService _firebaseStorageService = FirebaseStorageService();
+  FirestoreService _firestoreService = FirestoreService();
   final TextEditingController _messageController = TextEditingController();
   final ConversationViewModel _conversationViewModel = ConversationViewModel();
   String appBarTitle = "Loading...";
@@ -119,37 +121,84 @@ class _ChatPageState extends State<ChatPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Row(
+    return WillPopScope(
+      onWillPop: () async {
+        await _firestoreService.updateMapField('Conversations',
+            widget.conversation.id, 'unread_message', widget.currentUserId, 0);
+        return true;
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: Row(
+            children: [
+              ClipOval(
+                  child: Image.network(
+                widget.chatPic,
+                width: 40,
+                height: 40,
+                fit: BoxFit.cover,
+              )),
+              const SizedBox(
+                width: 10,
+              ),
+              Text(appBarTitle)
+            ],
+          ),
+        ),
+        body: Column(
           children: [
-            ClipOval(
-                child: Image.network(
-              widget.chatPic,
-              width: 40,
-              height: 40,
-              fit: BoxFit.cover,
-            )),
-            const SizedBox(
-              width: 10,
+            if (widget.conversation.messagePinnedId != null)
+              _buildPinMessage(widget.conversation.id),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.only(
+                  top: 0.0,
+                  left: 15.0,
+                  right: 15.0,
+                  bottom: 15.0,
+                ),
+                child: _buildMessageList(widget.conversation.id),
+              ),
             ),
-            Text(appBarTitle)
+            _buildUserInput(widget.currentUserId, widget.conversation.id)
           ],
         ),
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.all(15.0),
-              child: _buildMessageList(widget.conversation.id),
-            ),
-          ),
-          _buildUserInput(widget.currentUserId, widget.conversation.id)
-        ],
-      ),
     );
   }
+Widget _buildPinMessage(String conversationId) {
+  return StreamBuilder<DocumentSnapshot>(
+    stream: _conversationViewModel.getConversationStream(
+        conversationId: widget.conversation.id),
+    builder: (context, snapshot) {
+      // Error handling
+      if (snapshot.hasError) {
+        return const Text('Error fetching pinned message');
+      }
+
+      // Loading state
+      if (snapshot.connectionState == ConnectionState.waiting) {
+        return const Text('Loading...');
+      }
+
+      // Check if the document exists and has the pinned message
+      var document = snapshot.data;
+      if (document != null && document.exists) {
+        // Assuming you store the pinned message in a field 'message_pinned_id'
+        String? pinnedMessage = document['message_pinned_id'];
+
+        // If there's a pinned message, return the PinMessage widget
+        if (pinnedMessage != null && pinnedMessage.isNotEmpty) {
+          return PinMessage(message: pinnedMessage);
+        }
+      }
+
+      // Return an empty container if no pinned message
+      return SizedBox.shrink(); // Or you can return Container() for the same effect
+    },
+  );
+}
+
 
   Widget _buildMessageList(String conversationId) {
     String currentUserId = FirebaseAuth.instance.currentUser!.uid;
@@ -184,14 +233,8 @@ class _ChatPageState extends State<ChatPage> {
   Widget _buildMessageItem(DocumentSnapshot doc, String currentUserId) {
     Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
     bool isCurrentUser = data['sender_id'] == currentUserId;
-
-    // var alignment =
-    //     isCurrentUser ? Alignment.centerRight : Alignment.centerLeft;
-    return
-        // Container(
-        //     alignment: alignment,
-        // child:
-        Column(
+    MessageModel messageModel = MessageModel.fromMap(data);
+    return Column(
       crossAxisAlignment:
           isCurrentUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
       children: [
@@ -205,6 +248,7 @@ class _ChatPageState extends State<ChatPage> {
           isGroup: widget.conversation.isGroup,
           conversation: widget.conversation,
           currentUser: currentUserId,
+          messageModel: messageModel,
         ),
         const SizedBox(
           height: 5,

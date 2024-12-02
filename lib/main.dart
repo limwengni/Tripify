@@ -5,6 +5,7 @@ import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:tripify/view_models/firestore_service.dart';
 import 'package:tripify/view_models/stripe_key.dart';
 import 'package:tripify/view_models/hashtag_provider.dart';
 import 'package:tripify/views/accommodation_requirement_create_page.dart';
@@ -15,6 +16,8 @@ import 'package:tripify/views/request_selection_page.dart';
 import 'package:tripify/views/test_map.dart';
 import 'package:tripify/views/travel_package_create_page.dart';
 import 'package:tripify/views/verify_email_page.dart';
+import 'package:tripify/widgets/accommodation_car_rental_drawer.dart';
+import 'package:tripify/widgets/accommodation_car_rental_nav_bar.dart';
 import 'firebase_options.dart';
 
 import 'package:tripify/models/user_model.dart';
@@ -84,11 +87,11 @@ void main() async {
   );
 }
 
-Future<void> _setup() async{
+Future<void> _setup() async {
   WidgetsFlutterBinding.ensureInitialized();
   Stripe.publishableKey = stripePublishableKey;
 }
- 
+
 class MyApp extends StatefulWidget {
   const MyApp({super.key});
 
@@ -164,6 +167,10 @@ class MainPageState extends State<MainPage> {
   int _currentIndex = 0;
   int _btmNavIndex = 0;
   String _title = 'Home';
+  UserModel? user;
+
+  String currentUserId = FirebaseAuth.instance.currentUser!.uid;
+  FirestoreService _firestoreService = FirestoreService();
 
   List<Map<String, dynamic>> widgetItems = [
     {'title': 'Home', 'widget': HomePage()},
@@ -191,8 +198,52 @@ class MainPageState extends State<MainPage> {
       'widget': const TravelPackageCreatePage()
     }
   ];
+  List<Map<String, dynamic>> accommodationWidgetItems = [
+    {'title': 'Home', 'widget': HomePage()},
+    {
+      'title': 'Accommodation Request',
+      'widget': const AccommodationRequirementPage()
+    },
+    {'title': 'Profile', 'widget': ProfilePage()},
+    {'title': 'Favorites', 'widget': const FavoritesPage()},
+    {'title': 'Document Repository', 'widget': const DocumentRepositoryPage()},
+    {'title': 'Settings', 'widget': SettingsPage()},
+  ];
 
+  List<Map<String, dynamic>> carRentalWidgetItems = [
+    {'title': 'Home', 'widget': HomePage()},
+    {
+      'title': 'Accommodation Request',
+      'widget': const CarRentalRequirementPage()
+    },
+    {'title': 'Profile', 'widget': ProfilePage()},
+    {'title': 'Favorites', 'widget': const FavoritesPage()},
+    {'title': 'Document Repository', 'widget': const DocumentRepositoryPage()},
+    {'title': 'Settings', 'widget': SettingsPage()},
+  ];
   List<int> navigationStack = [];
+
+  @override
+  void initState() {
+    super.initState();
+
+    getUserData();
+  }
+
+  void getUserData() async {
+    Map<String, dynamic>? userMap =
+        await _firestoreService.getDataById('User', currentUserId);
+    if (userMap != null) {
+      setState(() {
+        user = UserModel.fromMap(userMap!, currentUserId);
+        if (user!.role == 'Accommodation Rental Company') {
+          widgetItems = accommodationWidgetItems;
+        }else if(user!.role == 'Car Rental Company'){
+          widgetItems = carRentalWidgetItems;
+        }
+      });
+    }
+  }
 
   void onItemTapped(int index) {
     setState(() {
@@ -210,6 +261,26 @@ class MainPageState extends State<MainPage> {
         _btmNavIndex = 3;
       } else if (_currentIndex > 5) {
         _btmNavIndex = 4;
+      } else {
+        _btmNavIndex = _currentIndex;
+      }
+    });
+  }
+
+  void accommodationCarRentalOnItemTapped(int index) {
+    setState(() {
+      // Store the current index to the stack before navigating
+      if (_currentIndex != 0) {
+        navigationStack.add(_currentIndex);
+      }
+
+      // Set the current index and update the title
+      _currentIndex = index;
+      _title = widgetItems[_currentIndex]['title'];
+
+      // Manage bottom navigation index based on current page
+      if (_currentIndex > 1 && _currentIndex < 6) {
+        _btmNavIndex = 2;
       } else {
         _btmNavIndex = _currentIndex;
       }
@@ -349,38 +420,100 @@ class MainPageState extends State<MainPage> {
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
-        onWillPop: _onWillPop,
-        child: Scaffold(
-            appBar: AppBar(
-              title: Text(_title),
-              actions: [
-                Padding(
-                  padding: const EdgeInsets.only(right: 16),
-                  child: IconButton(
-                    icon: SvgPicture.asset(
-                      Provider.of<ThemeNotifier>(context).themeMode ==
-                              ThemeMode.dark
-                          ? 'assets/icons/message_icon_dark.svg'
-                          : 'assets/icons/message_icon_light.svg',
-                      width: 24,
-                      height: 24,
-                    ),
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => ChatListPage()),
-                      );
-                    },
-                  ),
+      onWillPop: _onWillPop,
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(_title),
+          actions: [
+            Padding(
+              padding: const EdgeInsets.only(right: 16),
+              child: IconButton(
+                icon: SvgPicture.asset(
+                  Provider.of<ThemeNotifier>(context).themeMode ==
+                          ThemeMode.dark
+                      ? 'assets/icons/message_icon_dark.svg'
+                      : 'assets/icons/message_icon_light.svg',
+                  width: 24,
+                  height: 24,
                 ),
-              ],
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => ChatListPage()),
+                  );
+                },
+              ),
             ),
-            drawer: TripifyDrawer(onItemTapped: onItemTapped),
-            body: widgetItems[_currentIndex]['widget'],
-            bottomNavigationBar: TripifyNavBar(
-              currentIndex: _btmNavIndex,
-              onItemTapped: onItemTapped,
-            ),
-            floatingActionButton: floatingButtonReturn(_currentIndex)));
+          ],
+        ),
+        drawer: user != null ? _buildDrawerBasedOnRole(user!.role) : null,
+        body: widgetItems[_currentIndex]['widget'],
+        bottomNavigationBar: user != null
+            ? _buildNavBarBasedOnRole(
+                user!.role) // Use the role to determine which navbar to show
+            : null, // If user is null, don't show the nav bar
+        floatingActionButton: floatingButtonReturn(_currentIndex),
+      ),
+    );
+  }
+
+// Method to return the correct NavBar based on user role
+  Widget _buildNavBarBasedOnRole(String role) {
+    print('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%' + role);
+    switch (role) {
+      case 'Normal User':
+        return TripifyNavBar(
+          currentIndex: _btmNavIndex,
+          onItemTapped: onItemTapped,
+        );
+      case 'Accommodation Rental Company':
+        return AccommodationCarRentalNavBar(
+          currentIndex: _btmNavIndex,
+          onItemTapped: accommodationCarRentalOnItemTapped,
+        );
+      case 'Car Rental Company':
+        return AccommodationCarRentalNavBar(
+          currentIndex: _btmNavIndex,
+          onItemTapped: accommodationCarRentalOnItemTapped,
+        );
+      // case 'moderator':
+      //   return ModeratorNavBar(
+      //     currentIndex: _btmNavIndex,
+      //     onItemTapped: onItemTapped,
+      //   );
+      default:
+        return TripifyNavBar(
+          currentIndex: _btmNavIndex,
+          onItemTapped: onItemTapped,
+        );
+    }
+  }
+
+// Method to return the correct NavBar based on user role
+  Widget _buildDrawerBasedOnRole(String role) {
+    switch (role) {
+      case 'Normal User':
+        return TripifyDrawer(
+          onItemTapped: onItemTapped,
+        );
+      case 'Accommodation Rental Company':
+        return AccommodationCarRentalDrawer(
+          onItemTapped: accommodationCarRentalOnItemTapped,
+        );
+      case 'Car Rental Company':
+        return AccommodationCarRentalDrawer(
+          onItemTapped: accommodationCarRentalOnItemTapped,
+        );
+      // case 'moderator':
+      //   return ModeratorNavBar(
+      //     currentIndex: _btmNavIndex,
+      //     onItemTapped: onItemTapped,
+      //   );
+      default:
+        return TripifyNavBar(
+          currentIndex: _btmNavIndex,
+          onItemTapped: onItemTapped,
+        );
+    }
   }
 }

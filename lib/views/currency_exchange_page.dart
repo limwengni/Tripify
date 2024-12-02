@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:tripify/view_models/fixer_api_service.dart';
 import 'package:tripify/views/exchange_rate_chart.dart';
-import 'package:tripify/widgets/testcharwidget.dart';
+import 'package:tripify/widgets/currency_chart.dart';
 
 class CurrencyExchangePage extends StatefulWidget {
   const CurrencyExchangePage({super.key});
@@ -123,8 +123,8 @@ class _CurrencyExchangePageState extends State<CurrencyExchangePage> {
                                     // Call the API to perform conversion
                                     final convertedAmount =
                                         await apiService.convert(
-                                      selectedCurrencyTo!,
                                       selectedCurrencyFrom!,
+                                      selectedCurrencyTo!,
                                       amount,
                                     );
 
@@ -241,11 +241,11 @@ class _CurrencyExchangePageState extends State<CurrencyExchangePage> {
                                     selectedCurrencyTo != null
                                 ? SizedBox(
                                     height: 300.0,
-                                    child: LineChartSample2(
+                                    child: CurrencyChart(
                                       key: ValueKey(selectedCurrencyFrom! +
                                           selectedCurrencyTo!),
-                                      baseCurrency: selectedCurrencyFrom!,
-                                      symbols: selectedCurrencyTo!,
+                                      baseCurrency: selectedCurrencyTo!,
+                                      symbols: selectedCurrencyFrom!,
                                     ),
                                   )
                                 : const SizedBox.shrink(),

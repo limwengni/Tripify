@@ -30,11 +30,18 @@ class ConversationViewModel {
 
     await firestoreService.insertSubCollectionDataWithAutoID(
         "Conversations", "Messages", conversation.id, newMessage.toMap());
+    String contentTypeAsString = contentType.toString().split('.').last;
 
-    conversation.setLatestMessage(newMessage.content);
+    await firestoreService.updateField(
+        'Conversations', conversation.id, 'latest_message', newMessage.content);
+    await firestoreService.updateField('Conversations', conversation.id,
+        'latest_message_send_date_time', sendTime);
+    await firestoreService.updateField(
+        'Conversations', conversation.id, 'updated_at', sendTime);
+    await firestoreService.updateField('Conversations', conversation.id,
+        'latest_message_type', contentTypeAsString);
+
     conversation.setLatestDateTime(sendTime);
-    await firestoreService.updateData(
-        "Conversations", conversation.id, conversation.toMap());
   }
 
   Future<void> sendPollMessage(
@@ -56,5 +63,10 @@ class ConversationViewModel {
         subCollection: "Messages",
         docId: conversationId,
         descending: true);
+  }
+
+  Stream<DocumentSnapshot> getConversationStream({required String conversationId}){
+        return firestoreService.getConversationStreamData(collection: 'Conversations', docId: conversationId);
+
   }
 }

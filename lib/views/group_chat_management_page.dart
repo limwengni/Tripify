@@ -1,6 +1,10 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:tripify/models/conversation_model.dart';
 import 'package:tripify/models/user_model.dart';
+import 'package:tripify/view_models/firesbase_storage_service.dart';
 import 'package:tripify/view_models/firestore_service.dart';
 import 'package:tripify/views/add_group_chat_user_page.dart';
 import 'package:tripify/views/group_chat_edit_page.dart';
@@ -13,13 +17,15 @@ class GroupChatManagementPage extends StatefulWidget {
   final Function(UserModel)
       onGroupMemberUpdated; // Callback to update the group user list
   final Function(String) onGroupNameUpdated;
+  final Function(String) onGroupImageUpdated;
 
   GroupChatManagementPage(
       {Key? key,
       required this.conversation,
       required this.groupChatUserList,
       required this.onGroupMemberUpdated,
-      required this.onGroupNameUpdated})
+      required this.onGroupNameUpdated,
+      required this.onGroupImageUpdated})
       : super(key: key);
 
   @override
@@ -30,9 +36,22 @@ class GroupChatManagementPage extends StatefulWidget {
 class _GroupChatManagementPageState extends State<GroupChatManagementPage> {
   FirestoreService _firestoreService = FirestoreService();
   List<UserModel> userCanbeAdded = [];
+
+  final ImagePicker picker = ImagePicker();
+  XFile? _imageSelected;
+
   @override
   void initState() {
     super.initState();
+  }
+
+  void _updateGroupChatUserList(List<UserModel> updatedUserList) async {
+    setState(() {
+      // Add the new users to the group chat user list
+      widget.groupChatUserList.addAll(updatedUserList);
+    });
+    await _firestoreService.updateField('Conversations', widget.conversation.id,
+        'participants', widget.groupChatUserList.toList());
   }
 
   @override
@@ -82,9 +101,46 @@ class _GroupChatManagementPageState extends State<GroupChatManagementPage> {
                             Icons.edit,
                             color: Colors.black, // Edit icon color
                           ),
-                          onPressed: () {
-                            // Handle edit functionality
-                            print('Edit icon pressed');
+                          onPressed: () async {
+                           
+
+                            FirebaseStorageService _firebaseStorageService =
+                                FirebaseStorageService();
+
+                            final XFile? groupchatPic = await picker.pickImage(
+                                source: ImageSource.gallery);
+                            
+                            if (groupchatPic != null) {
+                              File image = File(groupchatPic.path);
+                              String? imgDownloadUrl = await _firebaseStorageService
+                                  .saveImageVideoToFirestore(
+                                      file: image,
+                                      storagePath:
+                                          '${widget.conversation.id}/groupchatPic/');
+                              await _firestoreService.updateField(
+                                  'Conversations',
+                                  widget.conversation.id,
+                                  'conversation_pic',
+                                  imgDownloadUrl);
+
+                              ConversationModel updatedConversation =
+                                  widget.conversation;
+                            
+                              updatedConversation
+                                  .updateGroupPic(imgDownloadUrl!);
+                            
+                              await _firestoreService.updateData(
+                                  "Conversations",
+                                  widget.conversation.id,
+                                  updatedConversation.toMap());
+                            
+                              setState(() {
+                                widget.conversation = updatedConversation;
+                              });
+                            
+                              widget.onGroupImageUpdated(
+                                  widget.conversation.conversationPic!);
+                            }
                           },
                         ),
                       ),
@@ -143,14 +199,14 @@ class _GroupChatManagementPageState extends State<GroupChatManagementPage> {
 
                         if (mounted) {
                           Navigator.push(
-                            // ignore: use_build_context_synchronously
                             context,
                             MaterialPageRoute(
                               builder: (builder) => AddGroupChatUserPage(
                                 userList: userCanbeAdded,
                                 addToGroup: true,
                                 conversation: widget.conversation,
-                                onGroupUpdated: _updateGroupChatUserList,
+                                onGroupUpdated:
+                                    _updateGroupChatUserList, // Pass the callback here
                               ),
                             ),
                           );
@@ -164,7 +220,6 @@ class _GroupChatManagementPageState extends State<GroupChatManagementPage> {
                     child: GroupChatUserCardList(
                   userList: widget.groupChatUserList,
                   conversation: widget.conversation,
-                  addToGroup: false,
                   onConversationUpdated: updateConversation,
                 ))
               ],
@@ -216,13 +271,6 @@ class _GroupChatManagementPageState extends State<GroupChatManagementPage> {
         );
       },
     );
-  }
-
-  void _updateGroupChatUserList(List<UserModel> updatedUserList) {
-    setState(() {
-      widget.groupChatUserList
-          .addAll(updatedUserList); // Update the group chat user list
-    });
   }
 
   void updateConversation(ConversationModel updatedConversation) {

@@ -14,6 +14,7 @@ import 'package:tripify/view_models/firestore_service.dart';
 import 'package:tripify/views/create_poll_page.dart';
 import 'package:tripify/views/group_chat_management_page.dart';
 import 'package:tripify/widgets/chat_bubble.dart';
+import 'package:tripify/widgets/pin_message.dart';
 
 class GroupChatPage extends StatefulWidget {
   ConversationModel conversation;
@@ -32,7 +33,7 @@ class GroupChatPage extends StatefulWidget {
 }
 
 class _GroupChatPageState extends State<GroupChatPage> {
-  FirestoreService firestoreService = FirestoreService();
+  FirestoreService _firestoreService = FirestoreService();
   FirebaseStorageService _firebaseStorageService = FirebaseStorageService();
   final TextEditingController _messageController = TextEditingController();
   final ConversationViewModel _conversationViewModel = ConversationViewModel();
@@ -97,7 +98,7 @@ class _GroupChatPageState extends State<GroupChatPage> {
 
   void _getGroupChatUser(List<String> participantsId) async {
     for (var userId in participantsId) {
-      user = await firestoreService.getDataById("User", userId);
+      user = await _firestoreService.getDataById("User", userId);
       if (user != null) {
         groupChatUser.add(user);
       } else {
@@ -147,62 +148,109 @@ class _GroupChatPageState extends State<GroupChatPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-          title: Row(
-            children: [
-              ClipOval(
-                child: widget.chatPic != ''
-                    ? Image.network(
-                        widget.chatPic,
-                        width: 40,
-                        height: 40,
-                        fit: BoxFit.cover,
-                      )
-                    : Container(
-                        width: 40,
-                        height: 40,
-                        color: Colors.grey, // Fallback color or placeholder
-                        child: Icon(
-                          Icons.person,
-                          size: 20,
-                          color: Colors.white,
+    return WillPopScope(
+      onWillPop: () async {
+        await _firestoreService.updateMapField('Conversations',
+            widget.conversation.id, 'unread_message', widget.currentUserId, 0);
+        return true;
+      },
+      child: Scaffold(
+        appBar: AppBar(
+            title: Row(
+              children: [
+                ClipOval(
+                  child: widget.chatPic != ''
+                      ? Image.network(
+                          widget.chatPic,
+                          width: 40,
+                          height: 40,
+                          fit: BoxFit.cover,
+                        )
+                      : Container(
+                          width: 40,
+                          height: 40,
+                          color: Colors.grey, // Fallback color or placeholder
+                          child: Icon(
+                            Icons.person,
+                            size: 20,
+                            color: Colors.white,
+                          ),
                         ),
-                      ),
-              ),
-              const SizedBox(
-                width: 10,
-              ),
-              Text(appBarTitle)
-            ],
-          ),
-          actions: [
-            IconButton(
-                onPressed: () {
-                  Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (builder) => GroupChatManagementPage(
-                          conversation: widget.conversation,
-                          groupChatUserList: groupChatUserList!,
-                          onGroupMemberUpdated: _updateGroupChatUserList,
-                          onGroupNameUpdated: _updateGroupName,
-                        ),
-                      ));
-                },
-                icon: const Icon(Icons.more_vert_outlined)),
-          ]),
-      body: Column(
-        children: [
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.all(15.0),
-              child: _buildMessageList(widget.conversation.id),
+                ),
+                const SizedBox(
+                  width: 10,
+                ),
+                Text(appBarTitle)
+              ],
             ),
-          ),
-          _buildUserInput(widget.currentUserId, widget.conversation.id)
-        ],
+            actions: [
+              IconButton(
+                  onPressed: () {
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (builder) => GroupChatManagementPage(
+                            conversation: widget.conversation,
+                            groupChatUserList: groupChatUserList!,
+                            onGroupMemberUpdated: _updateGroupChatUserList,
+                            onGroupNameUpdated: _updateGroupName,
+                            onGroupImageUpdated: _updatedGroupPic,
+                          ),
+                        ));
+                  },
+                  icon: const Icon(Icons.more_vert_outlined)),
+            ]),
+        body: Column(
+          children: [
+            if (widget.conversation.messagePinnedId != null)
+              _buildPinMessage(widget.conversation.id),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.only(
+                  top: 0.0,
+                  left: 15.0,
+                  right: 15.0,
+                  bottom: 15.0,
+                ),
+                child: _buildMessageList(widget.conversation.id),
+              ),
+            ),
+            _buildUserInput(widget.currentUserId, widget.conversation.id)
+          ],
+        ),
       ),
+    );
+  }
+
+  Widget _buildPinMessage(String conversationId) {
+    return StreamBuilder<DocumentSnapshot>(
+      stream: _conversationViewModel.getConversationStream(
+          conversationId: widget.conversation.id),
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return const Text('Error fetching pinned message');
+        }
+
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Text('Loading...');
+        }
+
+        // Check if the document exists and has the pinned message
+        var document = snapshot.data;
+        if (document != null && document.exists) {
+          // Assuming you store the pinned message in a field 'pinnedMessage'
+          String pinnedMessage = document['message_pinned_id'] ?? '';
+
+          // If there's a pinned message, display it using PinMessage
+          if (pinnedMessage.isNotEmpty) {
+            return PinMessage(message: pinnedMessage);
+          } else {
+            return const Text('No pinned message');
+          }
+        }
+
+        return const Text('Conversation not found');
+      },
     );
   }
 
@@ -239,6 +287,7 @@ class _GroupChatPageState extends State<GroupChatPage> {
   Widget _buildMessageItem(DocumentSnapshot doc, String currentUserId) {
     Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
     bool isCurrentUser = data['sender_id'] == currentUserId;
+    MessageModel messageModel = MessageModel.fromMap(data);
 
     return Column(
       crossAxisAlignment:
@@ -254,6 +303,7 @@ class _GroupChatPageState extends State<GroupChatPage> {
           isGroup: widget.conversation.isGroup,
           conversation: widget.conversation,
           currentUser: currentUserId,
+          messageModel: messageModel,
         ),
         const SizedBox(
           height: 5,
@@ -451,6 +501,13 @@ class _GroupChatPageState extends State<GroupChatPage> {
     setState(() {
       appBarTitle = newGroupName;
       widget.conversation.updateGroupName(newGroupName);
+    });
+  }
+
+  void _updatedGroupPic(String newGroupPic) {
+    setState(() {
+      widget.chatPic = newGroupPic;
+      widget.conversation.updateGroupPic(newGroupPic);
     });
   }
 }
