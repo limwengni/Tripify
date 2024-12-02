@@ -109,7 +109,7 @@ class _NewPostPageState extends State<NewPostPage> {
               style: TextStyle(color: Colors.white),
             ),
             duration: Duration(seconds: 2),
-            backgroundColor: const Color.fromARGB(255, 159, 118, 249),
+            backgroundColor: Colors.red,
           ),
         );
 
@@ -191,7 +191,7 @@ class _NewPostPageState extends State<NewPostPage> {
             "Please enter the neccessary details before proceeding.",
             style: TextStyle(color: Colors.white),
           ),
-          backgroundColor: const Color.fromARGB(255, 159, 118, 249),
+          backgroundColor: Colors.red,
         ),
       );
     }
@@ -386,8 +386,7 @@ class _NewPostPageState extends State<NewPostPage> {
                                         style: TextStyle(color: Colors.white),
                                       ),
                                       duration: Duration(seconds: 2),
-                                      backgroundColor: const Color.fromARGB(
-                                          255, 159, 118, 249),
+                                      backgroundColor: Colors.red,
                                     ),
                                   );
                                 }

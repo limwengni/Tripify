@@ -39,12 +39,22 @@ class _ProfilePageState extends State<ProfilePage> {
 
     if (user != null) {
       await userProvider.fetchUserDetails(user.uid);
-      final postsWithIds = await postProvider.fetchPostsForLoginUser(user.uid);
 
-      for (var postEntry in postsWithIds) {
-        print('Doc ID: ${postEntry['id']}');
-        final post = postEntry['post'] as Post;
-        print('Post Title: ${post.title}');
+      print('user log in ID: ${user.uid}');
+
+      try {
+        final postsWithIds =
+            await postProvider.fetchPostsForLoginUser(user.uid);
+
+        postProvider.setUserPosts(postsWithIds);
+
+        for (var postEntry in postsWithIds) {
+          final post = postEntry['post'] as Post;
+          print('Doc ID: ${postEntry['id']}');
+          print('Post Title: ${post.title}');
+        }
+      } catch (e) {
+        print("Error fetching posts for user: $e");
       }
 
       // // After fetching user details, the _profileImageUrl is updated in the provider
@@ -103,8 +113,7 @@ class _ProfilePageState extends State<ProfilePage> {
           );
         },
         child: const Icon(Icons.add, color: Colors.white),
-        backgroundColor:
-            const Color.fromARGB(255, 159, 118, 249), // Customize color
+        backgroundColor: const Color.fromARGB(255, 159, 118, 249),
       ),
     );
   }
@@ -544,7 +553,7 @@ class _ProfilePageState extends State<ProfilePage> {
         crossAxisSpacing: 8.0,
         mainAxisSpacing: 8.0,
       ),
-      itemCount: 10, // Show 10 placeholders
+      itemCount: 10,
       itemBuilder: (context, index) {
         return _buildPostShimmer(); // Display shimmer placeholders
       },
@@ -565,21 +574,27 @@ class _ProfilePageState extends State<ProfilePage> {
       return Center(child: Text('No posts available'));
     }
 
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: NeverScrollableScrollPhysics(),
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        childAspectRatio: 0.75,
-        crossAxisSpacing: 8.0,
-        mainAxisSpacing: 8.0,
-      ),
-      itemCount: userPosts.length,
-      itemBuilder: (context, index) {
-        final post = userPosts[index];
-        final postId = postIds[index];
-        return _buildPostUi(post, postId);
-      },
+    return Column(
+      children: [
+        // Grid view for displaying posts
+        GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            childAspectRatio: 0.75,
+            crossAxisSpacing: 8.0,
+            mainAxisSpacing: 8.0,
+          ),
+          itemCount: userPosts.length,
+          itemBuilder: (context, index) {
+            final post = userPosts[index];
+            final postId = postIds[index];
+            return _buildPostUi(post, postId);
+          },
+        ),
+        SizedBox(height: 40),
+      ],
     );
   }
 
@@ -593,12 +608,10 @@ class _ProfilePageState extends State<ProfilePage> {
         padding: EdgeInsets.all(5),
         child: GestureDetector(
           onTap: () {
-            print("postId: $postId");
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) =>
-                    PostDetailPage(post: post, id: postId),
+                builder: (context) => PostDetailPage(post: post, id: postId),
               ),
             );
           },

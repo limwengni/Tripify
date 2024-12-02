@@ -11,10 +11,13 @@ class UserProvider with ChangeNotifier {
   User? _user;
 
   UserModel? _userModel;
+  UserModel? _otherUserModel;
+
   bool isLoading = true;
 
   User? get user => _auth.currentUser;
   UserModel? get userModel => _userModel;
+  UserModel? get otherUserModel => _otherUserModel;
 
   UserProvider(this._userModel);
 
@@ -55,6 +58,43 @@ class UserProvider with ChangeNotifier {
     }
   }
 
+  Future<void> fetchOtherUserDetails(String uid) async {
+    isLoading = true;
+    notifyListeners();
+
+    try {
+      DocumentSnapshot userDoc =
+          await FirebaseFirestore.instance.collection('User').doc(uid).get();
+
+      if (userDoc.exists) {
+        var userData = userDoc.data() as Map<String, dynamic>?;
+
+        if (userData != null) {
+          _otherUserModel = UserModel.fromMap(userData, uid);
+
+          // Fetch the profile image URL after getting user details
+          String profilePicUrl = await fetchProfileImageUrl();
+
+          _profilePicUrl = profilePicUrl;
+
+          notifyListeners();
+        } else {
+          print("User data is null!");
+          _otherUserModel = null;
+        }
+      } else {
+        print("User document does not exist!");
+        _otherUserModel = null;
+      }
+    } catch (e) {
+      print("Failed to fetch user details: $e");
+      throw e; // Rethrow error if necessary
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
+  }
+
   Future<String?> fetchUsername(String uid) async {
     isLoading = true;
     notifyListeners();
@@ -83,6 +123,41 @@ class UserProvider with ChangeNotifier {
       }
     } catch (e) {
       print("Failed to fetch username: $e");
+      throw e; // Rethrow error if necessary
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<String?> fetchUserProfilePic(String uid) async {
+    isLoading = true;
+    notifyListeners();
+
+    try {
+      // Fetch the document from the User collection using the provided UID
+      DocumentSnapshot userDoc =
+          await FirebaseFirestore.instance.collection('User').doc(uid).get();
+
+      if (userDoc.exists) {
+        var userData = userDoc.data() as Map<String, dynamic>?;
+
+        if (userData != null && userData.containsKey('profile_picture')) {
+          // Fetch the profile picture URL directly from the user data
+          String profilePicUrl = userData['profile_picture'];
+
+          notifyListeners();
+          return profilePicUrl; // Return the profile picture URL
+        } else {
+          print("Profile picture field is not available in the user data.");
+          return null;
+        }
+      } else {
+        print("User document does not exist!");
+        return null;
+      }
+    } catch (e) {
+      print("Failed to fetch profile picture: $e");
       throw e; // Rethrow error if necessary
     } finally {
       isLoading = false;

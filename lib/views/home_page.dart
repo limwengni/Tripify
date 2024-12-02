@@ -28,15 +28,20 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _fetchPosts() async {
-    final userProvider = Provider.of<UserProvider>(context, listen: false);
     final postProvider = Provider.of<PostProvider>(context, listen: false);
-    final user = FirebaseAuth.instance.currentUser;
-    final postsWithIds =
-        await postProvider.fetchPostsForAllUsersExceptLoggedIn(user!.uid);
-    for (var postEntry in postsWithIds) {
-      print('Doc ID: ${postEntry['id']}');
-      final post = postEntry['post'] as Post;
-      print('Post Title: ${post.title}');
+    try {
+      final postsWithIds =
+          await postProvider.fetchRecommendedPosts(
+              FirebaseAuth.instance.currentUser?.uid ?? '');
+      postProvider.setHomePosts(postsWithIds);
+
+      for (var postEntry in postsWithIds) {
+        print('Doc ID: ${postEntry['id']}');
+        final post = postEntry['post'] as Post;
+        print('Post Title: ${post.title}');
+      }
+    } catch (e) {
+      print("Error fetching posts for user: $e");
     }
   }
 
@@ -174,8 +179,8 @@ class _HomePageState extends State<HomePage> {
       return _buildPostShimmerGrid();
     }
 
-    List<Post> userPosts = postProvider.userPosts;
-    List<String> postIds = postProvider.postsId;
+    List<Post> userPosts = postProvider.homePosts;
+    List<String> postIds = postProvider.homesId;
 
     if (userPosts.isEmpty) {
       // Show a message if no posts are available

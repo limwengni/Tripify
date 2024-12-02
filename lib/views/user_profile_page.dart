@@ -43,12 +43,19 @@ class _UserProfilePageState extends State<UserProfilePage> {
 
     if (userId != null) {
       await userProvider.fetchUserDetails(widget.userId);
-      final postsWithIds = await postProvider.fetchPostsForLoginUser(userId);
 
-      for (var postEntry in postsWithIds) {
-        print('Doc ID: ${postEntry['id']}');
-        final post = postEntry['post'] as Post;
-        print('Post Title: ${post.title}');
+      try {
+        final postsWithIds = await postProvider.fetchPostsForUser(userId);
+
+        postProvider.setOtherProfPosts(postsWithIds);
+
+        for (var postEntry in postsWithIds) {
+          print('Doc ID: ${postEntry['id']}');
+          final post = postEntry['post'] as Post;
+          print('Post Title: ${post.title}');
+        }
+      } catch (e) {
+        print("Error fetching posts for user: $e");
       }
 
       // // After fetching user details, the _profileImageUrl is updated in the provider
@@ -67,6 +74,30 @@ class _UserProfilePageState extends State<UserProfilePage> {
     setState(() {});
   }
 
+  // Check if the user is logged in
+  Widget _buildEditProfileButton() {
+    final currentUser = FirebaseAuth.instance.currentUser;
+
+    if (currentUser?.uid == widget.userId) {
+      return ElevatedButton(
+        onPressed: () {
+          _navigateToEditProfile();
+        },
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color.fromARGB(255, 159, 118, 249),
+          foregroundColor: Colors.white,
+        ),
+        child: const Text(
+          'Edit Profile',
+          style: TextStyle(fontSize: 16),
+        ),
+      );
+    } else {
+      // Return an empty container (or null) if the user is not logged in
+      return Container(); // or simply return SizedBox.shrink();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     // Access UserProvider
@@ -78,7 +109,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
-            Navigator.pop(context); // Pops the current screen and goes back
+            Navigator.pop(context);
           },
         ),
         title: Text(
@@ -107,18 +138,6 @@ class _UserProfilePageState extends State<UserProfilePage> {
             _buildPostGrid(postProvider),
           ],
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // Action when the button is pressed
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => PickImagesPage()),
-          );
-        },
-        child: const Icon(Icons.add, color: Colors.white),
-        backgroundColor:
-            const Color.fromARGB(255, 159, 118, 249), // Customize color
       ),
     );
   }
@@ -248,6 +267,8 @@ class _UserProfilePageState extends State<UserProfilePage> {
                     )
                   ],
                 ),
+                // Edit Profile Button
+                _buildEditProfileButton(),
               ],
             ),
           ],
@@ -557,8 +578,8 @@ class _UserProfilePageState extends State<UserProfilePage> {
       return _buildPostShimmerGrid();
     }
 
-    List<Post> userPosts = postProvider.userPosts;
-    List<String> postIds = postProvider.postsId;
+    List<Post> userPosts = postProvider.profilePosts;
+    List<String> postIds = postProvider.otherProfId;
 
     if (userPosts.isEmpty) {
       // Show a message if no posts are available

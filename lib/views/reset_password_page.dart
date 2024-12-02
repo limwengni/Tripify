@@ -183,7 +183,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                                   showDialog(
                                       context: context,
                                       builder: (BuildContext context) => Theme(
-                                            data: ThemeData.light(),
+                                            data: lightTheme,
                                             child: AlertDialog(
                                               title: const Text(
                                                 'Error',
@@ -191,8 +191,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                                                   fontWeight: FontWeight.bold,
                                                 ),
                                               ),
-                                              content: const Text(
-                                                  'Failed to send reset link, please try again later.'),
+                                              content: Text(returnState),
                                               actions: <Widget>[
                                                 TextButton(
                                                   onPressed: () =>

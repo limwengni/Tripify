@@ -144,7 +144,8 @@ class _PostFormPageState extends State<PostFormPage> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Post submitted successfully!'),
+          content: Text('Post submitted successfully!',
+              style: TextStyle(color: Colors.white)),
           backgroundColor: const Color.fromARGB(255, 159, 118, 249),
         ),
       );
@@ -340,19 +341,23 @@ class _PostFormPageState extends State<PostFormPage> {
                                 fontSize: 16, color: Colors.grey[500]),
                           ),
                           SizedBox(width: 8),
-                          if (_location !=
-                              '') // Check if _location is not empty
-                            Icon(
-                              Icons.circle,
-                              size: 5,
-                              color: Colors.grey[500],
-                            ),
+                          _location != ''  // Check if _location is not null and not empty
+                              ? Icon(
+                                  Icons.circle,
+                                  size: 5,
+                                  color: Colors.grey[500],
+                                )
+                              : SizedBox.shrink(),
                           SizedBox(width: 8),
                           Text(
-                            "$_location",
+                            (_location?.length ?? 0) > 15
+                                ? "${_location?.substring(0, 15)}..."
+                                : (_location ?? ''),
                             style: TextStyle(
-                                fontSize: 16, color: Colors.grey[500]),
-                          ),
+                              fontSize: 16,
+                              color: Colors.grey[500],
+                            ),
+                          )
                         ],
                       ),
                       SizedBox(height: 20),

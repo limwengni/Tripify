@@ -43,7 +43,7 @@ class HashtagProvider with ChangeNotifier {
           .collection('Hashtag')
           .orderBy('usage_count',
               descending: true) // Most popular to least popular
-          .limit(20); // Fetch 20 hashtags
+          .limit(10); // Fetch 10 hashtags
 
       if (lastDocument != null) {
         query = query.startAfterDocument(lastDocument);
@@ -61,6 +61,36 @@ class HashtagProvider with ChangeNotifier {
     } catch (e) {
       print("Error retrieving hashtags: $e");
       return [];
+    }
+  }
+
+  Future<void> removeHashtag(String hashtagName) async {
+    try {
+      final querySnapshot = await _firestore
+          .collection('Hashtag')
+          .where('name', isEqualTo: hashtagName.toLowerCase())
+          .get();
+
+      if (querySnapshot.docs.isNotEmpty) {
+        final doc = querySnapshot.docs.first;
+        int currentUsageCount = doc['usage_count'];
+
+        // Only update if the usage count is greater than 1
+        if (currentUsageCount > 1) {
+          final updatedHashtag = Hashtag(
+            id: doc.id,
+            name: hashtagName,
+            usageCount: currentUsageCount - 1,
+          );
+
+          await doc.reference.update(updatedHashtag.toMap());
+        } else {
+          // If the usage count is 1, delete the hashtag document
+          await doc.reference.delete();
+        }
+      }
+    } catch (e) {
+      print("Error removing hashtag: $e");
     }
   }
 }
