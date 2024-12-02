@@ -103,8 +103,7 @@ class _ProfilePageState extends State<ProfilePage> {
           );
         },
         child: const Icon(Icons.add, color: Colors.white),
-        backgroundColor:
-            const Color.fromARGB(255, 159, 118, 249), // Customize color
+        backgroundColor: const Color.fromARGB(255, 159, 118, 249),
       ),
     );
   }
@@ -544,7 +543,7 @@ class _ProfilePageState extends State<ProfilePage> {
         crossAxisSpacing: 8.0,
         mainAxisSpacing: 8.0,
       ),
-      itemCount: 10, // Show 10 placeholders
+      itemCount: 10,
       itemBuilder: (context, index) {
         return _buildPostShimmer(); // Display shimmer placeholders
       },
@@ -565,21 +564,27 @@ class _ProfilePageState extends State<ProfilePage> {
       return Center(child: Text('No posts available'));
     }
 
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: NeverScrollableScrollPhysics(),
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        childAspectRatio: 0.75,
-        crossAxisSpacing: 8.0,
-        mainAxisSpacing: 8.0,
-      ),
-      itemCount: userPosts.length,
-      itemBuilder: (context, index) {
-        final post = userPosts[index];
-        final postId = postIds[index];
-        return _buildPostUi(post, postId);
-      },
+    return Column(
+      children: [
+        // Grid view for displaying posts
+        GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            childAspectRatio: 0.75,
+            crossAxisSpacing: 8.0,
+            mainAxisSpacing: 8.0,
+          ),
+          itemCount: userPosts.length,
+          itemBuilder: (context, index) {
+            final post = userPosts[index];
+            final postId = postIds[index];
+            return _buildPostUi(post, postId);
+          },
+        ),
+        SizedBox(height: 40),
+      ],
     );
   }
 
@@ -597,8 +602,7 @@ class _ProfilePageState extends State<ProfilePage> {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) =>
-                    PostDetailPage(post: post, id: postId),
+                builder: (context) => PostDetailPage(post: post, id: postId),
               ),
             );
           },

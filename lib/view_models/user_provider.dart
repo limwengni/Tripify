@@ -90,6 +90,41 @@ class UserProvider with ChangeNotifier {
     }
   }
 
+  Future<String?> fetchUserProfilePic(String uid) async {
+    isLoading = true;
+    notifyListeners();
+
+    try {
+      // Fetch the document from the User collection using the provided UID
+      DocumentSnapshot userDoc =
+          await FirebaseFirestore.instance.collection('User').doc(uid).get();
+
+      if (userDoc.exists) {
+        var userData = userDoc.data() as Map<String, dynamic>?;
+
+        if (userData != null && userData.containsKey('profile_picture')) {
+          // Fetch the profile picture URL directly from the user data
+          String profilePicUrl = userData['profile_picture'];
+
+          notifyListeners();
+          return profilePicUrl; // Return the profile picture URL
+        } else {
+          print("Profile picture field is not available in the user data.");
+          return null;
+        }
+      } else {
+        print("User document does not exist!");
+        return null;
+      }
+    } catch (e) {
+      print("Failed to fetch profile picture: $e");
+      throw e; // Rethrow error if necessary
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
+  }
+
   Future<String> fetchProfileImageUrl() async {
     if (_userModel?.profilePic != null && _userModel!.profilePic.isNotEmpty) {
       return _userModel!.profilePic;

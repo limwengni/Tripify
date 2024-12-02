@@ -32,7 +32,7 @@ class _HomePageState extends State<HomePage> {
     final postProvider = Provider.of<PostProvider>(context, listen: false);
     final user = FirebaseAuth.instance.currentUser;
     final postsWithIds =
-        await postProvider.fetchPostsForAllUsersExceptLoggedIn(user!.uid);
+        await postProvider.fetchRecommendedPosts(user!.uid);
     for (var postEntry in postsWithIds) {
       print('Doc ID: ${postEntry['id']}');
       final post = postEntry['post'] as Post;

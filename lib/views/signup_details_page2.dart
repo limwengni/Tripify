@@ -224,7 +224,8 @@ class _SignupDetailsPage2State extends State<SignupDetailsPage2> {
                                 commentsCount: 0,
                                 savedCount: 0);
 
-                            firestoreService.insertData('User', user.toMap());
+                            await firestoreService.insertUserData(
+                                "User", user.toMap());
                           } else if (selectedOption == 'Normal User') {
                             selectedOption =
                                 _formKey.currentState?.fields['role']?.value;
@@ -245,7 +246,6 @@ class _SignupDetailsPage2State extends State<SignupDetailsPage2> {
                                 likesCount: 0,
                                 commentsCount: 0,
                                 savedCount: 0);
-                            firestoreService.insertData('User', user.toMap());
 
                             // For creating a user document where the uid is the current user's uid
                             await firestoreService.insertUserData(
@@ -262,8 +262,7 @@ class _SignupDetailsPage2State extends State<SignupDetailsPage2> {
                                     style:
                                         TextStyle(fontWeight: FontWeight.bold),
                                   ),
-                                  content: const Text(
-                                      'No PDF file selected'),
+                                  content: const Text('No PDF file selected'),
                                   actions: [
                                     TextButton(
                                       onPressed: () =>

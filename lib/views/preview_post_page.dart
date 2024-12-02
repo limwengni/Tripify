@@ -144,7 +144,7 @@ class _PostFormPageState extends State<PostFormPage> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Post submitted successfully!'),
+          content: Text('Post submitted successfully!', style: TextStyle(color: Colors.white)),
           backgroundColor: const Color.fromARGB(255, 159, 118, 249),
         ),
       );
