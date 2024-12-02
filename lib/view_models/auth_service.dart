@@ -7,6 +7,7 @@ import '../theme_notifier.dart';
 import 'package:flutter/material.dart';
 import 'package:tripify/models/user_model.dart';
 import 'package:tripify/views/login_page.dart';
+import 'package:tripify/views/signup_details_page1.dart';
 
 class AuthService extends ChangeNotifier {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -49,8 +50,15 @@ class AuthService extends ChangeNotifier {
       if (accountStatus == 'disabled') {
         await FirebaseAuth.instance.signOut();
         return 'Your account has been disabled. Please contact support if you believe this is a mistake.';
-      } else if (accountStatus == 'error' || accountStatus == 'not_found') {
+      } else if (accountStatus == 'error') {
         return 'An error occurred while checking your account. Please try again later.';
+      } else if (accountStatus == 'not_found') {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+              builder: (context) =>
+                  SignupDetailsPage1()),
+        );
       }
 
       return 'Success'; // Return a success message
@@ -134,14 +142,14 @@ class AuthService extends ChangeNotifier {
           return userData['status'] ?? 'active';
         } else {
           print("User document not found.");
-          return 'not_found'; // Optional: Handle cases where the document doesn't exist
+          return 'not_found';
         }
       } else {
         return 'no_user'; // Optional: Handle cases where no user is logged in
       }
     } catch (e) {
       print("Error checking account status: $e");
-      return 'error'; // Optional: Return error status for exceptions
+      return 'error';
     }
   }
 
