@@ -80,13 +80,13 @@ class DocumentRepositoryPage extends StatelessWidget {
                       const Text("Access your favourite travel posts/packages."),
                   trailing: const Icon(Icons.arrow_forward),
                   onTap: () {
-                    // Navigator.push(
-                    //   context,
-                    //   MaterialPageRoute(
-                    //     builder: (context) =>
-                    //         ViewFavouriteTravelPage(),
-                    //   ),
-                    // );
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            ViewFavouriteTravelPage(),
+                      ),
+                    );
                   },
                 ),
               ),

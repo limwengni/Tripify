@@ -26,7 +26,6 @@ import 'package:tripify/views/accommodation_requirement_page.dart';
 import 'package:tripify/views/currency_exchange_page.dart';
 import 'package:tripify/views/document_repository_page.dart';
 import 'package:tripify/views/emergency_call_page.dart';
-import 'package:tripify/views/favorites_page.dart';
 import 'package:tripify/views/language_translator_page.dart';
 import 'package:tripify/views/settings_page.dart';
 import 'package:tripify/views/travel_assistant_page.dart';
@@ -178,7 +177,6 @@ class MainPageState extends State<MainPage> {
     {'title': 'Profile', 'widget': ProfilePage()},
     {'title': 'AI Chat', 'widget': TravelAssistantPage()},
     {'title': 'Emergency Call', 'widget': const EmergencyCallPage()},
-    {'title': 'Favorites', 'widget': const FavoritesPage()},
     {'title': 'Document Repository', 'widget': const DocumentRepositoryPage()},
     {'title': 'Language Translator', 'widget': const LanguageTranslatorPage()},
     {

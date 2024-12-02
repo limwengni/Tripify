@@ -23,6 +23,9 @@ class PostProvider with ChangeNotifier {
   List<Post> _profilePosts = [];
   List<String> _otherProfId = [];
 
+  List<Post> _savePosts = [];
+  List<String> _saveId = [];
+
   List<Post> get homePosts => _homePosts;
   List<String> get homesId => _homesId;
 
@@ -31,6 +34,10 @@ class PostProvider with ChangeNotifier {
 
   List<Post> get userPosts => _userPosts;
   List<String> get postsId => _id;
+
+  List<Post> get savePosts => _savePosts;
+  List<String> get savePostsId => _saveId;
+
   String? loggedInUserId;
 
   void setUserPosts(List<Map<String, dynamic>> postsWithIds) {
@@ -48,6 +55,12 @@ class PostProvider with ChangeNotifier {
   void setOtherProfPosts(List<Map<String, dynamic>> postsWithIds) {
     _profilePosts = postsWithIds.map((e) => e['post'] as Post).toList();
     _otherProfId = postsWithIds.map((e) => e['id'] as String).toList();
+    notifyListeners();
+  }
+
+  void setSavedPosts(List<Map<String, dynamic>> postsWithIds) {
+    _savePosts = postsWithIds.map((e) => e['post'] as Post).toList();
+    _saveId = postsWithIds.map((e) => e['id'] as String).toList();
     notifyListeners();
   }
 
@@ -379,10 +392,8 @@ class PostProvider with ChangeNotifier {
   Future<bool> isPostLiked(String postId, String userId) async {
     try {
       // Check if the user has liked the post
-      final doc = await _firestore
-          .collection('PostLike')
-          .doc('$userId-$postId') // Use the correct document ID format
-          .get();
+      final doc =
+          await _firestore.collection('PostLike').doc('$userId-$postId').get();
       return doc.exists;
     } catch (e) {
       print("Error checking like status: $e");
@@ -586,6 +597,51 @@ class PostProvider with ChangeNotifier {
       }
     } catch (e) {
       print("Error updating user saves count: $e");
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> fetchSavedPostsForUser(String uid) async {
+    isLoading = true;
+    notifyListeners();
+
+    try {
+      final postSaveSnapshot = await _firestore
+          .collection('PostSave')
+          .where('user_id', isEqualTo: uid)
+          .orderBy('created_at', descending: true)
+          .get();
+
+      print('PostSave documents: ${postSaveSnapshot.docs.length}');
+
+      if (postSaveSnapshot.docs.isEmpty) {
+        return [];
+      }
+
+      final savedPostIds =
+          postSaveSnapshot.docs.map((doc) => doc['post_id']).toList();
+
+      final postsSnapshot = await _firestore
+          .collection('Post')
+          .where(FieldPath.documentId, whereIn: savedPostIds)
+          .get();
+
+      if (postsSnapshot.docs.isNotEmpty) {
+        final postsWithIds = postsSnapshot.docs
+            .map((doc) => {
+                  'id': doc.id,
+                  'post': Post.fromMap(doc.data()),
+                })
+            .toList();
+        return postsWithIds;
+      } else {
+        return [];
+      }
+    } catch (e) {
+      print("Error fetching saved posts: $e");
+      throw Exception('Failed to fetch saved posts: $e');
+    } finally {
+      isLoading = false;
+      notifyListeners();
     }
   }
 

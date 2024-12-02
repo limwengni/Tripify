@@ -42,44 +42,37 @@ class TripifyDrawer extends StatelessWidget {
             },
           ),
           ListTile(
-            title: const Text('Favorites'),
+            title: const Text('Document Repository'),
             onTap: () {
               onItemTapped(9);
               Navigator.pop(context);
             },
           ),
           ListTile(
-            title: const Text('Document Repository'),
+            title: const Text('Language Translator'),
             onTap: () {
               onItemTapped(10);
               Navigator.pop(context);
             },
           ),
           ListTile(
-            title: const Text('Language Translator'),
+            title: const Text('Currency Exchange Calculator'),
             onTap: () {
               onItemTapped(11);
               Navigator.pop(context);
             },
           ),
           ListTile(
-            title: const Text('Currency Exchange Calculator'),
+            title: const Text('Settings'),
             onTap: () {
               onItemTapped(12);
               Navigator.pop(context);
             },
           ),
           ListTile(
-            title: const Text('Settings'),
-            onTap: () {
-              onItemTapped(13);
-              Navigator.pop(context);
-            },
-          ),
-          ListTile(
             title: const Text('On Shelves Travel Package'),
             onTap: () {
-              onItemTapped(14);
+              onItemTapped(13);
               Navigator.pop(context);
             },
           ),
