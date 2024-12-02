@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:tripify/views/travel_package_purchased_repository_page.dart';
 import 'package:tripify/views/view_fav_post_page.dart';
 
-
 class DocumentRepositoryPage extends StatelessWidget {
   const DocumentRepositoryPage({super.key});
 
@@ -23,7 +22,7 @@ class DocumentRepositoryPage extends StatelessWidget {
               const SizedBox(height: 8),
               Card(
                 child: ListTile(
-                  title: const Text("Store Travel Package Document"),
+                  title: const Text("Purchased Travel Package Document"),
                   subtitle: const Text("Access your purchased documents here."),
                   trailing: const Icon(Icons.arrow_forward),
                   onTap: () {
@@ -44,6 +43,16 @@ class DocumentRepositoryPage extends StatelessWidget {
                   trailing: const Icon(Icons.arrow_forward),
                   onTap: () {
                     // Navigate to Expired Travel Package Page
+                  },
+                ),
+              ),
+              Card(
+                child: ListTile(
+                  title: const Text("Resale Travel Package Document"),
+                  subtitle: const Text("View your resale travel packages."),
+                  trailing: const Icon(Icons.arrow_forward),
+                  onTap: () {
+                    // Navigate to Resale Travel Package Page
                   },
                 ),
               ),
@@ -76,20 +85,48 @@ class DocumentRepositoryPage extends StatelessWidget {
               Card(
                 child: ListTile(
                   title: const Text("View Favourite Travel Post/Package"),
-                  subtitle:
-                      const Text("Access your favourite travel posts/packages."),
+                  subtitle: const Text(
+                      "Access your favourite travel posts/packages."),
                   trailing: const Icon(Icons.arrow_forward),
                   onTap: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) =>
-                            ViewFavouriteTravelPage(),
+                        builder: (context) => ViewFavouriteTravelPage(),
                       ),
                     );
                   },
                 ),
               ),
+              const SizedBox(height: 16),
+
+              // Repository Section
+              const Text(
+                "Saved Request",
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              Card(
+                child: ListTile(
+                  title: const Text("Saved Accommodation Request"),
+                  subtitle: const Text("Access your saved accomodation request."),
+                  trailing: const Icon(Icons.arrow_forward),
+                  onTap: () {
+                    // Navigate to View Documents Page
+                  },
+                ),
+              ),
+              Card(
+                child: ListTile(
+                  title: const Text("Saved Car Rental Request"),
+                  subtitle: const Text("Access your saved car rental request."),
+                  trailing: const Icon(Icons.arrow_forward),
+                  onTap: () {
+                    // Navigate to View Documents Page
+                  },
+                ),
+              ),
+              const SizedBox(height: 16),
             ],
           ),
         ),

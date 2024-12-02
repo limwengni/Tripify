@@ -34,12 +34,12 @@ class _ViewFavouriteTravelPageState extends State<ViewFavouriteTravelPage> {
       child: Scaffold(
         appBar: AppBar(
           title: const Text("Favourite Travel Items"),
-          centerTitle: true,
           bottom: const TabBar(
             tabs: [
               Tab(text: "Travel Posts"),
               Tab(text: "Travel Packages"),
             ],
+            indicatorWeight: 3.0,
           ),
         ),
         body: const TabBarView(
