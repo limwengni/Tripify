@@ -58,6 +58,16 @@ class DocumentRepositoryPage extends StatelessWidget {
               ),
               const SizedBox(height: 16),
 
+              Container(
+                margin: EdgeInsets.only(top: 4), // Optional margin for spacing
+                height: 2, // Height of the divider
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.grey[800]
+                    : Colors.grey[300], // Color of the divider
+              ),
+
+              const SizedBox(height: 16),
+
               // Repository Section
               const Text(
                 "Repository",
@@ -74,6 +84,17 @@ class DocumentRepositoryPage extends StatelessWidget {
                   },
                 ),
               ),
+
+              const SizedBox(height: 16),
+
+              Container(
+                margin: EdgeInsets.only(top: 4), // Optional margin for spacing
+                height: 2, // Height of the divider
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.grey[800]
+                    : Colors.grey[300], // Color of the divider
+              ),
+
               const SizedBox(height: 16),
 
               // User's Favourite Repository Section
@@ -98,9 +119,20 @@ class DocumentRepositoryPage extends StatelessWidget {
                   },
                 ),
               ),
+
               const SizedBox(height: 16),
 
-              // Repository Section
+              Container(
+                margin: EdgeInsets.only(top: 4), // Optional margin for spacing
+                height: 2, // Height of the divider
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.grey[800]
+                    : Colors.grey[300], // Color of the divider
+              ),
+
+              const SizedBox(height: 16),
+
+              // Request Section
               const Text(
                 "Saved Request",
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
@@ -109,7 +141,8 @@ class DocumentRepositoryPage extends StatelessWidget {
               Card(
                 child: ListTile(
                   title: const Text("Saved Accommodation Request"),
-                  subtitle: const Text("Access your saved accomodation request."),
+                  subtitle:
+                      const Text("Access your saved accomodation request."),
                   trailing: const Icon(Icons.arrow_forward),
                   onTap: () {
                     // Navigate to View Documents Page
