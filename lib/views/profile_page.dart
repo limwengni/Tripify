@@ -167,7 +167,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        '${userProvider.userModel?.username ?? 'Username'} ${(userProvider.userModel?.ssm ?? '')}',
+                        '${userProvider.userModel?.username ?? 'Username'}${userProvider.userModel?.ssm != null && userProvider.userModel!.ssm!.isNotEmpty ? ' (${userProvider.userModel!.ssm})' : ''}',
                         style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
@@ -188,7 +188,18 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
             const SizedBox(height: 16.0),
 
-            // Row 2: Bio
+            // Row 2: Role
+            Container(
+              alignment: Alignment.centerLeft,
+              padding: EdgeInsets.zero,
+              child: Text(
+                '${userProvider.userModel?.role ?? ''}',
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+            ),
+            const SizedBox(height: 4.0),
+
+            // Row 3: Bio
             Container(
               alignment: Alignment.centerLeft,
               padding: EdgeInsets.zero,
@@ -205,7 +216,7 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
             const SizedBox(height: 16.0),
 
-            // Row 3: Likes, Comments, and Edit Profile Button
+            // Row 4: Likes, Comments, and Edit Profile Button
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [

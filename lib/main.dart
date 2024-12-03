@@ -203,7 +203,7 @@ class MainPageState extends State<MainPage> {
       'widget': const AccommodationRequirementPage()
     },
     {'title': 'Profile', 'widget': ProfilePage()},
-    {'title': 'Favorites', 'widget': const FavoritesPage()},
+    // {'title': 'Favorites', 'widget': const FavoritesPage()},
     {'title': 'Document Repository', 'widget': const DocumentRepositoryPage()},
     {'title': 'Settings', 'widget': SettingsPage()},
   ];
@@ -215,7 +215,7 @@ class MainPageState extends State<MainPage> {
       'widget': const CarRentalRequirementPage()
     },
     {'title': 'Profile', 'widget': ProfilePage()},
-    {'title': 'Favorites', 'widget': const FavoritesPage()},
+    // {'title': 'Favorites', 'widget': const FavoritesPage()},
     {'title': 'Document Repository', 'widget': const DocumentRepositoryPage()},
     {'title': 'Settings', 'widget': SettingsPage()},
   ];
@@ -236,7 +236,7 @@ class MainPageState extends State<MainPage> {
         user = UserModel.fromMap(userMap!, currentUserId);
         if (user!.role == 'Accommodation Rental Company') {
           widgetItems = accommodationWidgetItems;
-        }else if(user!.role == 'Car Rental Company'){
+        } else if (user!.role == 'Car Rental Company') {
           widgetItems = carRentalWidgetItems;
         }
       });
