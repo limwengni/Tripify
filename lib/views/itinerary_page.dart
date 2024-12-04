@@ -4,6 +4,7 @@ import 'package:tripify/models/itinerary_model.dart';
 import 'package:tripify/models/itinerary_invite_model.dart';
 import 'package:tripify/models/itinerary_location_model.dart';
 import 'package:tripify/views/itinerary_invitations_page.dart';
+import 'package:tripify/views/add_itinerary_page.dart';
 import 'package:tripify/views/itinerary_detail_page.dart';
 
 class ItineraryPage extends StatelessWidget {
@@ -12,8 +13,8 @@ class ItineraryPage extends StatelessWidget {
     Itinerary(
       id: '1',
       name: 'Beach Vacation',
-      startDate: DateTime(2024, 12, 10),
-      endDate: DateTime(2024, 12, 14),
+      startDate: DateTime(2024, 12, 9),
+      numberOfDays: 8,
       invites: [
         ItineraryInvite(
             userId: 'user1',
@@ -44,13 +45,16 @@ class ItineraryPage extends StatelessWidget {
                 latitude: 12.35, longitude: 2.347, name: 'Restaurant X'),
           ],
         ),
-        // More days...
       ],
       createdAt: DateTime(2024, 11, 30),
       updatedAt: DateTime(2024, 12, 1),
     ),
     // More itineraries...
   ];
+
+  DateTime calculateEndDate(DateTime startDate, int numberOfDays) {
+    return startDate.add(Duration(days: numberOfDays - 1));
+  }
 
   // Helper function to calculate the duration
   String getDuration(DateTime startDate, DateTime endDate) {
@@ -63,7 +67,9 @@ class ItineraryPage extends StatelessWidget {
 
   // Helper function to format the date range (startDate - endDate)
   String formatDateRange(DateTime startDate, DateTime endDate) {
-    final DateFormat formatter = DateFormat('d MMM yyyy');
+    final DateFormat formatter = DateFormat('dd MMM yyyy');
+
+    print('end date: $endDate');
 
     return '${formatter.format(startDate)} - ${formatter.format(endDate)}';
   }
@@ -186,7 +192,12 @@ class ItineraryPage extends StatelessWidget {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // Navigate to add new itinerary page (you can create this page)
+          Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => AddItineraryPage(),
+                        ),
+                      );
         },
         child: const Icon(Icons.add, color: Colors.white),
         backgroundColor: const Color.fromARGB(255, 159, 118, 249),
