@@ -21,6 +21,7 @@ class _ItineraryDetailPageState extends State<ItineraryDetailPage> {
   int selectedDayIndex = 0;
   String? selectedLocationName;
   int selectedLocationIndex = 0;
+  bool _isMapReady = false;
 
   @override
   void initState() {
@@ -63,14 +64,8 @@ class _ItineraryDetailPageState extends State<ItineraryDetailPage> {
     );
 
     // Automatically select the first location and zoom into it when the page loads
-    selectedLocationName = widget.itinerary.dailyItineraries[0].locations[0].name;
-
-    // Make sure the map is ready before trying to zoom
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_googleMapController != null) {
-        _zoomToLocation(0);
-      }
-    });
+    selectedLocationName =
+        widget.itinerary.dailyItineraries[0].locations[0].name;
   }
 
   @override
@@ -88,43 +83,43 @@ class _ItineraryDetailPageState extends State<ItineraryDetailPage> {
       body: Column(
         children: [
           // Display itinerary details
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Dates: ${formatDateRange(widget.itinerary.startDate, widget.itinerary.endDate!)}',
-                  style: TextStyle(fontSize: 18),
-                ),
-                Text(
-                  'Duration: ${getDuration(widget.itinerary.startDate, widget.itinerary.endDate!)}',
-                  style: TextStyle(fontSize: 18),
-                ),
-              ],
-            ),
-          ),
+          // Padding(
+          //   padding: const EdgeInsets.all(16.0),
+          //   child: Column(
+          //     crossAxisAlignment: CrossAxisAlignment.start,
+          //     children: [
+          //       Text(
+          //         'Dates: ${formatDateRange(widget.itinerary.startDate, widget.itinerary.endDate!)}',
+          //         style: TextStyle(fontSize: 18),
+          //       ),
+          //       Text(
+          //         'Duration: ${getDuration(widget.itinerary.startDate, widget.itinerary.endDate!)}',
+          //         style: TextStyle(fontSize: 18),
+          //       ),
+          //     ],
+          //   ),
+          // ),
 
           // Day selection buttons
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: List.generate(widget.itinerary.dailyItineraries.length, (index) {
+              children: List.generate(widget.itinerary.dailyItineraries.length,
+                  (index) {
                 return ElevatedButton(
                   onPressed: () {
                     setState(() {
                       selectedDayIndex = index;
                       selectedLocationIndex = 0;
                       selectedLocationName = widget
-                          .itinerary
-                          .dailyItineraries[index]
-                          .locations[0]
-                          .name;
+                          .itinerary.dailyItineraries[index].locations[0].name;
                     });
-                    _zoomToLocation(0); // Zoom to the first location of the new day
+                    _zoomToLocation(
+                        0); // Zoom to the first location of the new day
                   },
-                  child: Text('Day ${widget.itinerary.dailyItineraries[index].dayNumber}'),
+                  child: Text(
+                      'Day ${widget.itinerary.dailyItineraries[index].dayNumber}'),
                 );
               }),
             ),
@@ -132,48 +127,87 @@ class _ItineraryDetailPageState extends State<ItineraryDetailPage> {
 
           // Google Map
           Expanded(
-            child: GoogleMap(
-              onMapCreated: (GoogleMapController controller) {
-                _googleMapController = controller;
-              },
-              initialCameraPosition: CameraPosition(
-                target: _mapCenter,
-                zoom: 10,
-              ),
-              markers: dayMarkers[selectedDayIndex],
-            ),
-          ),
+            child: Stack(
+              children: [
+                // Google Map
+                GoogleMap(
+                  onMapCreated: (GoogleMapController controller) {
+                    _googleMapController = controller;
 
-          // Location cards
-          Container(
-            height: 150,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              itemCount: widget.itinerary.dailyItineraries[selectedDayIndex].locations.length,
-              itemBuilder: (context, index) {
-                final location = widget.itinerary
-                    .dailyItineraries[selectedDayIndex].locations[index];
-                return GestureDetector(
-                  onTap: () {
                     setState(() {
-                      selectedLocationName = location.name;
-                      selectedLocationIndex = index;
+                      _isMapReady = true;
                     });
-                    _zoomToLocation(index); // Zoom to the selected location
+                    _zoomToLocation(0);
                   },
-                  child: Card(
-                    margin: EdgeInsets.symmetric(horizontal: 8, vertical: 16),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.location_on, size: 40, color: Colors.blue),
-                        SizedBox(height: 8),
-                        Text(location.name, style: TextStyle(fontSize: 16), textAlign: TextAlign.center),
-                      ],
+                  initialCameraPosition: CameraPosition(
+                    target: _mapCenter,
+                    zoom: 10,
+                  ),
+                  markers: dayMarkers[selectedDayIndex],
+                ),
+
+                // Location Cards overlay
+                Align(
+                  alignment: Alignment.bottomCenter,
+                  child: Container(
+                    height: 150,
+                    margin: EdgeInsets.only(bottom: 16),
+                    color:
+                        Colors.transparent,
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: widget.itinerary
+                          .dailyItineraries[selectedDayIndex].locations.length,
+                      itemBuilder: (context, index) {
+                        final location = widget
+                            .itinerary
+                            .dailyItineraries[selectedDayIndex]
+                            .locations[index];
+                        return GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              selectedLocationName = location.name;
+                              selectedLocationIndex = index;
+                            });
+                            _zoomToLocation(
+                                index); // Zoom to the selected location
+                          },
+                          child: Card(
+                            margin: EdgeInsets.symmetric(horizontal: 8),
+                            elevation: 4,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: Container(
+                              width: 250, // Wider card
+                              padding: EdgeInsets.all(16),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    location.name,
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                  SizedBox(height: 8),
+                                  Text(
+                                    'Latitude: ${location.latitude.toStringAsFixed(2)}\nLongitude: ${location.longitude.toStringAsFixed(2)}',
+                                    style: TextStyle(fontSize: 14),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        );
+                      },
                     ),
                   ),
-                );
-              },
+                ),
+              ],
             ),
           ),
         ],
@@ -197,10 +231,12 @@ class _ItineraryDetailPageState extends State<ItineraryDetailPage> {
 
   // Function to zoom into the selected location
   void _zoomToLocation(int locationIndex) {
-    var location = widget.itinerary.dailyItineraries[selectedDayIndex].locations[locationIndex];
-    if (_googleMapController != null) {
+    if (_isMapReady && _googleMapController != null) {
+      var location = widget.itinerary.dailyItineraries[selectedDayIndex]
+          .locations[locationIndex];
       _googleMapController!.animateCamera(
-        CameraUpdate.newLatLngZoom(LatLng(location.latitude, location.longitude), 14),
+        CameraUpdate.newLatLngZoom(
+            LatLng(location.latitude, location.longitude), 14),
       );
     }
   }

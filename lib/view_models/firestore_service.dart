@@ -179,19 +179,19 @@ class FirestoreService {
     }
   }
 
-  Future<void> updateMapField(
-    String collection, String documentId, String field, String key, dynamic value) async {
-  try {
-    // Update the specific key in the map field
-    await _db.collection(collection).doc(documentId).update({
-      '$field.$key': value,  // Access the key inside the map field and update its value
-    });
-    print("Field '$field' updated successfully for key '$key'.");
-  } catch (e) {
-    print("Error updating field: $e");
+  Future<void> updateMapField(String collection, String documentId,
+      String field, String key, dynamic value) async {
+    try {
+      // Update the specific key in the map field
+      await _db.collection(collection).doc(documentId).update({
+        '$field.$key':
+            value, // Access the key inside the map field and update its value
+      });
+      print("Field '$field' updated successfully for key '$key'.");
+    } catch (e) {
+      print("Error updating field: $e");
+    }
   }
-}
-
 
   Future<void> updateSubCollectionField(
       {required String collection,
@@ -310,23 +310,19 @@ Stream<QuerySnapshot> getStreamDataByField({
     }
   }
 
-Stream<DocumentSnapshot> getConversationStreamData({
-  required String collection,
-  required String docId,
-}) {
-  try {
-    return _db
-        .collection(collection)
-        .doc(docId)
-        .snapshots();
-  } catch (e) {
-    print("Error fetching data: $e");
-    // Handle the error scenario appropriately
-    // You could return an empty Stream or rethrow the error
-    return Stream.empty(); // Empty stream as a fallback
+  Stream<DocumentSnapshot> getConversationStreamData({
+    required String collection,
+    required String docId,
+  }) {
+    try {
+      return _db.collection(collection).doc(docId).snapshots();
+    } catch (e) {
+      print("Error fetching data: $e");
+      // Handle the error scenario appropriately
+      // You could return an empty Stream or rethrow the error
+      return Stream.empty(); // Empty stream as a fallback
+    }
   }
-}
-
 
   Future<Map<String, dynamic>?> getSubCollectionDataById({
     required String collection,
@@ -467,14 +463,14 @@ Stream<DocumentSnapshot> getConversationStreamData({
       String currentUserId) {
     try {
       // Listen to changes in the "Conversations" collection
-       return _db
-        .collection('Conversations')
-        .where('participants', arrayContains: currentUserId)
-        .orderBy('updated_at', descending: true)
-        .snapshots()
-        .map((snapshot) =>
-            snapshot.docs.map((doc) => doc.data() as Map<String, dynamic>).toList());
-
+      return _db
+          .collection('Conversations')
+          .where('participants', arrayContains: currentUserId)
+          .orderBy('updated_at', descending: true)
+          .snapshots()
+          .map((snapshot) => snapshot.docs
+              .map((doc) => doc.data() as Map<String, dynamic>)
+              .toList());
     } catch (e) {
       print("Error fetching conversations stream: $e");
       return Stream.value([]);
@@ -507,7 +503,8 @@ Stream<DocumentSnapshot> getConversationStreamData({
       for (var doc in querySnapshot.docs) {
         final data = doc.data() as Map<String, dynamic>;
         final listField = List<String>.from(doc['participants'] ?? []);
-        print('&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&' + listField.toString());
+        print('&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&' +
+            listField.toString());
 
         if (listField != null &&
             listField.length == 2 &&
@@ -559,5 +556,35 @@ Stream<DocumentSnapshot> getConversationStreamData({
 
     //Username is unique if no other user matches
     return true;
+  }
+
+  UserModel? _userModel;
+  UserModel? get userModel => _userModel;
+
+  Future<void> searchUser(String username) async {
+    final firestore = FirebaseFirestore.instance;
+    final currentUserUid = FirebaseAuth.instance.currentUser?.uid;
+
+    final result = await firestore
+        .collection('User')
+        .where('username', isEqualTo: username)
+        .get();
+
+    if (result.docs.isNotEmpty) {
+      final filteredResults = result.docs.where((doc) {
+        return doc.id != currentUserUid; // Exclude the logged-in user
+      }).toList();
+
+      if (filteredResults.isNotEmpty) {
+        var userData = result.docs.first.data() as Map<String, dynamic>;
+        String userId = result.docs.first.id;
+
+        _userModel = UserModel.fromMap(userData, userId);
+      } else {
+        _userModel = null;
+      }
+    } else {
+      _userModel = null;
+    }
   }
 }
