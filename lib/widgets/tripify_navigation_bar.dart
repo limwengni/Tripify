@@ -13,10 +13,10 @@ class TripifyNavBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final selectedColor =
-        Theme.of(context).colorScheme.onSurface.withOpacity(0.6);
+        const Color.fromARGB(255, 159, 118,249);
     final unselectedColor =
-        Theme.of(context).colorScheme.onSurface.withOpacity(0.6);
-
+        const Color.fromARGB(255, 159, 118,249);
+ 
     return BottomNavigationBar(
       iconSize: 24,
       selectedFontSize: 12.0,

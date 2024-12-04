@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:tripify/main.dart';
+import 'package:tripify/views/accommodation_requirement_create_page.dart';
+import 'package:tripify/views/car_rental_requirement_create_page.dart';
 
 class RequestSelectionPage extends StatelessWidget {
   const RequestSelectionPage({super.key});
@@ -17,9 +19,11 @@ class RequestSelectionPage extends StatelessWidget {
           children: [
             MaterialButton(
               onPressed: () {
-                mainPageState?.onItemTapped(4); // Navigate to Option1Page
+                // mainPageState?.onItemTapped(4); // Navigate to Option1Page
+                Navigator.push(context, MaterialPageRoute(builder: (builder)=> AccommodationRequirementCreatePage()));
               },
-              color: Colors.blue,
+              color: const Color.fromARGB(255, 159, 118, 249)
+,
               textColor: Colors.white,
               minWidth: double.infinity,
               padding:
@@ -34,9 +38,10 @@ class RequestSelectionPage extends StatelessWidget {
             ),
             MaterialButton(
               onPressed: () {
-                mainPageState?.onItemTapped(5); // Navigate to Option1Page
+                // mainPageState?.onItemTapped(5); // Navigate to Option1Page
+                Navigator.push(context, MaterialPageRoute(builder: (builder)=> CarRentalRequirementCreatePage()));
               },
-              color: Colors.blue,
+              color: const Color.fromARGB(255, 159, 118, 249),
               textColor: Colors.white,
               minWidth: double.infinity,
               padding:

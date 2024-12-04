@@ -216,6 +216,30 @@ class FirestoreService {
     }
   }
 
+Future<void> addItemToSubCollectionList({
+  required String documentId,
+  required String collectionName,  required String subDocumentId,
+  required String subCollectionName,
+
+  required String fieldName,
+  required List<String> newItems,
+}) async {
+  try {
+    // Reference to the document
+    DocumentReference documentRef =
+        FirebaseFirestore.instance.collection(collectionName).doc(documentId).collection(subCollectionName).doc(subDocumentId);
+
+    // Update the list using arrayUnion to add the new item
+    await documentRef.update({
+      fieldName: FieldValue.arrayUnion(newItems),
+    });
+
+    print('Item added successfully to the list!');
+  } catch (e) {
+    print('Error adding item to the list: $e');
+  }
+}
+
   // Delete Data
   Future<void> deleteData(String collection, String documentId) async {
     try {
@@ -240,6 +264,29 @@ class FirestoreService {
       return [];
     }
   }
+Stream<QuerySnapshot> getStreamDataByField({
+  required String collection,
+  required String field,
+  required dynamic value,
+  bool? descending,
+  String? orderBy,
+}) {
+  try {
+    // Create the query
+    var query = _db.collection(collection).where(field, isEqualTo: value);
+
+    // Add optional ordering
+    if (orderBy != null) {
+      query = query.orderBy(orderBy, descending: descending ?? false);
+    }
+
+    // Return the stream of snapshots
+    return query.snapshots();
+  } catch (e) {
+    print("Error fetching stream data by field: $e");
+    return const Stream.empty(); // Fallback for errors
+  }
+}
 
   // Select Data (Get All Sub Collection Data)
   Stream<QuerySnapshot> getSubCollectionMessagesStreamData({

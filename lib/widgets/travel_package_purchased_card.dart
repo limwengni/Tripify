@@ -28,7 +28,7 @@ class TravelPackagePurchasedCard extends StatefulWidget {
 class _TravelPackagePurchasedCardState
     extends State<TravelPackagePurchasedCard> {
   FirestoreService _firestoreService = FirestoreService();
-  UserModel? user;
+  UserModel? travelCompanyUser;
   bool userLoaded = false;
   TravelPackageModel? travelPackage;
   int quantity = 1;
@@ -77,7 +77,7 @@ class _TravelPackagePurchasedCardState
           await _firestoreService.getDataById('User', travelPackage!.createdBy);
       if (userMap != null) {
         setState(() {
-          user = UserModel.fromMap(userMap, userMap['id']);
+          travelCompanyUser = UserModel.fromMap(userMap, userMap['id']);
           userLoaded = true;
         });
       }
@@ -97,7 +97,7 @@ class _TravelPackagePurchasedCardState
           context,
           MaterialPageRoute(
             builder: (context) => TravelPackageDetailsPage(
-              travelPackage: travelPackage!,currentUserId: widget.currentUserId,
+              travelPackage: travelPackage!,currentUserId: widget.currentUserId, travelPackageUser: travelCompanyUser!,
             ),
           ),
         );
@@ -196,17 +196,17 @@ class _TravelPackagePurchasedCardState
                   ),
                   Row(
                     children: [
-                      user != null
+                      travelCompanyUser != null
                           ? Container(
                               child: CircleAvatar(
                                 radius: 15,
-                                backgroundImage: NetworkImage(user!.profilePic),
+                                backgroundImage: NetworkImage(travelCompanyUser!.profilePic),
                                 backgroundColor: Colors.grey[200],
                               ),
                             )
                           : Text('loading'),
                       const SizedBox(width: 10),
-                      Text(user!.username),
+                      Text(travelCompanyUser!.username),
                       SizedBox(
                         width: 10,
                       ),
@@ -239,7 +239,7 @@ class _TravelPackagePurchasedCardState
                           }
                         },
                         style: TextButton.styleFrom(
-                          backgroundColor: Colors.blue, // Blue background color
+                          backgroundColor: const Color.fromARGB(255, 159, 118,249), // Blue background color
                           foregroundColor: Colors
                               .white, // Text color (white text on blue background)
                           padding: const EdgeInsets.symmetric(
@@ -380,7 +380,9 @@ class _TravelPackagePurchasedCardState
                       groupChatId: travelPackage!.groupChatId,
                       resellerId: widget.currentUserId,
                       isResale: true,
-                      quantityAvailable:quantity);
+                      createdAt: travelPackage!.createdAt,
+                      quantityAvailable:quantity,
+                      ticketIdNumMap: travelPackage!.ticketIdNumMap);
                   try {
                     await _firestoreService.insertDataWithAutoID(
                         'Travel_Packages', travelPackageResale.toMap());

@@ -18,6 +18,8 @@ import 'package:tripify/views/travel_package_create_page.dart';
 import 'package:tripify/views/verify_email_page.dart';
 import 'package:tripify/widgets/accommodation_car_rental_drawer.dart';
 import 'package:tripify/widgets/accommodation_car_rental_nav_bar.dart';
+import 'package:tripify/widgets/travel_company_drawer.dart';
+import 'package:tripify/widgets/travel_company_nav_bar.dart';
 import 'firebase_options.dart';
 
 import 'package:tripify/models/user_model.dart';
@@ -178,9 +180,9 @@ class MainPageState extends State<MainPage> {
     {'title': 'Request', 'widget': const RequestSelectionPage()},
     {
       'title': 'Accommodation Request',
-      'widget': const AccommodationRequirementPage()
+      'widget': const AccommodationRequirementCreatePage()
     },
-    {'title': 'Car Rental Request', 'widget': const CarRentalRequirementPage()},
+    {'title': 'Car Rental Request', 'widget': const CarRentalRequirementCreatePage()},
     {'title': 'Profile', 'widget': ProfilePage()},
     {'title': 'AI Chat', 'widget': TravelAssistantPage()},
     {'title': 'Emergency Call', 'widget': const EmergencyCallPage()},
@@ -203,7 +205,6 @@ class MainPageState extends State<MainPage> {
       'widget': const AccommodationRequirementPage()
     },
     {'title': 'Profile', 'widget': ProfilePage()},
-    {'title': 'Favorites', 'widget': const FavoritesPage()},
     {'title': 'Document Repository', 'widget': const DocumentRepositoryPage()},
     {'title': 'Settings', 'widget': SettingsPage()},
   ];
@@ -215,7 +216,21 @@ class MainPageState extends State<MainPage> {
       'widget': const CarRentalRequirementPage()
     },
     {'title': 'Profile', 'widget': ProfilePage()},
-    {'title': 'Favorites', 'widget': const FavoritesPage()},
+    {'title': 'Document Repository', 'widget': const DocumentRepositoryPage()},
+    {'title': 'Settings', 'widget': SettingsPage()},
+  ];
+
+   List<Map<String, dynamic>> travelPackageCompanyWidgetItems = [
+    {'title': 'Home', 'widget': HomePage()},
+    {
+      'title': 'Marketplace',
+      'widget':  MarketplacePage()
+    },
+    {
+      'title': 'On Shelves Travel Package',
+      'widget':  TravelPackageCreatePage()
+    },
+    {'title': 'Profile', 'widget': ProfilePage()},
     {'title': 'Document Repository', 'widget': const DocumentRepositoryPage()},
     {'title': 'Settings', 'widget': SettingsPage()},
   ];
@@ -238,6 +253,8 @@ class MainPageState extends State<MainPage> {
           widgetItems = accommodationWidgetItems;
         }else if(user!.role == 'Car Rental Company'){
           widgetItems = carRentalWidgetItems;
+        }else if(user!.role == 'Travel Company'){
+          widgetItems = travelPackageCompanyWidgetItems;
         }
       });
     }
@@ -285,51 +302,72 @@ class MainPageState extends State<MainPage> {
     });
   }
 
-  Widget? floatingButtonReturn(int index) {
-    if (index == 4) {
-      return FloatingActionButton(
-        onPressed: () async {
-          final result = await Navigator.push(
-              context,
-              MaterialPageRoute(
-                  builder: (builder) => AccommodationRequirementCreatePage()));
+  
+  void travelCompanyOnItemTapped(int index) {
+    setState(() {
+      // Store the current index to the stack before navigating
+      if (_currentIndex != 0) {
+        navigationStack.add(_currentIndex);
+      }
 
-          if (result != null && result is String) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(result),
-                backgroundColor: Colors.green,
-                duration: Duration(seconds: 2),
-              ),
-            );
-          }
-        },
-        child: const Icon(Icons.add),
-      );
-    } else if (index == 5) {
-      return FloatingActionButton(
-        onPressed: () async {
-          final result = await Navigator.push(
-              context,
-              MaterialPageRoute(
-                  builder: (builder) => CarRentalRequirementCreatePage()));
+      // Set the current index and update the title
+      _currentIndex = index;
+      _title = widgetItems[_currentIndex]['title'];
 
-          if (result != null && result is String) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(result),
-                backgroundColor: Colors.green,
-                duration: Duration(seconds: 2),
-              ),
-            );
-          }
-        },
-        child: const Icon(Icons.add),
-      );
-    }
-
-    return null;
+      // Manage bottom navigation index based on current page
+      if (_currentIndex > 2 && _currentIndex < 6) {
+        _btmNavIndex = 3;
+      } else {
+        _btmNavIndex = _currentIndex;
+      }
+    });
   }
+
+  // Widget? floatingButtonReturn(int index) {
+  //   if (index == 4) {
+  //     return FloatingActionButton(
+  //       onPressed: () async {
+  //         final result = await Navigator.push(
+  //             context,
+  //             MaterialPageRoute(
+  //                 builder: (builder) => AccommodationRequirementCreatePage()));
+
+  //         if (result != null && result is String) {
+  //           ScaffoldMessenger.of(context).showSnackBar(
+  //             SnackBar(
+  //               content: Text(result),
+  //               backgroundColor: Colors.green,
+  //               duration: Duration(seconds: 2),
+  //             ),
+  //           );
+  //         }
+  //       },
+  //       child: const Icon(Icons.add),
+  //     );
+  //   } else if (index == 5) {
+  //     return FloatingActionButton(
+  //       onPressed: () async {
+  //         final result = await Navigator.push(
+  //             context,
+  //             MaterialPageRoute(
+  //                 builder: (builder) => CarRentalRequirementCreatePage()));
+
+  //         if (result != null && result is String) {
+  //           ScaffoldMessenger.of(context).showSnackBar(
+  //             SnackBar(
+  //               content: Text(result),
+  //               backgroundColor: Colors.green,
+  //               duration: Duration(seconds: 2),
+  //             ),
+  //           );
+  //         }
+  //       },
+  //       child: const Icon(Icons.add),
+  //     );
+  //   }
+
+  //   return null;
+  // }
 
   // Pop the page if click back btn
   // Show a confirmation dialog when back button is pressed
@@ -433,6 +471,7 @@ class MainPageState extends State<MainPage> {
                       : 'assets/icons/message_icon_light.svg',
                   width: 24,
                   height: 24,
+                  color: const Color.fromARGB(255, 159, 118, 249),
                 ),
                 onPressed: () {
                   Navigator.push(
@@ -448,16 +487,15 @@ class MainPageState extends State<MainPage> {
         body: widgetItems[_currentIndex]['widget'],
         bottomNavigationBar: user != null
             ? _buildNavBarBasedOnRole(
-                user!.role) // Use the role to determine which navbar to show
-            : null, // If user is null, don't show the nav bar
-        floatingActionButton: floatingButtonReturn(_currentIndex),
+                user!.role) 
+            : null,
+        // floatingActionButton: floatingButtonReturn(_currentIndex),
       ),
     );
   }
 
 // Method to return the correct NavBar based on user role
   Widget _buildNavBarBasedOnRole(String role) {
-    print('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%' + role);
     switch (role) {
       case 'Normal User':
         return TripifyNavBar(
@@ -473,6 +511,11 @@ class MainPageState extends State<MainPage> {
         return AccommodationCarRentalNavBar(
           currentIndex: _btmNavIndex,
           onItemTapped: accommodationCarRentalOnItemTapped,
+        );
+              case 'Travel Company':
+        return TravelCompanyNavBar(
+          currentIndex: _btmNavIndex,
+          onItemTapped: travelCompanyOnItemTapped,
         );
       // case 'moderator':
       //   return ModeratorNavBar(
@@ -501,7 +544,11 @@ class MainPageState extends State<MainPage> {
       case 'Car Rental Company':
         return AccommodationCarRentalDrawer(
           onItemTapped: accommodationCarRentalOnItemTapped,
-        );
+        );    case 'Travel Company':
+        return TravelCompanyDrawer(
+          onItemTapped: travelCompanyOnItemTapped,
+        );  
+      
       // case 'moderator':
       //   return ModeratorNavBar(
       //     currentIndex: _btmNavIndex,

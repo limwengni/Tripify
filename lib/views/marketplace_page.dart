@@ -14,8 +14,7 @@ class _MarketplacePageState extends State<MarketplacePage> {
   // List to hold travel packages
   List<TravelPackageModel> travelPackagesList = [];
   FirestoreService firestoreService = FirestoreService();
-      String currentUserId = FirebaseAuth.instance.currentUser!.uid;
-
+  String currentUserId = FirebaseAuth.instance.currentUser!.uid;
 
   @override
   void initState() {
@@ -39,12 +38,18 @@ class _MarketplacePageState extends State<MarketplacePage> {
   @override
   Widget build(BuildContext context) {
     return Center(
-        child: Column(
-      children: [
-        Expanded(
-          child: TravelPackageCardList(travelPackagesList: travelPackagesList,currentUserId: currentUserId,),
-        ),
-      ],
-    ));
+      child: travelPackagesList!= null
+          ? Column(
+              children: [
+                Expanded(
+                  child: TravelPackageCardList(
+                    travelPackagesList: travelPackagesList,
+                    currentUserId: currentUserId,
+                  ),
+                ),
+              ],
+            )
+          : Text('No Travel Package Found!'),
+    );
   }
 }

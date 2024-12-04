@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:tripify/models/travel_package_model.dart';
 import 'package:tripify/models/travel_package_purchased_model.dart';
+import 'package:tripify/models/user_model.dart';
 import 'package:tripify/view_models/firestore_service.dart';
 import 'package:tripify/view_models/stripe_service.dart';
 import 'package:tripify/views/payment_page.dart';
@@ -13,9 +14,13 @@ import 'package:tripify/views/payment_success_page.dart';
 class TravelPackageDetailsPage extends StatefulWidget {
   final TravelPackageModel travelPackage; // Identifier for the travel package
   final String currentUserId;
+  final UserModel travelPackageUser;
 
   const TravelPackageDetailsPage(
-      {Key? key, required this.travelPackage, required this.currentUserId})
+      {Key? key,
+      required this.travelPackage,
+      required this.currentUserId,
+      required this.travelPackageUser})
       : super(key: key);
 
   @override
@@ -25,6 +30,26 @@ class TravelPackageDetailsPage extends StatefulWidget {
 
 class _TravelPackageDetailsPageState extends State<TravelPackageDetailsPage> {
   int quantity = 1;
+  FirestoreService _firestoreService = FirestoreService();
+
+  @override
+  void initState() {
+    super.initState();
+    addClickNum();
+  }
+
+  void addClickNum() async {
+    Map<String, bool>? clickNum = widget.travelPackage.clickNum;
+    if (clickNum != null) {
+      if (!clickNum.containsKey(widget.currentUserId)) {
+        await _firestoreService.updateMapField('Travel_Packages',
+            widget.travelPackage.id, 'click_num', widget.currentUserId, true);
+      }
+    } else {
+      await _firestoreService.updateMapField('Travel_Packages',
+          widget.travelPackage.id, 'click_num', widget.currentUserId, true);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -251,12 +276,12 @@ class _TravelPackageDetailsPageState extends State<TravelPackageDetailsPage> {
                 double amount = quantity * widget.travelPackage.price;
                 bool paymentSuccess =
                     await StripeService.instance.makePayment(amount, 'myr');
+                List<String> ticketIdListForPurchasedModel = [];
 
                 if (paymentSuccess) {
                   // Payment was successful
                   FirestoreService firestoreService = FirestoreService();
                   String currentUser = FirebaseAuth.instance.currentUser!.uid;
-                  bool purchaseBefore = false;
 
                   Map<String, dynamic>? travelPackagePurchasedBeforeMap =
                       await firestoreService.getSubCollectionOneDataByFields(
@@ -266,6 +291,18 @@ class _TravelPackageDetailsPageState extends State<TravelPackageDetailsPage> {
                           'travel_package_id',
                           widget.travelPackage.id);
 
+                  String id = widget.travelPackage.id;
+                  for (int i = 0;
+                      i < widget.travelPackage.ticketIdNumMap!.length;
+                      i++) {
+                    if (quantity > ticketIdListForPurchasedModel.length &&
+                        widget.travelPackage.ticketIdNumMap!['${id}_${i}'] ==
+                            '') {
+                      ticketIdListForPurchasedModel.add('${id}_${i}');
+                      await _firestoreService.updateMapField('Travel_Packages',
+                          id, 'ticket_id_map', '${id}_${i}', currentUser);
+                    }
+                  }
                   if (travelPackagePurchasedBeforeMap == null) {
                     TravelPackagePurchasedModel travelPackagePurchased =
                         TravelPackagePurchasedModel(
@@ -273,9 +310,10 @@ class _TravelPackageDetailsPageState extends State<TravelPackageDetailsPage> {
                       travelPackageId: widget.travelPackage.id,
                       price: amount,
                       quantity: quantity,
+                      ticketIdList: ticketIdListForPurchasedModel,
                     );
 
-                    await firestoreService.insertSubCollectionDataWithAutoID(
+                    await _firestoreService.insertSubCollectionDataWithAutoID(
                       'User',
                       'Travel_Packages_Purchased',
                       currentUser,
@@ -284,9 +322,17 @@ class _TravelPackageDetailsPageState extends State<TravelPackageDetailsPage> {
                   } else {
                     int updatedQuantity =
                         travelPackagePurchasedBeforeMap['quantity'] + quantity;
-
+                    List<String> ticketListUpdated = [];
+                    if (travelPackagePurchasedBeforeMap != null &&
+                        travelPackagePurchasedBeforeMap['ticket_id_list']
+                            is List) {
+                      ticketListUpdated = List<String>.from(
+                          travelPackagePurchasedBeforeMap['ticket_id_list']
+                              .map((item) => item.toString()));
+                    }
+                    ticketListUpdated.addAll(ticketIdListForPurchasedModel);
                     print(travelPackagePurchasedBeforeMap['id']);
-                    firestoreService.updateSubCollectionField(
+                    await _firestoreService.updateSubCollectionField(
                       collection: 'User',
                       documentId: currentUser,
                       subCollection: 'Travel_Packages_Purchased',
@@ -294,7 +340,30 @@ class _TravelPackageDetailsPageState extends State<TravelPackageDetailsPage> {
                       field: 'quantity',
                       value: updatedQuantity,
                     );
+
+                    await _firestoreService.addItemToSubCollectionList(
+                      collectionName: 'User',
+                      documentId: currentUser,
+                      subCollectionName: 'Travel_Packages_Purchased',
+                      subDocumentId: travelPackagePurchasedBeforeMap['id'],
+                      fieldName: 'ticket_id_list',
+                      newItems: ticketListUpdated,
+                    );
                   }
+
+                  
+                  double walletCreditUpdated = 0;
+                  if (widget.travelPackageUser.walletCredit != null) {
+                    walletCreditUpdated =
+                        widget.travelPackageUser.walletCredit! + amount;
+                  } else {
+                    walletCreditUpdated = amount;
+                  }
+                  await _firestoreService.updateField(
+                      'User',
+                      widget.travelPackage.createdBy,
+                      'wallet_credit',
+                      walletCreditUpdated);
 
                   int quantityLeft =
                       widget.travelPackage.quantityAvailable! - quantity;

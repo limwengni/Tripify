@@ -245,11 +245,11 @@ class _GroupChatPageState extends State<GroupChatPage> {
           if (pinnedMessage.isNotEmpty) {
             return PinMessage(message: pinnedMessage);
           } else {
-            return const Text('No pinned message');
+            return SizedBox.shrink();
           }
         }
 
-        return const Text('Conversation not found');
+        return SizedBox.shrink();
       },
     );
   }

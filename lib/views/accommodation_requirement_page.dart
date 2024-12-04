@@ -38,14 +38,17 @@ class _AccommodationRequirementPageState
   }
   @override
   Widget build(BuildContext context) {
-    return   Center(
-        child: Column(
-          children: [
-            Expanded(
-              child: AccommodationRequirementCardList(accommodationsList: accommodationsList),
-            ),
-          ],
-        ),
+    return   Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Center(
+          child: Column(
+            children: [
+              Expanded(
+                child: AccommodationRequirementCardList(accommodationsList: accommodationsList),
+              ),
+            ],
+          ),
+      ),
     );
   }
 }
