@@ -18,8 +18,10 @@ class CarRentalRequirementCreatePage extends StatefulWidget {
 
 class _CarRentalRequirementCreatePageState
     extends State<CarRentalRequirementCreatePage> {
-  final FocusNode _pickupFocusNode = FocusNode(); // Focus node for pickup location
-  final FocusNode _returnFocusNode = FocusNode(); // Focus node for return location
+  final FocusNode _pickupFocusNode =
+      FocusNode(); // Focus node for pickup location
+  final FocusNode _returnFocusNode =
+      FocusNode(); // Focus node for return location
 
   @override
   void dispose() {
@@ -37,6 +39,9 @@ class _CarRentalRequirementCreatePageState
   Widget build(BuildContext context) {
     return Scaffold(
       resizeToAvoidBottomInset: true,
+      appBar: AppBar(
+        title: const Text('Car Rental Request Create'),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(8.0),
         child: Column(
@@ -60,9 +65,11 @@ class _CarRentalRequirementCreatePageState
                         validator: FormBuilderValidators.required(),
                       ),
                       const SizedBox(height: 15),
-                      placesAutoCompleteTextField(pickupLocationController, _pickupFocusNode),
+                      placesAutoCompleteTextField(
+                          pickupLocationController, _pickupFocusNode),
                       const SizedBox(height: 15),
-                      placesAutoCompleteTextField(returnLocationController, _returnFocusNode),
+                      placesAutoCompleteTextField(
+                          returnLocationController, _returnFocusNode),
                       const SizedBox(height: 15),
                       FormBuilderDateTimePicker(
                         name: 'pickup_date',
@@ -128,19 +135,22 @@ class _CarRentalRequirementCreatePageState
                             value: 'convertible',
                             child: Text('Convertible'),
                           ),
-                            DropdownMenuItem(
+                          DropdownMenuItem(
                             value: 'minivan',
                             child: Text('Mini Van'),
-                          ),  DropdownMenuItem(
+                          ),
+                          DropdownMenuItem(
                             value: 'sportsCar',
                             child: Text('Sports Car'),
-                          ),  DropdownMenuItem(
+                          ),
+                          DropdownMenuItem(
                             value: 'electric',
                             child: Text('Electric'),
-                          ),  DropdownMenuItem(
+                          ),
+                          DropdownMenuItem(
                             value: 'hybird',
                             child: Text('Hybird'),
-                          ), 
+                          ),
                         ],
                         onChanged: (value) {
                           print("Selected car type: $value");
@@ -232,7 +242,8 @@ class _CarRentalRequirementCreatePageState
     );
   }
 
-  placesAutoCompleteTextField(TextEditingController textEditingController, FocusNode focusNode) {
+  placesAutoCompleteTextField(
+      TextEditingController textEditingController, FocusNode focusNode) {
     return Container(
       child: GooglePlaceAutoCompleteTextField(
         containerVerticalPadding: 0,
@@ -272,7 +283,7 @@ class _CarRentalRequirementCreatePageState
             ),
           );
         },
-      isCrossBtnShown: true,
+        isCrossBtnShown: true,
         focusNode: focusNode, //
       ),
     );

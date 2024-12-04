@@ -31,6 +31,7 @@ class PaymentSuccessPage extends StatelessWidget {
               const SizedBox(height: 20),
               const Text(
                 'Your payment was successful!',
+                textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
@@ -53,12 +54,20 @@ class PaymentSuccessPage extends StatelessWidget {
               ),
               const SizedBox(height: 40),
               ElevatedButton(
+                style: ButtonStyle(
+                  backgroundColor: MaterialStateProperty.all(
+                    const Color.fromARGB(255, 159, 118, 249),
+                  ),
+                ),
                 onPressed: () {
                   // Navigate back or to another screen (e.g., Home or Orders Page)
                   Navigator.push(context,
                       MaterialPageRoute(builder: (builder) => MainPage()));
                 },
-                child: const Text('Back to Home'),
+                child: const Text(
+                  'Back to Home',
+                  style: TextStyle(color: Colors.white),
+                ),
               ),
             ],
           ),

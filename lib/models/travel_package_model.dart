@@ -9,8 +9,9 @@ class TravelPackageModel {
   final int? duration; // Duration in days
   final DateTime startDate; // Start date of the package
   final DateTime endDate;
+  final DateTime createdAt;
   final int quantity; // End date of the package
-  final int? quantityAvailable;
+  final int quantityAvailable;
   final List<String>? includedActivities; // List of activities included
   final bool isAvailable; // Availability status
   final List<String>? images;
@@ -21,6 +22,10 @@ class TravelPackageModel {
   final String? resellerId;
   final bool? isResale;
   final String? travelPackageIdForResale;
+  Map<String, bool>? clickNum;
+  Map<String, bool>? viewNum;
+  Map<String, bool>? saveNum;
+  Map<String, String?>? ticketIdNumMap;
 
   // Constructor
   TravelPackageModel({
@@ -38,11 +43,16 @@ class TravelPackageModel {
     required this.createdBy,
     this.isOffer = false,
     this.offerPrice,
-    this.quantityAvailable,
+    required this.quantityAvailable,
     required this.groupChatId,
     this.resellerId,
     this.isResale = false,
     this.travelPackageIdForResale,
+    this.clickNum,
+    this.viewNum,
+    this.saveNum,
+    required this.createdAt,
+    required this.ticketIdNumMap,
   });
 
   // Factory method for creating a TravelPackageModel from a JSON object
@@ -76,6 +86,21 @@ class TravelPackageModel {
       resellerId: data['reseller_id'],
       isResale: data['is_resale'],
       travelPackageIdForResale: data['travel_package_id_for_resale'],
+      clickNum: data['click_num'] != null
+          ? Map<String, bool>.from(data['click_num'] as Map)
+          : null,
+      viewNum: data['view_num'] != null
+          ? Map<String, bool>.from(data['view_num'] as Map)
+          : null,
+      saveNum: data['save_num'] != null
+          ? Map<String, bool>.from(data['save_num'] as Map)
+          : null,
+           ticketIdNumMap: data['ticket_id_map'] != null
+          ? Map<String, String?>.from(data['ticket_id_map'] as Map)
+          : null,
+      createdAt: (data['created_at'] is Timestamp)
+          ? (data['created_at'] as Timestamp).toDate()
+          : DateTime.parse(data['created_at']),
     );
   }
 
@@ -101,6 +126,11 @@ class TravelPackageModel {
       'reseller_id': resellerId,
       'is_resale': isResale,
       'travel_package_id_for_resale': travelPackageIdForResale,
+      'click_num': clickNum,
+      'view_num': viewNum,
+      'save_num': saveNum,
+      'ticket_id_map': ticketIdNumMap,
+      'created_at': createdAt,
     };
   }
 
@@ -108,5 +138,4 @@ class TravelPackageModel {
   int getRemainingDays() {
     return endDate.difference(DateTime.now()).inDays;
   }
-  
 }

@@ -9,6 +9,7 @@ class TravelPackagePurchasedModel {
   final bool isAvailable; // Availability status
   final int? resaleQuantity;
   final int? soldQuantity;
+  final List<String> ticketIdList;
 
   // Constructor
   TravelPackagePurchasedModel({
@@ -17,10 +18,9 @@ class TravelPackagePurchasedModel {
     required this.price,
     required this.quantity,
     this.isAvailable = true,
-    this.resaleQuantity, 
-    this.soldQuantity, 
-   
- 
+    this.resaleQuantity,
+    this.soldQuantity,
+    required this.ticketIdList,
   });
 
   // Factory method for creating a TravelPackageModel from a JSON object
@@ -31,9 +31,11 @@ class TravelPackagePurchasedModel {
       price: (data['price'] as num).toDouble(), // Ensure price is a double
       isAvailable: data['is_available'] ?? true,
       quantity: data['quantity'],
-      resaleQuantity: data['resale_quantity']??0,
-      soldQuantity:  data['sold_quantity']??0,
-     
+      resaleQuantity: data['resale_quantity'] ?? 0,
+      soldQuantity: data['sold_quantity'] ?? 0,
+      ticketIdList: (data['ticket_id_list'] is List) 
+        ? List<String>.from(data['ticket_id_list'].map((item) => item.toString())) 
+        : [],  // Convert to List<String> or use an empty list
     );
   }
 
@@ -45,10 +47,9 @@ class TravelPackagePurchasedModel {
       'price': price,
       'is_available': isAvailable,
       'quantity': quantity,
-      'resale_quantity': resaleQuantity??0,
-      'sold_quantity': soldQuantity??0,
+      'resale_quantity': resaleQuantity ?? 0,
+      'sold_quantity': soldQuantity ?? 0,
+      'ticket_id_list': ticketIdList,
     };
   }
-
-
 }

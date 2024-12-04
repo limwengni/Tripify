@@ -14,6 +14,7 @@ class UserModel {
   int likesCount;
   int commentsCount;
   int savedCount;
+  double? walletCredit;
 
   UserModel({
     required this.username,
@@ -29,6 +30,7 @@ class UserModel {
     required this.likesCount,
     required this.commentsCount,
     required this.savedCount,
+    this.walletCredit,
   });
 
   // Method to convert UserModel to Map for Firestore
@@ -47,6 +49,7 @@ class UserModel {
       'comments_count': commentsCount,
       'saved_count': savedCount,
       'id': uid,
+      'wallet_credit': walletCredit,
     };
   }
 
@@ -74,6 +77,9 @@ class UserModel {
       likesCount: data['likes_count'] ?? 0,
       commentsCount: data['comments_count'] ?? 0,
       savedCount: data['saved_count'] ?? 0,
+      walletCredit: (data['wallet_credit'] is int)
+          ? (data['wallet_credit'] as int).toDouble()
+          : data['wallet_credit'],
     );
   }
 }

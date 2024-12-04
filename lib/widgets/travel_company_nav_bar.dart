@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
-class AccommodationCarRentalNavBar extends StatelessWidget {
+class TravelCompanyNavBar extends StatelessWidget {
   final int currentIndex;
   final ValueChanged<int> onItemTapped;
 
-  const AccommodationCarRentalNavBar({
+  const TravelCompanyNavBar({
     super.key,
     required this.currentIndex,
     required this.onItemTapped,
@@ -12,11 +12,9 @@ class AccommodationCarRentalNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final selectedColor =
-       const Color.fromARGB(255, 159, 118,249);
-     final unselectedColor =
-       const Color.fromARGB(255, 159, 118,249);
- 
+    final selectedColor = const Color.fromARGB(255, 159, 118, 249);
+    final unselectedColor = const Color.fromARGB(255, 159, 118, 249);
+
     return BottomNavigationBar(
       iconSize: 24,
       selectedFontSize: 12.0,
@@ -28,18 +26,27 @@ class AccommodationCarRentalNavBar extends StatelessWidget {
             color: currentIndex == 0 ? selectedColor : unselectedColor,
           ),
           label: 'Home',
-        ),  
-        BottomNavigationBarItem(
-          icon: Icon(
-            currentIndex == 1 ? Icons.local_taxi : Icons.local_taxi_outlined,
-            color: currentIndex == 1 ? selectedColor : unselectedColor,
-          ),
-          label: 'Request',
         ),
         BottomNavigationBarItem(
           icon: Icon(
-            currentIndex > 1 ? Icons.more_rounded : Icons.more_outlined,
-            color: currentIndex > 1 ? selectedColor : unselectedColor,
+            currentIndex == 1
+                ? Icons.shopping_cart
+                : Icons.shopping_cart_outlined,
+            color: currentIndex == 1 ? selectedColor : unselectedColor,
+          ),
+          label: 'Marketplace',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(
+            currentIndex == 2 ? Icons.add_box_rounded : Icons.add_box_outlined,
+            color: currentIndex == 2 ? selectedColor : unselectedColor,
+          ),
+          label: 'On Sheleve',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(
+            currentIndex > 3 ? Icons.more_rounded : Icons.more_outlined,
+            color: currentIndex > 3 ? selectedColor : unselectedColor,
           ),
           label: 'More',
         ),

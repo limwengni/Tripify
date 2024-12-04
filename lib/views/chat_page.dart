@@ -17,12 +17,14 @@ class ChatPage extends StatefulWidget {
   final ConversationModel conversation;
   final String currentUserId;
   final String chatPic;
+  final String? predefineString;
 
   ChatPage(
       {Key? key,
       required this.conversation,
       required this.currentUserId,
-      required this.chatPic})
+      required this.chatPic,
+      this.predefineString})
       : super(key: key);
 
   @override
@@ -33,7 +35,7 @@ class _ChatPageState extends State<ChatPage> {
   // FirestoreService firestoreService = FirestoreService();
   FirebaseStorageService _firebaseStorageService = FirebaseStorageService();
   FirestoreService _firestoreService = FirestoreService();
-  final TextEditingController _messageController = TextEditingController();
+  TextEditingController _messageController = TextEditingController();
   final ConversationViewModel _conversationViewModel = ConversationViewModel();
   String appBarTitle = "Loading...";
   bool extraAction = false;
@@ -41,6 +43,7 @@ class _ChatPageState extends State<ChatPage> {
   final ImagePicker picker = ImagePicker();
   XFile? _imageSelected = null;
   String? fileName;
+  late FocusNode _textFieldFocusNode; // FocusNode for the TextField
 
   //
   final ScrollController _scrollController = ScrollController();
@@ -49,6 +52,13 @@ class _ChatPageState extends State<ChatPage> {
   void initState() {
     super.initState();
     _setAppBarTitle();
+    if (widget.predefineString != null) {
+      _messageController = TextEditingController(text: widget.predefineString);
+      _textFieldFocusNode = FocusNode();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _textFieldFocusNode.requestFocus(); // Open the keyboard
+      });
+    }
   }
 
   Future<void> _setAppBarTitle() async {
@@ -116,6 +126,8 @@ class _ChatPageState extends State<ChatPage> {
     _scrollController.dispose();
     _messageController.dispose();
     _extraActionNotifier.dispose();
+    _textFieldFocusNode.dispose(); // Dispose of the FocusNode
+
     super.dispose();
   }
 
@@ -166,39 +178,40 @@ class _ChatPageState extends State<ChatPage> {
       ),
     );
   }
-Widget _buildPinMessage(String conversationId) {
-  return StreamBuilder<DocumentSnapshot>(
-    stream: _conversationViewModel.getConversationStream(
-        conversationId: widget.conversation.id),
-    builder: (context, snapshot) {
-      // Error handling
-      if (snapshot.hasError) {
-        return const Text('Error fetching pinned message');
-      }
 
-      // Loading state
-      if (snapshot.connectionState == ConnectionState.waiting) {
-        return const Text('Loading...');
-      }
-
-      // Check if the document exists and has the pinned message
-      var document = snapshot.data;
-      if (document != null && document.exists) {
-        // Assuming you store the pinned message in a field 'message_pinned_id'
-        String? pinnedMessage = document['message_pinned_id'];
-
-        // If there's a pinned message, return the PinMessage widget
-        if (pinnedMessage != null && pinnedMessage.isNotEmpty) {
-          return PinMessage(message: pinnedMessage);
+  Widget _buildPinMessage(String conversationId) {
+    return StreamBuilder<DocumentSnapshot>(
+      stream: _conversationViewModel.getConversationStream(
+          conversationId: widget.conversation.id),
+      builder: (context, snapshot) {
+        // Error handling
+        if (snapshot.hasError) {
+          return const Text('Error fetching pinned message');
         }
-      }
 
-      // Return an empty container if no pinned message
-      return SizedBox.shrink(); // Or you can return Container() for the same effect
-    },
-  );
-}
+        // Loading state
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Text('Loading...');
+        }
 
+        // Check if the document exists and has the pinned message
+        var document = snapshot.data;
+        if (document != null && document.exists) {
+          // Assuming you store the pinned message in a field 'message_pinned_id'
+          String? pinnedMessage = document['message_pinned_id'];
+
+          // If there's a pinned message, return the PinMessage widget
+          if (pinnedMessage != null && pinnedMessage.isNotEmpty) {
+            return PinMessage(message: pinnedMessage);
+          }
+        }
+
+        // Return an empty container if no pinned message
+        return SizedBox
+            .shrink(); // Or you can return Container() for the same effect
+      },
+    );
+  }
 
   Widget _buildMessageList(String conversationId) {
     String currentUserId = FirebaseAuth.instance.currentUser!.uid;
@@ -372,6 +385,15 @@ Widget _buildPinMessage(String conversationId) {
               Expanded(
                 child: TextField(
                   controller: _messageController,
+                  focusNode: widget.predefineString != null
+                      ? _textFieldFocusNode
+                      : null,
+                  maxLines: 3,
+                  keyboardType: TextInputType.multiline,
+                  textInputAction:
+                      TextInputAction.newline, // Allows newline input
+                  scrollPadding:
+                      EdgeInsets.all(10), // Adds scrollable padding for comfort
                   decoration: const InputDecoration(
                     border: OutlineInputBorder(),
                   ),

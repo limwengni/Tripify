@@ -34,6 +34,9 @@ class _AccommodationRequirementCreatePageState
   Widget build(BuildContext context) {
     return Scaffold(
       resizeToAvoidBottomInset: true,
+      appBar: AppBar(
+        title: Text('Accommodation Request Create'),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(8.0),
         child: Column(
@@ -191,7 +194,7 @@ class _AccommodationRequirementCreatePageState
               padding: const EdgeInsets.symmetric(vertical: 10.0),
               child: MaterialButton(
                 padding: const EdgeInsets.all(15),
-                color: Theme.of(context).colorScheme.secondary,
+                color: const Color.fromARGB(255, 159, 118, 249),
                 onPressed: () async {
                   if (_formKey.currentState?.saveAndValidate() ?? false) {
                     final formValues = _formKey.currentState?.value;
@@ -235,7 +238,10 @@ class _AccommodationRequirementCreatePageState
                     }
                   }
                 },
-                child: const Text('Create'),
+                child: const Text(
+                  'Create',
+                  style: TextStyle(color: Colors.white),
+                ),
               ),
             ),
           ],

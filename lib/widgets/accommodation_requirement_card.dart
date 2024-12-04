@@ -85,6 +85,9 @@ class _AccommodationRequirementCardState
                       }
 
                       print('last');
+                      Map<String, dynamic>? currentUser =
+                          await _firestoreService.getDataById('User',
+                              currentUserId);
 
                       Navigator.push(
                         context,
@@ -92,8 +95,9 @@ class _AccommodationRequirementCardState
                           builder: (builder) => ChatPage(
                             conversation: conversation!,
                             currentUserId: currentUserId,
-                            chatPic:
-                                conversationPic!, // Use 'conversationPic' or default to an empty string
+                            chatPic: conversationPic!,
+                            predefineString:
+                                'Hi I am from ${currentUser!['username']}, I have some solution for your accoomodation requirement \n\n*${widget.accommodationRequirement.title}*\n',
                           ),
                         ),
                       );
@@ -110,7 +114,6 @@ class _AccommodationRequirementCardState
                 1: FlexColumnWidth(),
               },
               children: [
-                
                 TableRow(
                   children: [
                     const Text("Location:"),
@@ -125,21 +128,20 @@ class _AccommodationRequirementCardState
                   children: [
                     const Text("Check-in Date:"),
                     Padding(
-                      padding: const EdgeInsets.only(
-                          left: 10.0, bottom: 5), // Add space here
-                      child: Text('${DateFormat('yyyy-MM-dd').format(widget.accommodationRequirement.checkinDate)}')),
-                    
+                        padding: const EdgeInsets.only(
+                            left: 10.0, bottom: 5), // Add space here
+                        child: Text(
+                            '${DateFormat('yyyy-MM-dd').format(widget.accommodationRequirement.checkinDate)}')),
                   ],
                 ),
                 TableRow(
                   children: [
                     const Text("Check-out Date:"),
                     Padding(
-                      padding: const EdgeInsets.only(
-                          left: 10.0, bottom: 5), // Add space here
-                      child: Text('${DateFormat('yyyy-MM-dd').format(widget.accommodationRequirement.checkoutDate)}')),
-                      
-            
+                        padding: const EdgeInsets.only(
+                            left: 10.0, bottom: 5), // Add space here
+                        child: Text(
+                            '${DateFormat('yyyy-MM-dd').format(widget.accommodationRequirement.checkoutDate)}')),
                   ],
                 ),
                 TableRow(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tripify/views/travel_package_on_shelves_repo_page.dart';
 import 'package:tripify/views/travel_package_purchased_repository_page.dart';
 import 'package:tripify/views/view_fav_post_page.dart';
 
@@ -53,6 +54,23 @@ class DocumentRepositoryPage extends StatelessWidget {
                   trailing: const Icon(Icons.arrow_forward),
                   onTap: () {
                     // Navigate to Resale Travel Package Page
+                  },
+                ),
+              ),
+
+              Card(
+                child: ListTile(
+                  title: const Text("Travel Package On Shelves Document"),
+                  subtitle: const Text("View your travel packages on shelves."),
+                  trailing: const Icon(Icons.arrow_forward),
+                  onTap: () {
+                     Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            TravelPackageOnShelvesRepoPage(),
+                      ),
+                    );
                   },
                 ),
               ),
