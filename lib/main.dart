@@ -205,10 +205,6 @@ class MainPageState extends State<MainPage> {
       'widget': const AccommodationRequirementPage()
     },
     {'title': 'Profile', 'widget': ProfilePage()},
-<<<<<<< HEAD
-=======
-    // {'title': 'Favorites', 'widget': const FavoritesPage()},
->>>>>>> 9a91a0965c6eb209f656309569f595ca8830934b
     {'title': 'Document Repository', 'widget': const DocumentRepositoryPage()},
     {'title': 'Settings', 'widget': SettingsPage()},
   ];
@@ -220,7 +216,6 @@ class MainPageState extends State<MainPage> {
       'widget': const CarRentalRequirementPage()
     },
     {'title': 'Profile', 'widget': ProfilePage()},
-<<<<<<< HEAD
     {'title': 'Document Repository', 'widget': const DocumentRepositoryPage()},
     {'title': 'Settings', 'widget': SettingsPage()},
   ];
@@ -236,9 +231,6 @@ class MainPageState extends State<MainPage> {
       'widget':  TravelPackageCreatePage()
     },
     {'title': 'Profile', 'widget': ProfilePage()},
-=======
-    // {'title': 'Favorites', 'widget': const FavoritesPage()},
->>>>>>> 9a91a0965c6eb209f656309569f595ca8830934b
     {'title': 'Document Repository', 'widget': const DocumentRepositoryPage()},
     {'title': 'Settings', 'widget': SettingsPage()},
   ];
