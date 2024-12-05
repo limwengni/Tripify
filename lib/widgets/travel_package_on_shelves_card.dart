@@ -10,6 +10,7 @@ import 'package:tripify/models/travel_package_purchased_model.dart';
 import 'package:tripify/models/user_model.dart';
 import 'package:tripify/view_models/firestore_service.dart';
 import 'package:tripify/views/travel_package_details_page.dart';
+import 'package:tripify/views/create_ads_page.dart';
 
 class TravelPackageOnShelvesCard extends StatefulWidget {
   final TravelPackageModel travelPackageOnShelve;
@@ -34,8 +35,7 @@ class _TravelPackagePurchasedCardState
   int? clickNum;
   int? saveNum;
   double? purchaseRate;
-    UserModel? travelCompanyUser;
-
+  UserModel? travelCompanyUser;
 
   @override
   void initState() {
@@ -43,8 +43,6 @@ class _TravelPackagePurchasedCardState
     fetchTravelCompany;
     super.initState();
   }
-
-
 
   void fetchTravelCompany() async {
     Map<String, dynamic>? userMap;
@@ -55,12 +53,9 @@ class _TravelPackagePurchasedCardState
       if (userMap != null) {
         travelCompanyUser = UserModel.fromMap(userMap, userMap['id']);
         print(travelCompanyUser);
-        
       }
     });
   }
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -184,6 +179,30 @@ class _TravelPackagePurchasedCardState
                       ),
                       Text(viewNum != null ? '$viewNum' : '0'),
                       Spacer(),
+
+                      // Ads button (later need to change..)
+                      TextButton(
+                        onPressed: () {
+                          String id = widget.travelPackageOnShelve.id;
+                          
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => CreateAdsPage(travelPackageId: id),
+                            ),
+                          );
+                        },
+                        style: TextButton.styleFrom(
+                          backgroundColor: Colors.blue,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 8, horizontal: 12),
+                        ),
+                        child: const Text('Create Ads'),
+                      ),
+                      const SizedBox(width: 8),
+
+                      // Delete button
                       TextButton(
                         onPressed: () {
                           if (widget.travelPackageOnShelve.quantity !=
@@ -397,7 +416,7 @@ class _TravelPackagePurchasedCardState
                                         ),
                                       ),
                                       TextSpan(
-                                        text: '${saveNum}',
+                                        text: '${saveNum ?? 0}',
                                         style: const TextStyle(
                                           fontWeight: FontWeight
                                               .normal, // Normal for the number

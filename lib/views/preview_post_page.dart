@@ -12,6 +12,8 @@ class PostFormPage extends StatefulWidget {
   final String? description;
   final Map<File, int> imagesWithIndex;
   final String? location;
+  final String? pollQuestion;
+  final List<String>? pollOptions;
 
   // Constructor to receive the parameters
   PostFormPage({
@@ -19,6 +21,8 @@ class PostFormPage extends StatefulWidget {
     this.description,
     required this.imagesWithIndex,
     this.location,
+    this.pollQuestion,
+    this.pollOptions,
   });
 
   @override
@@ -29,6 +33,8 @@ class _PostFormPageState extends State<PostFormPage> {
   late String _title;
   late String? _description;
   late String? _location;
+  late String? _pollQuestion;
+  late List<String>? _pollOptions;
   late Map<File, int> _imagesWithIndex;
   late int _numOfImages;
   String location = "";
@@ -51,6 +57,8 @@ class _PostFormPageState extends State<PostFormPage> {
     _description = widget.description ?? "";
     _location = widget.location ?? "";
     _imagesWithIndex = widget.imagesWithIndex;
+    _pollQuestion = widget.pollQuestion ?? "";
+    _pollOptions = widget.pollOptions ?? [];
 
     _pageController = PageController();
     _isMuted =
@@ -140,6 +148,8 @@ class _PostFormPageState extends State<PostFormPage> {
         mediaWithIndex: imagesWithIndex,
         hashtags: hashtags,
         location: location,
+        pollQuestion: _pollQuestion,
+        pollOptions: _pollOptions,
       );
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -329,7 +339,80 @@ class _PostFormPageState extends State<PostFormPage> {
                         "$_description",
                         style: TextStyle(fontSize: 18),
                       ),
-                      SizedBox(height: 10),
+                      SizedBox(height: 20),
+
+                      // Poll
+                      if (_pollQuestion != '')
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Container(
+                              width: 400,
+                              padding: EdgeInsets.all(16.0),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(
+                                  color: Theme.of(context).brightness ==
+                                          Brightness.dark
+                                      ? Colors.white.withOpacity(0.3)
+                                      : Colors.black.withOpacity(0.3),
+                                ),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    _pollQuestion ?? '', // Poll Question
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: Theme.of(context).brightness ==
+                                              Brightness.dark
+                                          ? Colors.white
+                                          : Colors.black,
+                                    ),
+                                  ),
+                                  SizedBox(height: 10),
+                                  // Poll Options (Display as buttons or other UI elements)
+                                  if (_pollOptions != null &&
+                                      _pollOptions!.isNotEmpty)
+                                    for (int i = 0;
+                                        i < _pollOptions!.length;
+                                        i++)
+                                      Padding(
+                                        padding:
+                                            const EdgeInsets.only(bottom: 8.0),
+                                        child: ElevatedButton(
+                                          onPressed: () {
+                                            // Handle option selection
+                                          },
+                                          style: ElevatedButton.styleFrom(
+                                            padding: EdgeInsets.symmetric(
+                                                vertical: 12.0,
+                                                horizontal: 24.0),
+                                            backgroundColor:
+                                                Theme.of(context).brightness ==
+                                                        Brightness.dark
+                                                    ? Colors.grey[500]
+                                                    : Colors.grey[300],
+                                            minimumSize:
+                                                Size(double.infinity, 50),
+                                          ),
+                                          child: Align(
+                                            alignment: Alignment.centerLeft,
+                                            child: Text(
+                                              _pollOptions![i],
+                                              textAlign: TextAlign.left,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      if (_pollQuestion != '') SizedBox(height: 20),
 
                       // Sample time and Location (if available)
                       Row(
@@ -341,7 +424,8 @@ class _PostFormPageState extends State<PostFormPage> {
                                 fontSize: 16, color: Colors.grey[500]),
                           ),
                           SizedBox(width: 8),
-                          _location != ''  // Check if _location is not null and not empty
+                          _location !=
+                                  '' // Check if _location is not null and not empty
                               ? Icon(
                                   Icons.circle,
                                   size: 5,
@@ -444,7 +528,7 @@ class _PostFormPageState extends State<PostFormPage> {
                   ? Colors.grey[800]
                   : Colors.grey[300], // Color of the divider
             ),
-            SizedBox(height: 20),
+            SizedBox(height: 10),
 
             // Post button
             Center(
@@ -459,6 +543,7 @@ class _PostFormPageState extends State<PostFormPage> {
                 child: Text("Post", style: TextStyle(fontSize: 16)),
               ),
             ),
+            SizedBox(height: 20),
           ],
         ),
       ),
