@@ -72,7 +72,8 @@ class _TravelPackageCardState extends State<TravelPackageCard> {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
+    return widget.travelPackage.isAvailable==true? 
+    Padding(
       padding: const EdgeInsets.fromLTRB(8.0, 8, 8, 0),
       child: GestureDetector(
         onTap: () {
@@ -243,7 +244,7 @@ class _TravelPackageCardState extends State<TravelPackageCard> {
           ),
         ),
       ),
-    );
+    ):SizedBox.shrink();
   }
 
   void changeSave() async {

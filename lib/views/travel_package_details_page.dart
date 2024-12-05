@@ -3,6 +3,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:tripify/models/conversation_model.dart';
+import 'package:tripify/models/receipt_model.dart';
 import 'package:tripify/models/travel_package_model.dart';
 import 'package:tripify/models/travel_package_purchased_model.dart';
 import 'package:tripify/models/user_model.dart';
@@ -161,7 +163,8 @@ class _TravelPackageDetailsPageState extends State<TravelPackageDetailsPage> {
             ),
             ElevatedButton(
               onPressed: () {
-                if (widget.travelPackage.createdBy == widget.currentUserId) {
+                if (widget.travelPackage.createdBy == widget.currentUserId ||
+                    widget.travelPackage.resellerId == widget.currentUserId) {
                   showDialog(
                     context: context,
                     builder: (BuildContext context) => AlertDialog(
@@ -224,174 +227,395 @@ class _TravelPackageDetailsPageState extends State<TravelPackageDetailsPage> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Quantity Purchase'),
+          title: widget.travelPackage.isResale != true
+              ? Text('Quantity Purchase')
+              : Text('Purchase Confirmation'),
           content: StatefulBuilder(
             builder: (BuildContext context, StateSetter setState) {
-              return Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  SizedBox(
-                    height: 20,
-                  ),
-                  Text(
-                    'Quantity: $quantity',
-                    style: TextStyle(fontSize: 18),
-                  ),
-                  SizedBox(
-                    height: 20,
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      IconButton(
-                        icon: Icon(Icons.remove),
-                        onPressed: () {
-                          setState(() {
-                            if (quantity > 0) {
-                              quantity--;
-                            }
-                          });
-                        },
-                      ),
-                      IconButton(
-                        icon: Icon(Icons.add),
-                        onPressed: () {
-                          if (quantity <=
-                              widget.travelPackage.quantityAvailable!) {
-                            setState(() {
-                              quantity++;
-                            });
-                          }
-                        },
-                      ),
-                    ],
-                  ),
-                ],
-              );
+              return widget.travelPackage.isResale != true
+                  ? Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        SizedBox(
+                          height: 20,
+                        ),
+                        Text(
+                          'Quantity: $quantity',
+                          style: TextStyle(fontSize: 18),
+                        ),
+                        SizedBox(
+                          height: 20,
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            IconButton(
+                              icon: Icon(Icons.remove),
+                              onPressed: () {
+                                setState(() {
+                                  if (quantity > 0) {
+                                    quantity--;
+                                  }
+                                });
+                              },
+                            ),
+                            IconButton(
+                              icon: Icon(Icons.add),
+                              onPressed: () {
+                                if (quantity <=
+                                    widget.travelPackage.quantityAvailable!) {
+                                  setState(() {
+                                    quantity++;
+                                  });
+                                }
+                              },
+                            ),
+                          ],
+                        ),
+                      ],
+                    )
+                  : Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        SizedBox(
+                          height: 20,
+                        ),
+                        Text(
+                          'Are you sure to purchase?\nResell Travel Package can\'t select quantity!',
+                          style: TextStyle(fontSize: 18),
+                        ),
+                        SizedBox(
+                          height: 20,
+                        ),
+                      ],
+                    );
             },
           ),
           actions: [
             TextButton(
               onPressed: () async {
-                double amount = quantity * widget.travelPackage.price;
-                bool paymentSuccess =
-                    await StripeService.instance.makePayment(amount, 'myr');
-                List<String> ticketIdListForPurchasedModel = [];
+                if (widget.travelPackage.isResale != true) {
+                  double amount = quantity * widget.travelPackage.price;
+                  bool paymentSuccess =
+                      await StripeService.instance.makePayment(amount, 'myr');
+                  List<String> ticketIdListForPurchasedModel = [];
+                  String travelPackagePurchasedId;
 
-                if (paymentSuccess) {
-                  // Payment was successful
-                  FirestoreService firestoreService = FirestoreService();
-                  String currentUser = FirebaseAuth.instance.currentUser!.uid;
+                  if (paymentSuccess) {
+                    FirestoreService firestoreService = FirestoreService();
+                    String currentUser = FirebaseAuth.instance.currentUser!.uid;
+                    Map<String, dynamic>? travelPackagePurchasedBeforeMap;
 
-                  Map<String, dynamic>? travelPackagePurchasedBeforeMap =
-                      await firestoreService.getSubCollectionOneDataByFields(
-                          'User',
-                          currentUser,
-                          'Travel_Packages_Purchased',
-                          'travel_package_id',
-                          widget.travelPackage.id);
+                    travelPackagePurchasedBeforeMap =
+                        await firestoreService.getSubCollectionOneDataByFields(
+                            'User',
+                            currentUser,
+                            'Travel_Packages_Purchased',
+                            'travel_package_id',
+                            widget.travelPackage.id);
 
-                  String id = widget.travelPackage.id;
-                  for (int i = 0;
-                      i < widget.travelPackage.ticketIdNumMap!.length;
-                      i++) {
-                    if (quantity > ticketIdListForPurchasedModel.length &&
-                        widget.travelPackage.ticketIdNumMap!['${id}_${i}'] ==
-                            '') {
-                      ticketIdListForPurchasedModel.add('${id}_${i}');
-                      await _firestoreService.updateMapField('Travel_Packages',
-                          id, 'ticket_id_map', '${id}_${i}', currentUser);
+                    String id = widget.travelPackage.id;
+
+                    for (int i = 0;
+                        i < widget.travelPackage.ticketIdNumMap!.length;
+                        i++) {
+                      if (quantity > ticketIdListForPurchasedModel.length &&
+                          widget.travelPackage.ticketIdNumMap!['${id}_${i}'] ==
+                              '') {
+                        ticketIdListForPurchasedModel.add('${id}_${i}');
+                        await _firestoreService.updateMapField(
+                            'Travel_Packages',
+                            id,
+                            'ticket_id_map',
+                            '${id}_${i}',
+                            currentUser);
+                      }
                     }
+
+                    if (travelPackagePurchasedBeforeMap == null) {
+                      TravelPackagePurchasedModel travelPackagePurchased =
+                          TravelPackagePurchasedModel(
+                        id: '',
+                        travelPackageId: widget.travelPackage.id,
+                        price: amount,
+                        quantity: quantity,
+                        ticketIdList: ticketIdListForPurchasedModel,
+                      );
+
+                      travelPackagePurchasedId = await _firestoreService
+                          .insertSubCollectionDataWithAutoIDReturnValue(
+                        'User',
+                        'Travel_Packages_Purchased',
+                        currentUser,
+                        travelPackagePurchased.toMap(),
+                      );
+
+                      List<String> newItem = [widget.currentUserId];
+                      await _firestoreService.addItemToCollectionList(
+                          documentId: widget.travelPackage.groupChatId!,
+                          collectionName: 'Conversations',
+                          fieldName: 'participants',
+                          newItems: newItem);
+
+                      await _firestoreService.updateMapField(
+                          'Conversations',
+                          widget.travelPackage.groupChatId!,
+                          'unread_message',
+                          currentUser,
+                          0);
+                    } else {
+                      travelPackagePurchasedId =
+                          travelPackagePurchasedBeforeMap['id'];
+                      int updatedQuantity =
+                          travelPackagePurchasedBeforeMap['quantity'] +
+                              quantity;
+                      List<String> ticketListUpdated = [];
+                      if (travelPackagePurchasedBeforeMap != null &&
+                          travelPackagePurchasedBeforeMap['ticket_id_list']
+                              is List) {
+                        ticketListUpdated = List<String>.from(
+                            travelPackagePurchasedBeforeMap['ticket_id_list']
+                                .map((item) => item.toString()));
+                      }
+                      ticketListUpdated.addAll(ticketIdListForPurchasedModel);
+                      print(travelPackagePurchasedBeforeMap['id']);
+
+                      await _firestoreService.updateSubCollectionField(
+                        collection: 'User',
+                        documentId: currentUser,
+                        subCollection: 'Travel_Packages_Purchased',
+                        subDocumentId: travelPackagePurchasedBeforeMap['id'],
+                        field: 'quantity',
+                        value: updatedQuantity,
+                      );
+
+                      await _firestoreService.addItemToSubCollectionList(
+                        collectionName: 'User',
+                        documentId: currentUser,
+                        subCollectionName: 'Travel_Packages_Purchased',
+                        subDocumentId: travelPackagePurchasedBeforeMap['id'],
+                        fieldName: 'ticket_id_list',
+                        newItems: ticketListUpdated,
+                      );
+                    }
+
+                    //receipt part
+                    ReceiptModel receipt = ReceiptModel(
+                        id: '',
+                        userId: currentUser,
+                        travelPackagePurchasedId: travelPackagePurchasedId,
+                        createdAt: DateTime.now(),
+                        ticketIdList: ticketIdListForPurchasedModel,
+                        travelPackageId: widget.travelPackage.id);
+
+                    await _firestoreService.insertSubCollectionDataWithAutoID(
+                        'User', 'Receipts', currentUser, receipt.toMap());
+
+                    //wallet credit part
+                    double walletCreditUpdated = 0;
+                    if (widget.travelPackageUser.walletCredit != null) {
+                      walletCreditUpdated =
+                          widget.travelPackageUser.walletCredit! + amount;
+                    } else {
+                      walletCreditUpdated = amount;
+                    }
+
+                    await _firestoreService.updateField(
+                        'User',
+                        widget.travelPackage.createdBy,
+                        'wallet_credit',
+                        walletCreditUpdated);
+
+                    //update ori package quantity
+                    int quantityLeft =
+                        widget.travelPackage.quantityAvailable! - quantity;
+
+                    await firestoreService.updateField(
+                        'Travel_Packages',
+                        widget.travelPackage.id,
+                        'quantity_available',
+                        quantityLeft);
+
+                    if (quantityLeft == 0) {
+                      await firestoreService.updateField('Travel_Packages',
+                          widget.travelPackage.id, 'is_available', false);
+                    }
+
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => PaymentSuccessPage(
+                          orderId: widget.travelPackage.name,
+                          totalAmount: amount,
+                        ),
+                      ),
+                    );
+                  } else {
+                    // Payment failed
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Checkout Failed')),
+                    );
                   }
-                  if (travelPackagePurchasedBeforeMap == null) {
+                } else {
+                  double amount = widget.travelPackage.price;
+                  bool paymentSuccess =
+                      await StripeService.instance.makePayment(amount, 'myr');
+                  List<String> ticketIdListOfPurchasedModel = [];
+                  String travelPackagePurchasedId;
+
+                  if (paymentSuccess) {
+                    FirestoreService firestoreService = FirestoreService();
+                    String currentUser = FirebaseAuth.instance.currentUser!.uid;
+
+                    String id = widget.travelPackage.id;
+
+                    //get Travel Package Purchased ticket number
+                    Map<String, dynamic>? resellTravelPackagePurchasedMap =
+                        await _firestoreService.getSubCollectionDataById(
+                            collection: 'User',
+                            subCollection: 'Travel_Packages_Purchased',
+                            docId: widget.travelPackage.resellerId!,
+                            subDocId:
+                                widget.travelPackage.travelPackagePurchasedId!);
+
+                    TravelPackagePurchasedModel travelPackagePurchasedModel;
+
+                    //process for transfer the ticket no
+                    if (resellTravelPackagePurchasedMap != null) {
+                      travelPackagePurchasedModel =
+                          TravelPackagePurchasedModel.fromMap(
+                              resellTravelPackagePurchasedMap);
+
+                      for (int i = 0;
+                          i < travelPackagePurchasedModel.ticketIdList.length;
+                          i++) {
+                        print('model ' +
+                            travelPackagePurchasedModel.ticketIdList
+                                .toString());
+
+                        print('start part');
+                        print(widget.travelPackage.quantity);
+                        print('i = ${i}');
+                        print(ticketIdListOfPurchasedModel.length);
+
+                        if (widget.travelPackage.quantity >
+                            ticketIdListOfPurchasedModel.length) {
+                          ticketIdListOfPurchasedModel.add(
+                              '${travelPackagePurchasedModel.ticketIdList[i]}');
+
+                          print(
+                              'add: ${travelPackagePurchasedModel.ticketIdList[i]}');
+                        }
+                      }
+                      List<String> oriTicketNoList =
+                          travelPackagePurchasedModel.ticketIdList;
+                      List<String> updatedTicketNoList = oriTicketNoList
+                          .where((item) =>
+                              !ticketIdListOfPurchasedModel.contains(item))
+                          .toList();
+
+                      await _firestoreService.updateSubCollectionField(
+                          collection: 'User',
+                          documentId: widget.travelPackage.resellerId!,
+                          subCollection: 'Travel_Packages_Purchased',
+                          subDocumentId:
+                              widget.travelPackage.travelPackagePurchasedId!,
+                          field: 'ticket_id_list',
+                          value: updatedTicketNoList);
+                    }
+
                     TravelPackagePurchasedModel travelPackagePurchased =
                         TravelPackagePurchasedModel(
                       id: '',
-                      travelPackageId: widget.travelPackage.id,
+                      travelPackageId:
+                          widget.travelPackage.travelPackageIdForResale!,
                       price: amount,
-                      quantity: quantity,
-                      ticketIdList: ticketIdListForPurchasedModel,
+                      quantity: widget.travelPackage.quantity,
+                      ticketIdList: ticketIdListOfPurchasedModel,
                     );
 
-                    await _firestoreService.insertSubCollectionDataWithAutoID(
+                    travelPackagePurchasedId = await _firestoreService
+                        .insertSubCollectionDataWithAutoIDReturnValue(
                       'User',
                       'Travel_Packages_Purchased',
                       currentUser,
                       travelPackagePurchased.toMap(),
                     );
-                  } else {
-                    int updatedQuantity =
-                        travelPackagePurchasedBeforeMap['quantity'] + quantity;
-                    List<String> ticketListUpdated = [];
-                    if (travelPackagePurchasedBeforeMap != null &&
-                        travelPackagePurchasedBeforeMap['ticket_id_list']
-                            is List) {
-                      ticketListUpdated = List<String>.from(
-                          travelPackagePurchasedBeforeMap['ticket_id_list']
-                              .map((item) => item.toString()));
+
+                    print('groupchatid: ${widget.travelPackage.groupChatId}');
+                    Map<String, dynamic>? groupChatMap =
+                        await _firestoreService.getDataById(
+                            'Conversations', widget.travelPackage.groupChatId!);
+                    if (groupChatMap != null) {
+                      ConversationModel groupChat =
+                          ConversationModel.fromMap(groupChatMap);
+                      if (!groupChat.participants.contains(currentUser)) {
+                        List<String> newItem = [widget.currentUserId];
+                        await _firestoreService.addItemToCollectionList(
+                            documentId: widget.travelPackage.groupChatId!,
+                            collectionName: 'Conversations',
+                            fieldName: 'participants',
+                            newItems: newItem);
+
+                        await _firestoreService.updateMapField(
+                            'Conversations',
+                            widget.travelPackage.groupChatId!,
+                            'unread_message',
+                            currentUser,
+                            0);
+                      }
                     }
-                    ticketListUpdated.addAll(ticketIdListForPurchasedModel);
-                    print(travelPackagePurchasedBeforeMap['id']);
-                    await _firestoreService.updateSubCollectionField(
-                      collection: 'User',
-                      documentId: currentUser,
-                      subCollection: 'Travel_Packages_Purchased',
-                      subDocumentId: travelPackagePurchasedBeforeMap['id'],
-                      field: 'quantity',
-                      value: updatedQuantity,
-                    );
 
-                    await _firestoreService.addItemToSubCollectionList(
-                      collectionName: 'User',
-                      documentId: currentUser,
-                      subCollectionName: 'Travel_Packages_Purchased',
-                      subDocumentId: travelPackagePurchasedBeforeMap['id'],
-                      fieldName: 'ticket_id_list',
-                      newItems: ticketListUpdated,
-                    );
-                  }
+                    //receipt part
+                    ReceiptModel receipt = ReceiptModel(
+                        id: '',
+                        userId: currentUser,
+                        travelPackagePurchasedId: travelPackagePurchasedId,
+                        createdAt: DateTime.now(),
+                        ticketIdList: ticketIdListOfPurchasedModel,
+                        travelPackageId: widget.travelPackage.id);
 
-                  
-                  double walletCreditUpdated = 0;
-                  if (widget.travelPackageUser.walletCredit != null) {
-                    walletCreditUpdated =
-                        widget.travelPackageUser.walletCredit! + amount;
-                  } else {
-                    walletCreditUpdated = amount;
-                  }
-                  await _firestoreService.updateField(
-                      'User',
-                      widget.travelPackage.createdBy,
-                      'wallet_credit',
-                      walletCreditUpdated);
+                    await _firestoreService.insertSubCollectionDataWithAutoID(
+                        'User', 'Receipts', currentUser, receipt.toMap());
 
-                  int quantityLeft =
-                      widget.travelPackage.quantityAvailable! - quantity;
-                  await firestoreService.updateField(
-                      'Travel_Packages',
-                      widget.travelPackage.id,
-                      'quantity_available',
-                      quantityLeft);
+                    //wallet credit part
+                    Map<String, dynamic>? resellerMap = await _firestoreService
+                        .getDataById('User', widget.travelPackage.resellerId!);
+                    if (resellerMap != null) {
+                      UserModel reseller = UserModel.fromMap(
+                          resellerMap, widget.travelPackage.resellerId!);
 
-                  if (quantityLeft == 0) {
-                    await firestoreService.updateField('Travel_Packages',
+                      double walletCreditUpdated = 0;
+                      if (reseller.walletCredit != null) {
+                        walletCreditUpdated = reseller.walletCredit! + amount;
+                      } else {
+                        walletCreditUpdated = amount;
+                      }
+                      await _firestoreService.updateField(
+                          'User',
+                          widget.travelPackage.resellerId!,
+                          'wallet_credit',
+                          walletCreditUpdated);
+                    }
+
+                    await _firestoreService.updateField('Travel_Packages',
                         widget.travelPackage.id, 'is_available', false);
-                  }
 
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => PaymentSuccessPage(
-                        orderId: widget.travelPackage.name,
-                        totalAmount: amount,
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => PaymentSuccessPage(
+                          orderId: widget.travelPackage.name,
+                          totalAmount: amount,
+                        ),
                       ),
-                    ),
-                  );
-                } else {
-                  // Payment failed
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Checkout Failed')),
-                  );
+                    );
+                  } else {
+                    // Payment failed
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Checkout Failed')),
+                    );
+                  }
                 }
               },
               child: const Text('Confirm'),

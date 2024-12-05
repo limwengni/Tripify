@@ -22,6 +22,7 @@ class TravelPackageModel {
   final String? resellerId;
   final bool? isResale;
   final String? travelPackageIdForResale;
+  final String? travelPackagePurchasedId;
   Map<String, bool>? clickNum;
   Map<String, bool>? viewNum;
   Map<String, bool>? saveNum;
@@ -51,6 +52,7 @@ class TravelPackageModel {
     this.clickNum,
     this.viewNum,
     this.saveNum,
+    this.travelPackagePurchasedId,
     required this.createdAt,
     required this.ticketIdNumMap,
   });
@@ -86,6 +88,7 @@ class TravelPackageModel {
       resellerId: data['reseller_id'],
       isResale: data['is_resale'],
       travelPackageIdForResale: data['travel_package_id_for_resale'],
+      travelPackagePurchasedId: data['travel_package_purchased_id'],
       clickNum: data['click_num'] != null
           ? Map<String, bool>.from(data['click_num'] as Map)
           : null,
@@ -95,7 +98,7 @@ class TravelPackageModel {
       saveNum: data['save_num'] != null
           ? Map<String, bool>.from(data['save_num'] as Map)
           : null,
-           ticketIdNumMap: data['ticket_id_map'] != null
+      ticketIdNumMap: data['ticket_id_map'] != null
           ? Map<String, String?>.from(data['ticket_id_map'] as Map)
           : null,
       createdAt: (data['created_at'] is Timestamp)
@@ -131,6 +134,7 @@ class TravelPackageModel {
       'save_num': saveNum,
       'ticket_id_map': ticketIdNumMap,
       'created_at': createdAt,
+      'travel_package_purchased_id': travelPackagePurchasedId,
     };
   }
 

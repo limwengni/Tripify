@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:tripify/views/receipt_repo_page.dart';
+import 'package:tripify/views/resale_travel_package_repo_page.dart';
 import 'package:tripify/views/travel_package_on_shelves_repo_page.dart';
 import 'package:tripify/views/travel_package_purchased_repository_page.dart';
 import 'package:tripify/views/view_fav_post_page.dart';
@@ -53,7 +55,12 @@ class DocumentRepositoryPage extends StatelessWidget {
                   subtitle: const Text("View your resale travel packages."),
                   trailing: const Icon(Icons.arrow_forward),
                   onTap: () {
-                    // Navigate to Resale Travel Package Page
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ResaleTravelPackageRepoPage(),
+                      ),
+                    );
                   },
                 ),
               ),
@@ -64,11 +71,25 @@ class DocumentRepositoryPage extends StatelessWidget {
                   subtitle: const Text("View your travel packages on shelves."),
                   trailing: const Icon(Icons.arrow_forward),
                   onTap: () {
-                     Navigator.push(
+                    Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) =>
-                            TravelPackageOnShelvesRepoPage(),
+                        builder: (context) => TravelPackageOnShelvesRepoPage(),
+                      ),
+                    );
+                  },
+                ),
+              ),
+              Card(
+                child: ListTile(
+                  title: const Text("Receipt for Travel Package Purchased"),
+                  subtitle: const Text("View your travel packages on shelves."),
+                  trailing: const Icon(Icons.arrow_forward),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ReceiptRepoPage(),
                       ),
                     );
                   },

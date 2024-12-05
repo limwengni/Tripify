@@ -367,6 +367,7 @@ class _TravelPackagePurchasedCardState
                   price = double.parse(
                       price.toStringAsFixed(2)); // Round to 2 decimal places
 
+        
                   TravelPackageModel travelPackageResale = TravelPackageModel(
                       id: '',
                       name: travelPackage!.name,
@@ -381,8 +382,11 @@ class _TravelPackagePurchasedCardState
                       resellerId: widget.currentUserId,
                       isResale: true,
                       createdAt: travelPackage!.createdAt,
+                    
                       quantityAvailable:quantity,
-                      ticketIdNumMap: travelPackage!.ticketIdNumMap);
+                      ticketIdNumMap: travelPackage!.ticketIdNumMap
+                      ,travelPackageIdForResale: travelPackage!.id,
+                      travelPackagePurchasedId: widget.travelPackagePurchased.id);
                   try {
                     await _firestoreService.insertDataWithAutoID(
                         'Travel_Packages', travelPackageResale.toMap());

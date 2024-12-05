@@ -240,6 +240,29 @@ Future<void> addItemToSubCollectionList({
   }
 }
 
+Future<void> addItemToCollectionList({
+  required String documentId,
+  required String collectionName,  
+
+  required String fieldName,
+  required List<String> newItems,
+}) async {
+  try {
+    // Reference to the document
+    DocumentReference documentRef =
+        FirebaseFirestore.instance.collection(collectionName).doc(documentId);
+
+    // Update the list using arrayUnion to add the new item
+    await documentRef.update({
+      fieldName: FieldValue.arrayUnion(newItems),
+    });
+
+    print('Item added successfully to the list!');
+  } catch (e) {
+    print('Error adding item to the list: $e');
+  }
+}
+
   // Delete Data
   Future<void> deleteData(String collection, String documentId) async {
     try {
@@ -366,6 +389,21 @@ Stream<QuerySnapshot> getStreamDataByField({
       return null;
     }
   }
+
+Future<void> incrementFieldInSubCollection(String collection, String documentId,String subCollection, String subDocumentId, int increaseNum, String field) async {
+  try {
+   
+
+    // Update the document by incrementing the numeric field
+    await FirebaseFirestore.instance.collection(collection).doc(documentId).collection(subCollection).doc(subDocumentId).update({
+      field: FieldValue.increment(increaseNum), // Add 2 to the field
+    });
+
+    print("Field incremented successfully!");
+  } catch (e) {
+    print("Error incrementing field: $e");
+  }
+}
 
 // Select Data (Get by Field Value)
   Future<List<Map<String, dynamic>>> getDataByField(

@@ -34,17 +34,14 @@ class _TravelPackagePurchasedCardState
   int? clickNum;
   int? saveNum;
   double? purchaseRate;
-    UserModel? travelCompanyUser;
-
+  UserModel? travelCompanyUser;
 
   @override
   void initState() {
     travelPackage = widget.travelPackageOnShelve;
-    fetchTravelCompany;
+    fetchTravelCompany();
     super.initState();
   }
-
-
 
   void fetchTravelCompany() async {
     Map<String, dynamic>? userMap;
@@ -55,18 +52,20 @@ class _TravelPackagePurchasedCardState
       if (userMap != null) {
         travelCompanyUser = UserModel.fromMap(userMap, userMap['id']);
         print(travelCompanyUser);
-        
       }
     });
   }
-
-
 
   @override
   Widget build(BuildContext context) {
     viewNum = widget.travelPackageOnShelve.viewNum?.length;
     clickNum = widget.travelPackageOnShelve.clickNum?.length;
     saveNum = widget.travelPackageOnShelve.saveNum?.length;
+
+    double ctr = clickNum != null && viewNum != null && viewNum != 0
+        ? clickNum! / viewNum!
+        : 0;
+
     if (clickNum != null) {
       purchaseRate = (widget.travelPackageOnShelve.quantity -
               widget.travelPackageOnShelve.quantityAvailable) /
@@ -75,6 +74,10 @@ class _TravelPackagePurchasedCardState
     }
     return GestureDetector(
       onTap: () {
+        print('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%');
+        print('1: ' + travelPackage!.id);
+        print('2' + widget.currentUserId);
+        print('3' + travelCompanyUser!.role);
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -171,8 +174,19 @@ class _TravelPackagePurchasedCardState
                         ),
                       ),
                       Text(
-                        travelPackage!.price.toString(),
+                        'RM ' + travelPackage!.price.toString(),
                         style: Theme.of(context).textTheme.bodyLarge,
+                      ),
+                    ],
+                  ),
+                  Row(
+                    children: [
+                      Text(
+                        'Resell Quantity: ${widget.travelPackageOnShelve.quantity}',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.normal,
+                          color: Colors.black,
+                        ),
                       ),
                     ],
                   ),
@@ -344,8 +358,7 @@ class _TravelPackagePurchasedCardState
                                         ),
                                       ),
                                       TextSpan(
-                                        text:
-                                            '${widget.travelPackageOnShelve.quantity - widget.travelPackageOnShelve.quantityAvailable}',
+                                        text: '${ctr}%',
                                         style: const TextStyle(
                                           fontWeight: FontWeight
                                               .normal, // Normal for the number
@@ -371,7 +384,9 @@ class _TravelPackagePurchasedCardState
                                         ),
                                       ),
                                       TextSpan(
-                                        text: '${purchaseRate}%',
+                                        text: purchaseRate != null
+                                            ? '${purchaseRate}%'
+                                            : '0%',
                                         style: const TextStyle(
                                           fontWeight: FontWeight
                                               .normal, // Normal for the number
@@ -397,7 +412,9 @@ class _TravelPackagePurchasedCardState
                                         ),
                                       ),
                                       TextSpan(
-                                        text: '${saveNum}',
+                                        text: saveNum != null
+                                            ? '${saveNum}'
+                                            : '0',
                                         style: const TextStyle(
                                           fontWeight: FontWeight
                                               .normal, // Normal for the number
@@ -462,10 +479,22 @@ class _TravelPackagePurchasedCardState
           actions: [
             TextButton(
               onPressed: () async {
+          
+
                 await _firestoreService.deleteData(
                     'Travel_Packages', widget.travelPackageOnShelve.id);
-                await _firestoreService.deleteData(
-                    'Conversations', widget.travelPackageOnShelve.groupChatId!);
+                if (widget.travelPackageOnShelve.isResale == true) {
+                  await _firestoreService.incrementFieldInSubCollection(
+                      'User',
+                      widget.currentUserId,
+                      'Travel_Packages_Purchased',
+                      widget.travelPackageOnShelve.travelPackagePurchasedId!,
+                      -widget.travelPackageOnShelve.quantity,
+                      'resale_quantity');
+                } else {
+                  await _firestoreService.deleteData('Conversations',
+                      widget.travelPackageOnShelve.groupChatId!);
+                }
                 Navigator.of(context).pop();
               },
               child: const Text('Confirm'),
