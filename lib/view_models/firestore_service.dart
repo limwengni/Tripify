@@ -193,6 +193,21 @@ class FirestoreService {
     }
   }
 
+
+  Future<void> removeMapKey(
+      String collection, String documentId, String field, String key) async {
+    try {
+      // Use FieldValue.delete() to remove the specific key in the map field
+      await _db.collection(collection).doc(documentId).update({
+        '$field.$key': FieldValue.delete(),
+      });
+      print("Key '$key' removed successfully from field '$field'.");
+    } catch (e) {
+      print("Error removing key from field: $e");
+    }
+  }
+
+
   Future<void> updateSubCollectionField(
       {required String collection,
       required String documentId,
@@ -215,6 +230,28 @@ class FirestoreService {
       print("Error updating field: $e");
     }
   }
+
+Future<void> removeItemFromFirestoreList({
+  required String collectionPath,
+  required String documentId,
+  required String fieldName,
+  required dynamic itemToRemove,
+}) async {
+  try {
+    // Reference to the Firestore document
+    DocumentReference documentRef =
+        FirebaseFirestore.instance.collection(collectionPath).doc(documentId);
+
+    // Update the document by removing the specific item
+    await documentRef.update({
+      fieldName: FieldValue.arrayRemove([itemToRemove]),
+    });
+
+    print("Item removed successfully.");
+  } catch (e) {
+    print("Error removing item: $e");
+  }
+}
 
 Future<void> addItemToSubCollectionList({
   required String documentId,
@@ -396,7 +433,7 @@ Future<void> incrementFieldInSubCollection(String collection, String documentId,
 
     // Update the document by incrementing the numeric field
     await FirebaseFirestore.instance.collection(collection).doc(documentId).collection(subCollection).doc(subDocumentId).update({
-      field: FieldValue.increment(increaseNum), // Add 2 to the field
+      field: FieldValue.increment(increaseNum), 
     });
 
     print("Field incremented successfully!");
@@ -480,6 +517,38 @@ Future<void> incrementFieldInSubCollection(String collection, String documentId,
           .doc(parentDocId) // Parent document ID
           .collection(subCollection) // Subcollection
           .where(field, isEqualTo: value) // Filter by field
+          .get();
+
+      // Check if any documents exist in the query
+      if (querySnapshot.docs.isNotEmpty) {
+        // Return the first matching document's data
+        return querySnapshot.docs.first.data() as Map<String, dynamic>;
+      } else {
+        print("No matching documents found in the subcollection.");
+        return null;
+      }
+    } catch (e) {
+      print("Error fetching data from subcollection by field: $e");
+      return null;
+    }
+  }
+
+
+  Future<Map<String, dynamic>?> getSubCollectionOneDataByTwoFields(
+    String parentCollection,
+    String parentDocId,
+    String subCollection,
+    String field1,
+    dynamic value1,    String field2,
+    dynamic value2,
+  ) async {
+    try {
+      final querySnapshot = await _db
+          .collection(parentCollection) // Parent collection
+          .doc(parentDocId) // Parent document ID
+          .collection(subCollection) // Subcollection
+          .where(field2, isEqualTo: value2) // Filter by field
+          .where(field1, isEqualTo: value1) // Filter by field
           .get();
 
       // Check if any documents exist in the query
