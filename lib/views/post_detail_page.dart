@@ -48,7 +48,6 @@ class _PostDetailPageState extends State<PostDetailPage>
   bool liked = false;
   bool isSaved = false;
   bool saved = false;
-  bool isVoted = false;
   bool voted = false;
   String? username;
   List<PostComment> comments = [];
@@ -56,11 +55,15 @@ class _PostDetailPageState extends State<PostDetailPage>
   late String? _pollQuestion;
   late List<String>? _pollOptions;
   String? _selectedOption;
+  String? fetchedSelectedOption;
+  Map<String, int> pollResults = {};
 
   final TextEditingController _commentController = TextEditingController();
   final FocusNode _commentFocusNode = FocusNode();
   final int _maxCommentLength = 200;
   final _formKey = GlobalKey<FormState>();
+
+  PollProvider pollProvider = new PollProvider();
 
   @override
   void initState() {
@@ -97,11 +100,27 @@ class _PostDetailPageState extends State<PostDetailPage>
 
     _checkIfSaved(_id, user!.uid);
 
-    _checkIfVoted(_id, user!.uid);
+    _checkIfUserVoted();
 
     WidgetsBinding.instance.addObserver(this);
 
     _fetchUsernameAndPfp();
+  }
+
+  Future<void> _checkIfUserVoted() async {
+    String? userId = FirebaseAuth.instance.currentUser?.uid;
+
+    if (userId != null) {
+      fetchedSelectedOption =
+          await pollProvider.getUserSelectedOption(widget.id, userId);
+      final results = await pollProvider.getPollResults(widget.id);
+
+      pollResults = results;
+      if (fetchedSelectedOption != null) {
+        voted = true;
+      }
+      setState(() {});
+    }
   }
 
   Future<void> _refreshData() async {
@@ -329,19 +348,8 @@ class _PostDetailPageState extends State<PostDetailPage>
     Navigator.pop(context, true);
   }
 
-  Future<void> _checkIfVoted(String postId, String userId) async {
-    final pollProvider = PollProvider();
-
-    // Check if the user has voted on this poll (i.e., check if there's an entry with the userId)
-    bool voted = await pollProvider.isUserVoted(postId, userId);
-
-    setState(() {
-      isVoted = voted;
-    });
-  }
-
   Future<void> submitPollInteraction(
-      String pollId, String selectedOption) async {
+      String postId, String selectedOption) async {
     try {
       String? userId = FirebaseAuth.instance.currentUser?.uid;
       final pollProvider = PollProvider();
@@ -351,8 +359,14 @@ class _PostDetailPageState extends State<PostDetailPage>
         return;
       }
 
-      await pollProvider.submitPollInteraction(pollId, userId);
+      await pollProvider.submitPollInteraction(postId, selectedOption);
 
+      final results = await pollProvider.getPollResults(postId);
+
+      setState(() {
+        voted = true;
+        pollResults = results;
+      });
       print("Poll interaction submitted successfully!");
     } catch (e) {
       print("Error submitting poll interaction: $e");
@@ -370,6 +384,13 @@ class _PostDetailPageState extends State<PostDetailPage>
       print("Error fetching poll results: $e");
       return {};
     }
+  }
+
+  String calculatePercentage(String option) {
+    int totalVotes = pollResults.values.fold(0, (sum, count) => sum + count);
+    if (totalVotes == 0 || !pollResults.containsKey(option)) return "0%";
+    double percentage = (pollResults[option]! / totalVotes) * 100;
+    return "${percentage.toStringAsFixed(1)}%";
   }
 
   @override
@@ -669,6 +690,7 @@ class _PostDetailPageState extends State<PostDetailPage>
                         style: TextStyle(fontSize: 18),
                       ),
                       SizedBox(height: 10),
+
                       // Poll
                       if (_pollQuestion != '')
                         Column(
@@ -712,45 +734,139 @@ class _PostDetailPageState extends State<PostDetailPage>
                                             const EdgeInsets.only(bottom: 8.0),
                                         child: ElevatedButton(
                                           onPressed: () {
-                                            submitPollInteraction(
-                                                'pollId', _pollOptions![i]);
+                                            if (voted == false) {
+                                              submitPollInteraction(
+                                                  widget.id, _pollOptions![i]);
 
-                                            setState(() {
-                                              _selectedOption =
-                                                  _pollOptions![i];
-                                            });
+                                              setState(() {
+                                                _selectedOption =
+                                                    _pollOptions![i];
+                                              });
+                                            }
                                           },
                                           style: ElevatedButton.styleFrom(
                                             padding: EdgeInsets.symmetric(
                                                 vertical: 12.0,
                                                 horizontal: 24.0),
-                                            backgroundColor: _selectedOption ==
-                                                    _pollOptions![i]
+                                            backgroundColor: (_selectedOption ==
+                                                        _pollOptions![i] ||
+                                                    fetchedSelectedOption ==
+                                                        _pollOptions![i])
                                                 ? const Color.fromARGB(
-                                                    255,
-                                                    159,
-                                                    118,
-                                                    249) // Highlight selected option
-                                                : (isVoted
-                                                    ? Colors.grey[
-                                                        500] // Change color for other options when already voted
-                                                    : (Theme.of(context)
-                                                                .brightness ==
-                                                            Brightness.dark
-                                                        ? Colors.grey[500]
-                                                        : Colors.grey[300])),
+                                                    255, 159, 118, 249)
+                                                : (Theme.of(context)
+                                                            .brightness ==
+                                                        Brightness.dark
+                                                    ? Colors.grey[500]
+                                                    : Colors.grey[300]),
                                             minimumSize:
                                                 Size(double.infinity, 50),
                                           ),
                                           child: Align(
-                                            alignment: Alignment.centerLeft,
-                                            child: Text(
-                                              _pollOptions![i],
-                                              textAlign: TextAlign.left,
-                                            ),
-                                          ),
+                                              alignment: Alignment.centerLeft,
+                                              child: (_selectedOption ==
+                                                          _pollOptions![i] ||
+                                                      fetchedSelectedOption ==
+                                                          _pollOptions![i])
+                                                  ? Row(
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment
+                                                              .spaceBetween,
+                                                      children: [
+                                                        Text(
+                                                          _pollOptions![i],
+                                                          textAlign:
+                                                              TextAlign.left,
+                                                          style: TextStyle(
+                                                              color:
+                                                                  Colors.white),
+                                                        ),
+                                                        if (voted == true)
+                                                          Text(
+                                                            calculatePercentage(
+                                                                _pollOptions![
+                                                                    i]),
+                                                            style: TextStyle(
+                                                              color: (_selectedOption ==
+                                                                          _pollOptions![
+                                                                              i] ||
+                                                                      fetchedSelectedOption ==
+                                                                          _pollOptions![
+                                                                              i])
+                                                                  ? Colors.white
+                                                                  : Colors
+                                                                      .black,
+                                                            ),
+                                                          ),
+                                                      ],
+                                                    )
+                                                  : Row(
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment
+                                                              .spaceBetween,
+                                                      children: [
+                                                        Text(
+                                                          _pollOptions![i],
+                                                          textAlign:
+                                                              TextAlign.left,
+                                                        ),
+                                                        if (voted == true)
+                                                          Text(
+                                                            calculatePercentage(
+                                                                _pollOptions![
+                                                                    i]),
+                                                            style: TextStyle(
+                                                              color: (_selectedOption ==
+                                                                          _pollOptions![
+                                                                              i] ||
+                                                                      fetchedSelectedOption ==
+                                                                          _pollOptions![
+                                                                              i])
+                                                                  ? Colors.white
+                                                                  : Colors
+                                                                      .black,
+                                                            ),
+                                                          )
+                                                      ],
+                                                    )),
                                         ),
                                       ),
+                                  // Clear Vote Button
+                                  if (voted == true)
+                                    Align(
+                                      alignment: Alignment.centerRight,
+                                      child: SizedBox(
+                                        height:
+                                            30, // Adjust height to fit the button snugly
+                                        child: TextButton(
+                                          onPressed: () async {
+                                            String? userId = FirebaseAuth
+                                                .instance.currentUser?.uid;
+
+                                            try {
+                                              await pollProvider.clearUserVote(
+                                                  widget.id, userId!);
+                                            } catch (e) {
+                                              print("Error clearing vote: $e");
+                                              setState(() {
+                                                voted = true;
+                                              });
+                                            }
+
+                                            setState(() {
+                                              _selectedOption = null;
+                                              fetchedSelectedOption = null;
+                                              voted = false;
+                                            });
+                                          },
+                                          style: TextButton.styleFrom(
+                                            padding: EdgeInsets.symmetric(
+                                                horizontal: 8.0, vertical: 0.0),
+                                          ),
+                                          child: Text("Clear Vote"),
+                                        ),
+                                      ),
+                                    ),
                                 ],
                               ),
                             ),
