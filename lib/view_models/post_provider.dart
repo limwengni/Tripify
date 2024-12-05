@@ -72,6 +72,8 @@ class PostProvider with ChangeNotifier {
     required Map<File, int> mediaWithIndex,
     List<String>? hashtags,
     String? location,
+    String? pollQuestion,
+    List<String>? pollOptions,
   }) async {
     try {
       List<String> mediaUrls = await _uploadMedia(mediaWithIndex, userId);
@@ -95,6 +97,8 @@ class PostProvider with ChangeNotifier {
         likesCount: 0,
         commentsCount: 0,
         savedCount: 0,
+        pollQuestion: pollQuestion,
+        pollOptions: pollOptions,
       );
 
       await _firestore.collection('Post').add(newPost.toMap());

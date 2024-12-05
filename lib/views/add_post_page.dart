@@ -26,6 +26,12 @@ class _NewPostPageState extends State<NewPostPage> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
+  TextEditingController _pollQuestionController = TextEditingController();
+  List<TextEditingController> _pollOptionControllers = [
+    TextEditingController(text: 'Yes'),
+    TextEditingController(text: 'No'),
+  ];
+  List<String> _pollOptions = ['Yes', 'No'];
 
   late Map<File, ValueNotifier<File?>> thumbnailCache;
 
@@ -36,6 +42,7 @@ class _NewPostPageState extends State<NewPostPage> {
   final int _maxTitleLength = 20;
   int hashtagCount = 0;
   bool _isListenerEnabled = true;
+  bool isPollSectionVisible = false;
 
   final HashtagProvider _hashtagProvider = HashtagProvider();
 
@@ -72,6 +79,15 @@ class _NewPostPageState extends State<NewPostPage> {
     });
 
     _loadHashtags();
+
+    for (int i = 0; i < _pollOptionControllers.length; i++) {
+      _pollOptionControllers[i].addListener(() {
+        setState(() {
+          // Update the corresponding option in the list
+          _pollOptions[i] = _pollOptionControllers[i].text;
+        });
+      });
+    }
   }
 
   Future<void> _loadHashtags() async {
@@ -130,11 +146,9 @@ class _NewPostPageState extends State<NewPostPage> {
   Future<void> _generateThumbnail(File file) async {
     try {
       final thumbnail = await genThumbnailFile(file.path);
-      thumbnailCache[file]?.value =
-          thumbnail;
+      thumbnailCache[file]?.value = thumbnail;
     } catch (e) {
-      print(
-          "Error generating thumbnail: $e");
+      print("Error generating thumbnail: $e");
     }
   }
 
@@ -175,10 +189,12 @@ class _NewPostPageState extends State<NewPostPage> {
         context,
         MaterialPageRoute(
           builder: (context) => PostFormPage(
-            title: _titleController.text, // Pass the title
-            description: _descriptionController.text, // Pass the description
-            imagesWithIndex: widget.imagesWithIndex, // Pass the images
-            location: selectedLocation, // Pass the location
+            title: _titleController.text,
+            description: _descriptionController.text,
+            imagesWithIndex: widget.imagesWithIndex,
+            location: selectedLocation,
+            pollQuestion: _pollQuestionController.text,
+            pollOptions: _pollOptions,
             // Pass other required data
           ),
         ),
@@ -200,6 +216,9 @@ class _NewPostPageState extends State<NewPostPage> {
   @override
   void dispose() {
     _descriptionController.dispose();
+    for (var controller in _pollOptionControllers) {
+      controller.dispose();
+    }
     super.dispose();
   }
 
@@ -248,8 +267,8 @@ class _NewPostPageState extends State<NewPostPage> {
                                             ? Colors.grey[800]
                                             : Colors.grey[200],
                                         child: ValueListenableBuilder<File?>(
-                                          valueListenable: thumbnailCache[
-                                              file]!,
+                                          valueListenable:
+                                              thumbnailCache[file]!,
                                           builder: (context, thumbnail, child) {
                                             if (thumbnail != null) {
                                               return Image.file(
@@ -429,6 +448,222 @@ class _NewPostPageState extends State<NewPostPage> {
                           : Colors.grey[300], // Color of the divider
                     ),
 
+                    // Poll Section
+                    SizedBox(height: 16),
+
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Create a Poll',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color:
+                                Theme.of(context).brightness == Brightness.dark
+                                    ? Colors.white
+                                    : Colors.black,
+                          ),
+                        ),
+                        ElevatedButton(
+                          onPressed: () {
+                            setState(() {
+                              if (isPollSectionVisible) {
+                                _pollQuestionController.clear();
+                                _pollOptions
+                                    .clear(); // Clear the poll options list
+                                _pollOptionControllers
+                                    .clear(); // Clear the controllers list
+                              }
+                              if (!isPollSectionVisible) {
+                                _pollOptions.add('Yes');
+                                _pollOptionControllers.add(
+                                    TextEditingController(
+                                        text: 'Yes'));
+
+                                _pollOptions.add('No');
+                                _pollOptionControllers.add(
+                                    TextEditingController(
+                                        text: 'No'));
+                              }
+                              // Toggle the visibility state
+                              isPollSectionVisible = !isPollSectionVisible;
+                            });
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.blue,
+                            foregroundColor: Colors.white,
+                            padding: EdgeInsets.symmetric(
+                                vertical: 12.0, horizontal: 24.0),
+                          ),
+                          child:
+                              Text(isPollSectionVisible ? 'Clear' : 'Create'),
+                        ),
+                      ],
+                    ),
+
+                    if (isPollSectionVisible)
+                      Column(children: [
+                        SizedBox(height: 16),
+
+                        TextFormField(
+                          cursorColor:
+                              Theme.of(context).brightness == Brightness.dark
+                                  ? Colors.white
+                                  : Colors.black,
+                          controller: _pollQuestionController,
+                          maxLength: 40,
+                          decoration: InputDecoration(
+                            hintText: 'Enter your poll question here',
+                            hintStyle: TextStyle(color: Colors.grey),
+                            border: InputBorder.none,
+                            focusedBorder: UnderlineInputBorder(
+                              borderSide: BorderSide(
+                                color: Theme.of(context).brightness ==
+                                        Brightness.dark
+                                    ? Colors.white
+                                    : Colors.black,
+                              ),
+                            ),
+                            enabledBorder: UnderlineInputBorder(
+                              borderSide: BorderSide(
+                                color: Theme.of(context).brightness ==
+                                        Brightness.dark
+                                    ? Colors.white.withOpacity(0.6)
+                                    : Colors.black.withOpacity(0.6),
+                              ),
+                            ),
+                          ),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Please enter a poll question';
+                            }
+                            return null;
+                          },
+                        ),
+
+                        SizedBox(height: 16),
+
+                        // Poll Options
+                        Text(
+                          'Poll Options',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color:
+                                Theme.of(context).brightness == Brightness.dark
+                                    ? Colors.white
+                                    : Colors.black,
+                          ),
+                        ),
+
+                        // Input for each poll option
+                        ...List.generate(
+                          _pollOptions.length, // Generate based on list size
+                          (index) => Row(
+                            children: [
+                              Expanded(
+                                child: TextFormField(
+                                  controller: _pollOptionControllers[index],
+                                  decoration: InputDecoration(
+                                    hintText: 'Option ${index + 1}',
+                                    hintStyle: TextStyle(color: Colors.grey),
+                                    border: InputBorder.none,
+                                    focusedBorder: UnderlineInputBorder(
+                                      borderSide: BorderSide(
+                                        color: Theme.of(context).brightness ==
+                                                Brightness.dark
+                                            ? Colors.white
+                                            : Colors
+                                                .black, // Color of the underline when focused
+                                      ),
+                                    ),
+                                    enabledBorder: UnderlineInputBorder(
+                                      borderSide: BorderSide(
+                                          color: Theme.of(context).brightness ==
+                                                  Brightness.dark
+                                              ? Colors.white.withOpacity(0.6)
+                                              : Colors.black.withOpacity(0.6)),
+                                    ),
+                                  ),
+                                  validator: (value) {
+                                    if (value == null || value.isEmpty) {
+                                      return 'Please enter an option';
+                                    }
+                                    return null;
+                                  },
+                                ),
+                              ),
+                              if (index >= 2)
+                                IconButton(
+                                  icon: Icon(Icons.close,
+                                      color: Colors.grey[500]),
+                                  onPressed: () {
+                                    setState(() {
+                                      _pollOptions.removeAt(index);
+                                      _pollOptionControllers.removeAt(index);
+                                    });
+                                  },
+                                ),
+                            ],
+                          ),
+                        ),
+
+                        SizedBox(height: 16),
+
+                        // Add Button to Add More Options
+                        if (_pollOptions.length < 4)
+                          ElevatedButton(
+                            onPressed: () {
+                              if (_pollOptions.length < 4) {
+                                setState(() {
+                                  _pollOptionControllers.add(TextEditingController(
+                                      text:
+                                          'Option ${_pollOptions.length + 1}'));
+                                  _pollOptions
+                                      .add('Option ${_pollOptions.length + 1}');
+
+                                  _pollOptionControllers.last.addListener(() {
+                                    setState(() {
+                                      _pollOptions[_pollOptions.length - 1] =
+                                          _pollOptionControllers.last.text;
+                                    });
+                                  });
+                                });
+                              } else {
+                                // Show a warning message when the limit is reached
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      'You can only add up to 4 poll options.',
+                                      style: TextStyle(color: Colors.white),
+                                    ),
+                                    duration: Duration(seconds: 2),
+                                    backgroundColor: Colors.red,
+                                  ),
+                                );
+                              }
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.blue,
+                              foregroundColor: Colors.white,
+                              padding: EdgeInsets.symmetric(
+                                  vertical: 12.0, horizontal: 24.0),
+                            ),
+                            child: Text('Add More Options'),
+                          ),
+
+                        const SizedBox(height: 5),
+                        Container(
+                          margin: EdgeInsets.only(
+                              top: 4), // Optional margin for spacing
+                          height: 2, // Height of the divider
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.grey[800]
+                              : Colors.grey[300], // Color of the divider
+                        ),
+                      ]),
+
                     // Location
                     Padding(
                       padding: const EdgeInsets.only(top: 14, bottom: 14),
@@ -442,22 +677,21 @@ class _NewPostPageState extends State<NewPostPage> {
 
                           if (location != null) {
                             setState(() {
-                              selectedLocation =
-                                  location; // Update the selected location
+                              selectedLocation = location;
                             });
                           }
                         },
                         child: Row(
                           children: [
                             Icon(
-                              Icons.location_on_outlined, // Location icon
+                              Icons.location_on_outlined,
                               color: Theme.of(context).brightness ==
                                       Brightness.dark
                                   ? Colors.white
-                                  : Colors.black, // Color of the icon
-                              size: 24, // Size of the icon
+                                  : Colors.black,
+                              size: 24,
                             ),
-                            SizedBox(width: 8), // Space between icon and text
+                            SizedBox(width: 8),
                             Expanded(
                               child: Text(
                                 'Mark location', // The text
@@ -471,16 +705,32 @@ class _NewPostPageState extends State<NewPostPage> {
                                 ),
                               ),
                             ),
-                            Expanded(
-                              child: Text(
-                                '${selectedLocation.isNotEmpty ? selectedLocation : ''}', // The text
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w500,
-                                  color: Colors.grey[500],
-                                ),
+                            if (selectedLocation.isNotEmpty)
+                              Row(
+                                children: [
+                                  Text(
+                                    selectedLocation, // The text of the selected location
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w500,
+                                      color: Colors.grey[500],
+                                    ),
+                                  ),
+                                  IconButton(
+                                    icon: Icon(
+                                      Icons.close,
+                                      size: 18,
+                                      color: Colors.grey[500],
+                                    ),
+                                    onPressed: () {
+                                      setState(() {
+                                        selectedLocation =
+                                            ''; // Clear the selected location
+                                      });
+                                    },
+                                  ),
+                                ],
                               ),
-                            ),
                             Icon(
                               Icons.arrow_forward_ios, // Right arrow icon
                               size: 18,

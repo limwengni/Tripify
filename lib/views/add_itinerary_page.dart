@@ -119,7 +119,10 @@ class _AddItineraryPageState extends State<AddItineraryPage> {
                       return 'Number of days is required';
                     }
                     int? days = int.tryParse(value);
-                    if (days == null || days <= 0) {
+                    if (days == null) {
+                      return 'You can only input numbers.';
+                    }
+                    if (days <= 0) {
                       return 'Number of days must be greater than 0';
                     }
                     return null;
@@ -196,6 +199,8 @@ class _AddItineraryPageState extends State<AddItineraryPage> {
             ),
           ],
           SizedBox(height: 30),
+
+          const Spacer(),
 
           ElevatedButton(
             onPressed: _nextStep,

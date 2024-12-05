@@ -12,6 +12,8 @@ class Post {
   int likesCount;
   int commentsCount;
   int savedCount;
+  final String? pollQuestion;
+  final List<String>? pollOptions;
 
   // Constructor
   Post({
@@ -26,6 +28,8 @@ class Post {
     required this.likesCount,
     required this.commentsCount,
     required this.savedCount,
+    this.pollQuestion,
+    this.pollOptions,
   });
 
   // Method to convert a Post object to a Map for Firestore
@@ -42,6 +46,8 @@ class Post {
       'like_count': likesCount,
       'comment_count': commentsCount,
       'saved_count': savedCount,
+      'poll_question': pollQuestion,
+      'poll_options': pollOptions,
     };
   }
 
@@ -65,6 +71,8 @@ class Post {
       likesCount: data['like_count'] ?? 0,
       commentsCount: data['comment_count'] ?? 0,
       savedCount: data['saved_count'] ?? 0,
+      pollQuestion: data['poll_question'] ?? '',
+      pollOptions: List<String>.from(data['poll_options'] ?? []),
     );
   }
 
@@ -80,6 +88,8 @@ class Post {
     int? likesCount,
     int? commentsCount,
     int? savedCount,
+    String? pollQuestion,
+    List<String>? pollOptions,
   }) {
     return Post(
       userId: userId ?? this.userId,
@@ -93,6 +103,8 @@ class Post {
       likesCount: likesCount ?? this.likesCount,
       commentsCount: commentsCount ?? this.commentsCount,
       savedCount: savedCount ?? this.savedCount,
+      pollQuestion: pollQuestion ?? this.pollQuestion,
+      pollOptions: pollOptions ?? this.pollOptions,
     );
   }
 }

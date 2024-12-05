@@ -10,6 +10,7 @@ import 'package:tripify/models/travel_package_purchased_model.dart';
 import 'package:tripify/models/user_model.dart';
 import 'package:tripify/view_models/firestore_service.dart';
 import 'package:tripify/views/travel_package_details_page.dart';
+import 'package:tripify/views/create_ads_page.dart';
 
 class TravelPackageOnShelvesCard extends StatefulWidget {
   final TravelPackageModel travelPackageOnShelve;
@@ -198,6 +199,30 @@ class _TravelPackagePurchasedCardState
                       ),
                       Text(viewNum != null ? '$viewNum' : '0'),
                       Spacer(),
+
+                      // Ads button (later need to change..)
+                      TextButton(
+                        onPressed: () {
+                          String id = widget.travelPackageOnShelve.id;
+                          
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => CreateAdsPage(travelPackageId: id),
+                            ),
+                          );
+                        },
+                        style: TextButton.styleFrom(
+                          backgroundColor: Colors.blue,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 8, horizontal: 12),
+                        ),
+                        child: const Text('Create Ads'),
+                      ),
+                      const SizedBox(width: 8),
+
+                      // Delete button
                       TextButton(
                         onPressed: () {
                           if (widget.travelPackageOnShelve.quantity !=
@@ -412,9 +437,13 @@ class _TravelPackagePurchasedCardState
                                         ),
                                       ),
                                       TextSpan(
+<<<<<<< HEAD
                                         text: saveNum != null
                                             ? '${saveNum}'
                                             : '0',
+=======
+                                        text: '${saveNum ?? 0}',
+>>>>>>> 65c37a8ba1a8af67d622a20489fd4b47c07d69d5
                                         style: const TextStyle(
                                           fontWeight: FontWeight
                                               .normal, // Normal for the number

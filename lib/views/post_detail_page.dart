@@ -10,6 +10,7 @@ import 'package:provider/provider.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:tripify/view_models/post_provider.dart';
 import 'package:tripify/view_models/user_provider.dart';
+import 'package:tripify/view_models/poll_provider.dart';
 import 'package:tripify/models/post_model.dart';
 import 'package:tripify/models/comment_model.dart';
 import 'package:tripify/views/user_profile_page.dart';
@@ -47,9 +48,14 @@ class _PostDetailPageState extends State<PostDetailPage>
   bool liked = false;
   bool isSaved = false;
   bool saved = false;
+  bool isVoted = false;
+  bool voted = false;
   String? username;
   List<PostComment> comments = [];
   bool isLoading = false;
+  late String? _pollQuestion;
+  late List<String>? _pollOptions;
+  String? _selectedOption;
 
   final TextEditingController _commentController = TextEditingController();
   final FocusNode _commentFocusNode = FocusNode();
@@ -69,6 +75,8 @@ class _PostDetailPageState extends State<PostDetailPage>
     commentCount = widget.post.commentsCount;
     saveCount = widget.post.savedCount;
     _createdAt = widget.post.createdAt;
+    _pollQuestion = widget.post.pollQuestion;
+    _pollOptions = widget.post.pollOptions;
 
     _description = _description.replaceAll(r'\n', '\n');
 
@@ -88,6 +96,8 @@ class _PostDetailPageState extends State<PostDetailPage>
     _checkIfLiked(_id, user!.uid);
 
     _checkIfSaved(_id, user!.uid);
+
+    _checkIfVoted(_id, user!.uid);
 
     WidgetsBinding.instance.addObserver(this);
 
@@ -147,6 +157,8 @@ class _PostDetailPageState extends State<PostDetailPage>
         commentCount = updatedPost.commentsCount;
         saveCount = updatedPost.savedCount;
         _createdAt = updatedPost.createdAt;
+        _pollQuestion = updatedPost.pollQuestion;
+        _pollOptions = updatedPost.pollOptions;
         _description = _description.replaceAll(r'\n', '\n');
         formattedDate = formatPostDate(_createdAt.toLocal());
       });
@@ -315,6 +327,49 @@ class _PostDetailPageState extends State<PostDetailPage>
 
     Navigator.pop(context, true);
     Navigator.pop(context, true);
+  }
+
+  Future<void> _checkIfVoted(String postId, String userId) async {
+    final pollProvider = PollProvider();
+
+    // Check if the user has voted on this poll (i.e., check if there's an entry with the userId)
+    bool voted = await pollProvider.isUserVoted(postId, userId);
+
+    setState(() {
+      isVoted = voted;
+    });
+  }
+
+  Future<void> submitPollInteraction(
+      String pollId, String selectedOption) async {
+    try {
+      String? userId = FirebaseAuth.instance.currentUser?.uid;
+      final pollProvider = PollProvider();
+
+      if (userId == null) {
+        print("User is not authenticated");
+        return;
+      }
+
+      await pollProvider.submitPollInteraction(pollId, userId);
+
+      print("Poll interaction submitted successfully!");
+    } catch (e) {
+      print("Error submitting poll interaction: $e");
+    }
+  }
+
+  Future<Map<String, int>> getPollResults(String pollId) async {
+    try {
+      // Fetch all interactions for the specific pollId
+      final pollProvider = PollProvider();
+
+      Map<String, int> results = await pollProvider.getPollResults(pollId);
+      return results;
+    } catch (e) {
+      print("Error fetching poll results: $e");
+      return {};
+    }
   }
 
   @override
@@ -614,6 +669,95 @@ class _PostDetailPageState extends State<PostDetailPage>
                         style: TextStyle(fontSize: 18),
                       ),
                       SizedBox(height: 10),
+                      // Poll
+                      if (_pollQuestion != '')
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Container(
+                              width: 400,
+                              padding: EdgeInsets.all(16.0),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(
+                                  color: Theme.of(context).brightness ==
+                                          Brightness.dark
+                                      ? Colors.white.withOpacity(0.3)
+                                      : Colors.black.withOpacity(0.3),
+                                ),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    _pollQuestion ?? '', // Poll Question
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: Theme.of(context).brightness ==
+                                              Brightness.dark
+                                          ? Colors.white
+                                          : Colors.black,
+                                    ),
+                                  ),
+                                  SizedBox(height: 10),
+                                  // Poll Options (Display as buttons or other UI elements)
+                                  if (_pollOptions != null &&
+                                      _pollOptions!.isNotEmpty)
+                                    for (int i = 0;
+                                        i < _pollOptions!.length;
+                                        i++)
+                                      Padding(
+                                        padding:
+                                            const EdgeInsets.only(bottom: 8.0),
+                                        child: ElevatedButton(
+                                          onPressed: () {
+                                            submitPollInteraction(
+                                                'pollId', _pollOptions![i]);
+
+                                            setState(() {
+                                              _selectedOption =
+                                                  _pollOptions![i];
+                                            });
+                                          },
+                                          style: ElevatedButton.styleFrom(
+                                            padding: EdgeInsets.symmetric(
+                                                vertical: 12.0,
+                                                horizontal: 24.0),
+                                            backgroundColor: _selectedOption ==
+                                                    _pollOptions![i]
+                                                ? const Color.fromARGB(
+                                                    255,
+                                                    159,
+                                                    118,
+                                                    249) // Highlight selected option
+                                                : (isVoted
+                                                    ? Colors.grey[
+                                                        500] // Change color for other options when already voted
+                                                    : (Theme.of(context)
+                                                                .brightness ==
+                                                            Brightness.dark
+                                                        ? Colors.grey[500]
+                                                        : Colors.grey[300])),
+                                            minimumSize:
+                                                Size(double.infinity, 50),
+                                          ),
+                                          child: Align(
+                                            alignment: Alignment.centerLeft,
+                                            child: Text(
+                                              _pollOptions![i],
+                                              textAlign: TextAlign.left,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      if (_pollQuestion != '') SizedBox(height: 15),
+
                       Row(
                         mainAxisAlignment: MainAxisAlignment.start,
                         children: [
@@ -642,7 +786,7 @@ class _PostDetailPageState extends State<PostDetailPage>
                           )
                         ],
                       ),
-                      SizedBox(height: 20),
+                      SizedBox(height: 15),
                     ],
                   ),
                 ),
@@ -714,9 +858,13 @@ class _PostDetailPageState extends State<PostDetailPage>
                     SizedBox(width: 10),
                     IconButton(
                       icon: Icon(
-                        isSaved? Icons.bookmark : Icons.bookmark_border_outlined, 
-                        size: 30,
-                        color: isSaved ? const Color.fromARGB(246, 247, 195, 9) : null),
+                          isSaved
+                              ? Icons.bookmark
+                              : Icons.bookmark_border_outlined,
+                          size: 30,
+                          color: isSaved
+                              ? const Color.fromARGB(246, 247, 195, 9)
+                              : null),
                       onPressed: () async {
                         final postId = _id;
                         final userId = userProvider.user!.uid;
