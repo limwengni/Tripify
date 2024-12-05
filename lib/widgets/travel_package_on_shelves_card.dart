@@ -437,13 +437,9 @@ class _TravelPackagePurchasedCardState
                                         ),
                                       ),
                                       TextSpan(
-<<<<<<< HEAD
                                         text: saveNum != null
                                             ? '${saveNum}'
                                             : '0',
-=======
-                                        text: '${saveNum ?? 0}',
->>>>>>> 65c37a8ba1a8af67d622a20489fd4b47c07d69d5
                                         style: const TextStyle(
                                           fontWeight: FontWeight
                                               .normal, // Normal for the number
