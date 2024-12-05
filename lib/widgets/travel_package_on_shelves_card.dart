@@ -4,10 +4,11 @@ import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:intl/intl.dart';
-import 'package:shimmer/shimmer.dart'; // Import shimmer package
+import 'package:shimmer/shimmer.dart';
 import 'package:tripify/models/travel_package_model.dart';
 import 'package:tripify/models/travel_package_purchased_model.dart';
 import 'package:tripify/models/user_model.dart';
+import 'package:tripify/view_models/ad_provider.dart';
 import 'package:tripify/view_models/firestore_service.dart';
 import 'package:tripify/views/travel_package_details_page.dart';
 import 'package:tripify/views/create_ads_page.dart';
@@ -37,11 +38,20 @@ class _TravelPackagePurchasedCardState
   double? purchaseRate;
   UserModel? travelCompanyUser;
 
+  bool _hasAds = false;
+  TextButton? actionButton;
+  List<Map<String, dynamic>> _adDetails = [];
+  String _status = '';
+
+  AdProvider adProvider = new AdProvider();
+
   @override
   void initState() {
     travelPackage = widget.travelPackageOnShelve;
     fetchTravelCompany();
     super.initState();
+    checkIfAds(travelPackage!.id);
+    updateAdStatus();
   }
 
   void fetchTravelCompany() async {
@@ -55,6 +65,46 @@ class _TravelPackagePurchasedCardState
         print(travelCompanyUser);
       }
     });
+  }
+
+  Future<bool> checkIfAds(String travelPackageId) async {
+    // Fetch the ad details using your provider
+    List<Map<String, dynamic>> adDetails =
+        await adProvider.getAdDetails(travelPackageId);
+
+    // Print the ad details for debugging
+    print("Ad details: $adDetails");
+
+    // Initialize the status variable
+    String status = '';
+
+    // Check if there are ads available
+    if (adDetails.isNotEmpty) {
+      _hasAds = true;
+
+      // Loop through the fetched ad details
+      for (var ad in adDetails) {
+        String adId = ad['id']; // Get the ad ID
+        status = ad['status']; // Get the status of the ad
+      }
+
+      print("Ad status: $status");
+    } else {
+      _hasAds = false;
+      print("No ads available for this travel package.");
+    }
+
+    // Update the state with the final status
+    setState(() {
+      _status = status;
+      print("Updated status: $_status");
+    });
+
+    return _hasAds;
+  }
+
+  void updateAdStatus() async {
+    await adProvider.updateAdStatus();
   }
 
   @override
@@ -497,8 +547,351 @@ class _TravelPackagePurchasedCardState
                 ),
               ),
             ),
+<<<<<<< HEAD
           ),
       ],
+=======
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              travelPackage?.name ?? 'Loading...',
+                              style: Theme.of(context).textTheme.titleMedium,
+                            ),
+                            Text(
+                                '${DateFormat('yyyy-MM-dd').format(travelPackage!.startDate)} - ${DateFormat('yyyy-MM-dd').format(travelPackage!.endDate)}'),
+                            const SizedBox(height: 5),
+                          ],
+                        ),
+                      ),
+                      Text(
+                        'RM ' + travelPackage!.price.toString(),
+                        style: Theme.of(context).textTheme.bodyLarge,
+                      ),
+                    ],
+                  ),
+                  Row(
+                    children: [
+                      Text(
+                        'Resell Quantity: ${widget.travelPackageOnShelve.quantity}',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.normal,
+                          color: Colors.black,
+                        ),
+                      ),
+                    ],
+                  ),
+                  Row(
+                    children: [
+                      Icon(Icons.remove_red_eye),
+                      SizedBox(
+                        width: 5,
+                      ),
+                      Text(viewNum != null ? '$viewNum' : '0'),
+                      Spacer(),
+                      if (_hasAds && _status == 'running') ...[
+                        TextButton(
+                          onPressed: () {
+                            // Logic to view ads performance
+                          },
+                          style: TextButton.styleFrom(
+                            backgroundColor: Colors.green,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(
+                                vertical: 8, horizontal: 12),
+                          ),
+                          child: const Text('View Ads Performance'),
+                        ),
+                      ] else if (_status == 'ended') ...[
+                        TextButton(
+                          onPressed: () {
+                            // Logic to renew the ad
+                          },
+                          style: TextButton.styleFrom(
+                            backgroundColor: Colors.orange,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(
+                                vertical: 8, horizontal: 12),
+                          ),
+                          child: const Text('Renew Ads'),
+                        ),
+                      ] else ...[
+                        TextButton(
+                          onPressed: () {
+                            String id = widget.travelPackageOnShelve.id;
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    CreateAdsPage(travelPackageId: id),
+                              ),
+                            );
+                          },
+                          style: TextButton.styleFrom(
+                            backgroundColor: Colors.blue,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(
+                                vertical: 8, horizontal: 12),
+                          ),
+                          child: const Text('Create Ads'),
+                        ),
+                      ],
+                      const SizedBox(width: 8),
+
+                      // Delete button
+                      TextButton(
+                        onPressed: () {
+                          if (widget.travelPackageOnShelve.quantity !=
+                              widget.travelPackageOnShelve.quantityAvailable) {
+                            showDialog(
+                              context: context,
+                              builder: (BuildContext context) {
+                                return AlertDialog(
+                                  title: const Text('Error'),
+                                  content: const Text(
+                                      'You delete the travel package that already have user purchased!'),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () {
+                                        Navigator.of(context)
+                                            .pop(); // Close the dialog
+                                      },
+                                      child: const Text('OK'),
+                                    ),
+                                  ],
+                                );
+                              },
+                            );
+                          } else {
+                            _showDeleteDialog(context);
+                          }
+                        },
+                        style: TextButton.styleFrom(
+                          backgroundColor: Colors.red,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 8, horizontal: 12),
+                        ),
+                        child: const Text('Delete'),
+                      )
+                    ],
+                  ),
+                  Visibility(
+                      visible: showMore, // Show row only if `showMore` is true
+                      child: Table(
+                        columnWidths: const {
+                          0: FlexColumnWidth(
+                              1), // Own column takes 1/3 of the width
+                          1: FlexColumnWidth(
+                              1), // Available column takes 1/3 of the width
+                          2: FlexColumnWidth(
+                              1), // Sold column takes 1/3 of the width
+                        },
+                        border: TableBorder(
+                          top: BorderSide(color: Colors.grey, width: 0.5),
+                          left: BorderSide.none,
+                          right: BorderSide.none,
+                          horizontalInside:
+                              BorderSide.none, // For no borders between rows
+                          verticalInside:
+                              BorderSide.none, // For no borders between columns
+                        ),
+                        children: [
+                          TableRow(
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: RichText(
+                                  textAlign: TextAlign.center,
+                                  text: TextSpan(
+                                    children: [
+                                      TextSpan(
+                                        text: 'Own: ',
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight
+                                              .bold, // Bold for "Sold:"
+                                          color: Colors.grey,
+                                        ),
+                                      ),
+                                      TextSpan(
+                                        text:
+                                            '${widget.travelPackageOnShelve.quantity}',
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight
+                                              .normal, // Normal for the number
+                                          color: Colors.grey,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: RichText(
+                                  textAlign: TextAlign.center,
+                                  text: TextSpan(
+                                    children: [
+                                      TextSpan(
+                                        text: 'Available: ',
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight
+                                              .bold, // Bold for "Sold:"
+                                          color: Colors.grey,
+                                        ),
+                                      ),
+                                      TextSpan(
+                                        text:
+                                            '${widget.travelPackageOnShelve.quantityAvailable}',
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight
+                                              .normal, // Normal for the number
+                                          color: Colors.grey,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: RichText(
+                                  textAlign: TextAlign.center,
+                                  text: TextSpan(
+                                    children: [
+                                      TextSpan(
+                                        text: 'Sold: ',
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight
+                                              .bold, // Bold for "Sold:"
+                                          color: Colors.grey,
+                                        ),
+                                      ),
+                                      TextSpan(
+                                        text:
+                                            '${widget.travelPackageOnShelve.quantity - widget.travelPackageOnShelve.quantityAvailable}',
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight
+                                              .normal, // Normal for the number
+                                          color: Colors.grey,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          TableRow(
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: RichText(
+                                  textAlign: TextAlign.center,
+                                  text: TextSpan(
+                                    children: [
+                                      TextSpan(
+                                        text: 'CTR: ',
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight
+                                              .bold, // Bold for "Sold:"
+                                          color: Colors.grey,
+                                        ),
+                                      ),
+                                      TextSpan(
+                                        text: '${ctr}%',
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight
+                                              .normal, // Normal for the number
+                                          color: Colors.grey,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: RichText(
+                                  textAlign: TextAlign.center,
+                                  text: TextSpan(
+                                    children: [
+                                      TextSpan(
+                                        text: 'PR: ',
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight
+                                              .bold, // Bold for "Sold:"
+                                          color: Colors.grey,
+                                        ),
+                                      ),
+                                      TextSpan(
+                                        text: purchaseRate != null
+                                            ? '${purchaseRate}%'
+                                            : '0%',
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight
+                                              .normal, // Normal for the number
+                                          color: Colors.grey,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: RichText(
+                                  textAlign: TextAlign.center,
+                                  text: TextSpan(
+                                    children: [
+                                      TextSpan(
+                                        text: 'Save: ',
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight
+                                              .bold, // Bold for "Sold:"
+                                          color: Colors.grey,
+                                        ),
+                                      ),
+                                      TextSpan(
+                                        text: saveNum != null
+                                            ? '${saveNum}'
+                                            : '0',
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight
+                                              .normal, // Normal for the number
+                                          color: Colors.grey,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      )),
+                  TextButton(
+                    onPressed: () {
+                      setState(() {
+                        showMore = !showMore; // Toggle `showMore` state
+                      });
+                    },
+                    child: Text(showMore ? 'Show Less' : 'Show More'),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+>>>>>>> 1e58e89069e0a93551e606c2db094f99ee8d5d53
     );
   }
 
@@ -535,6 +928,11 @@ class _TravelPackagePurchasedCardState
           actions: [
             TextButton(
               onPressed: () async {
+<<<<<<< HEAD
+=======
+                await _firestoreService.deleteData(
+                    'Travel_Packages', widget.travelPackageOnShelve.id);
+>>>>>>> 1e58e89069e0a93551e606c2db094f99ee8d5d53
                 if (widget.travelPackageOnShelve.isResale == true) {
                   await _firestoreService.incrementFieldInSubCollection(
                       'User',

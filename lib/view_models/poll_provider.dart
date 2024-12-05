@@ -10,18 +10,25 @@ class PollProvider {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   // Method to check if the user has voted on a specific poll
-  Future<bool> isUserVoted(String postId, String userId) async {
+  Future<String?> getUserSelectedOption(String postId, String userId) async {
     try {
       final querySnapshot = await _firestore
           .collection('PollInteraction')
           .where('post_id', isEqualTo: postId)
           .where('user_id', isEqualTo: userId)
+          .limit(1)
           .get();
 
-      return querySnapshot.docs.isNotEmpty;
+      if (querySnapshot.docs.isNotEmpty) {
+        // Return the selected option
+        return querySnapshot.docs.first['selected_option'];
+      } else {
+        // User has not voted
+        return null;
+      }
     } catch (e) {
       print("Error checking if user has voted: $e");
-      return false;
+      return null;
     }
   }
 
@@ -61,7 +68,7 @@ class PollProvider {
 
       // Count the occurrences of each option
       for (var doc in snapshot.docs) {
-        String selectedOption = doc['selectedOption'];
+        String selectedOption = doc['selected_option'];
         if (results.containsKey(selectedOption)) {
           results[selectedOption] = results[selectedOption]! + 1;
         } else {
@@ -73,6 +80,23 @@ class PollProvider {
     } catch (e) {
       print("Error fetching poll results: $e");
       return {};
+    }
+  }
+
+  Future<void> clearUserVote(String postId, String userId) async {
+    try {
+      final querySnapshot = await _firestore
+          .collection('PollInteraction')
+          .where('post_id', isEqualTo: postId)
+          .where('user_id', isEqualTo: userId)
+          .get();
+
+      for (var doc in querySnapshot.docs) {
+        await doc.reference.delete();
+      }
+      print("Vote cleared successfully");
+    } catch (e) {
+      print("Error clearing vote: $e");
     }
   }
 }
