@@ -27,24 +27,18 @@ class AccommodationCarRentalDrawer extends StatelessWidget {
               Navigator.pop(context);
             },
           ),
+ 
           ListTile(
-            title: const Text('Favorites'),
+            title: const Text('Document Repository'),
             onTap: () {
               onItemTapped(3);
               Navigator.pop(context);
             },
           ),
           ListTile(
-            title: const Text('Document Repository'),
-            onTap: () {
-              onItemTapped(4);
-              Navigator.pop(context);
-            },
-          ),
-          ListTile(
             title: const Text('Settings'),
             onTap: () {
-              onItemTapped(5);
+              onItemTapped(4);
               Navigator.pop(context);
             },
           ),

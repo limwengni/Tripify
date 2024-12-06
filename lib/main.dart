@@ -211,6 +211,7 @@ class MainPageState extends State<MainPage> {
       'widget': const AccommodationRequirementPage()
     },
     {'title': 'Profile', 'widget': ProfilePage()},
+    
     {'title': 'Document Repository', 'widget': const DocumentRepositoryPage()},
     {'title': 'Settings', 'widget': SettingsPage()},
   ];

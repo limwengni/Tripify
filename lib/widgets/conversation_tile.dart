@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:tripify/models/conversation_model.dart';
+import 'package:tripify/models/user_model.dart';
 import 'package:tripify/view_models/firestore_service.dart';
 
 class ConversationTile extends StatefulWidget {
@@ -25,7 +26,7 @@ class _ConversationTileState extends State<ConversationTile> {
   String _conversationNameFuture = "";
   String _conversationPicFuture =
       "https://flutter.github.io/assets-for-api-docs/assets/widgets/owl-3.jpg";
-
+  UserModel? user;
   int? _unreadMessage;
 
   @override
@@ -51,16 +52,18 @@ class _ConversationTileState extends State<ConversationTile> {
     String profilePic =
         'https://flutter.github.io/assets-for-api-docs/assets/widgets/owl-3.jpg';
     String username = 'Unknown User'; // Default value
-
+    Map<String, dynamic>? userData;
     if (widget.conversation.isGroup == false) {
       for (var participant in widget.conversation.participants) {
         if (participant != currentUserId) {
-          Map<String, dynamic>? userData =
-              await firestoreService.getDataById('User', participant);
+          userData = await firestoreService.getDataById('User', participant);
 
           // If the userData is available, assign new values
           profilePic = userData?['profile_picture'] ?? profilePic;
           username = userData?['username'] ?? username;
+          if (userData != null) {
+            user = UserModel.fromMap(userData, participant);
+          }
         }
       }
 
@@ -91,6 +94,7 @@ class _ConversationTileState extends State<ConversationTile> {
             padding: const EdgeInsets.all(8.0),
             child: Row(
               children: [
+                // Left: Avatar and Info
                 CircleAvatar(
                   radius: 30,
                   backgroundColor: Colors.grey.shade200,
@@ -106,7 +110,7 @@ class _ConversationTileState extends State<ConversationTile> {
                             width: 60,
                             height: 60,
                             color: Colors.grey, // Fallback color or placeholder
-                            child: Icon(
+                            child: const Icon(
                               Icons.person,
                               size: 40,
                               color: Colors.white,
@@ -115,84 +119,438 @@ class _ConversationTileState extends State<ConversationTile> {
                   ),
                 ),
                 const SizedBox(width: 10),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      _conversationNameFuture, // This appears to be a future, might need to await the value
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                    if (widget.conversation.latestMessageType == 'text')
-                      Text(widget.conversation.latestMessage ?? "")
-                    else if (widget.conversation.latestMessageType == 'poll')
-                      const Row(
-                        children: [
-                          Icon(
-                            Icons.poll, // Choose an appropriate icon here
-                            color:
-                                Colors.blue, // Optional: Set color of the icon
-                          ),
-                          SizedBox(
-                              width:
-                                  8), // Optional: Space between the icon and the text
-                          Text('Poll'),
-                        ],
-                      )
-                    else if (widget.conversation.latestMessageType == 'pic')
-                      const Row(
-                        children: [
-                          Icon(
-                            Icons.image, // Choose an appropriate icon here
-                            color:
-                                Colors.blue, // Optional: Set color of the icon
-                          ),
-                          SizedBox(
-                              width:
-                                  8), // Optional: Space between the icon and the text
-                          Text('Pic'),
-                        ],
-                      )
-                    else if (widget.conversation.latestMessageType == 'video')
-                      const Row(
-                        children: [
-                          Icon(
-                            Icons
-                                .video_camera_back_rounded, // Choose an appropriate icon here
-                            color: Colors.blue,
-                          ),
-                          SizedBox(width: 8),
-                          Text('Video'),
-                        ],
-                      )
-                    else if (widget.conversation.latestMessageType == 'file')
-                      const Row(
-                        children: [
-                          Icon(
-                            Icons.file_copy_rounded,
-                            color: Colors.blue,
-                          ),
-                          SizedBox(width: 8),
-                          Text('File'),
-                        ],
-                      )
-                    else
-                      Text(''),
-                  ],
-                ),
-                const Spacer(),
-                Column(
-                  children: [
-                    if (widget.conversation
-                            .unreadMessage![widget.currentUserId] !=
-                        0) ...[
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
                       Row(
                         children: [
-                          if (widget.conversation.latestMessageSendDateTime !=
-                              null)
-                            Text(DateFormat('hh:mm a').format(widget
-                                .conversation.latestMessageSendDateTime!)),
+                          Expanded(
+                            child: Text(
+                              _conversationNameFuture,
+                              style: Theme.of(context).textTheme.titleMedium,
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
+                            ),
+                          ),
                         ],
                       ),
+                      if (widget.conversation.latestMessageType == 'text')
+                        Row(
+                          children: [
+                            if (user?.role == 'Accommodation Rental Company')
+                              Container(
+                                  width: 24, // Size of the icon
+                                  height: 24,
+                                  decoration: BoxDecoration(
+                                    color: Color.fromARGB(255, 159, 118,
+                                        249), // Purple background color
+                                    shape: BoxShape.circle, // Make it circular
+                                  ),
+                                  alignment: Alignment
+                                      .center, // Center the letter inside the circle
+                                  child: const Text(
+                                    'A',
+                                    style: TextStyle(
+                                      color: Colors
+                                          .white, // White text for contrast
+                                      fontWeight: FontWeight
+                                          .bold, // Bold text for visibility
+                                      fontSize: 14, // Font size of the letter
+                                    ),
+                                  ))
+                            else if (user?.role == 'Car Rental Company')
+                              Container(
+                                width: 24, // Size of the icon
+                                height: 24,
+                                decoration: BoxDecoration(
+                                  color: Color.fromARGB(255, 159, 118,
+                                      249), // Purple background color
+                                  shape: BoxShape.circle, // Make it circular
+                                ),
+                                alignment: Alignment
+                                    .center, // Center the letter inside the circle
+                                child: const Text(
+                                  'C',
+                                  style: TextStyle(
+                                    color:
+                                        Colors.white, // White text for contrast
+                                    fontWeight: FontWeight
+                                        .bold, // Bold text for visibility
+                                    fontSize: 14, // Font size of the letter
+                                  ),
+                                ),
+                              )
+                            else if (user?.role == 'Travel Company')
+                              Container(
+                                width: 24, // Size of the icon
+                                height: 24,
+                                decoration: BoxDecoration(
+                                  color: Color.fromARGB(255, 159, 118,
+                                      249), // Purple background color
+                                  shape: BoxShape.circle, // Make it circular
+                                ),
+                                alignment: Alignment
+                                    .center, // Center the letter inside the circle
+                                child: const Text(
+                                  'T',
+                                  style: TextStyle(
+                                    color:
+                                        Colors.white, // White text for contrast
+                                    fontWeight: FontWeight
+                                        .bold, // Bold text for visibility
+                                    fontSize: 14, // Font size of the letter
+                                  ),
+                                ),
+                              ),
+                            SizedBox(
+                              width: 5,
+                            ),
+                            Expanded(
+                                child: Text(
+                                    widget.conversation.latestMessage ?? "",
+                                    overflow: TextOverflow.ellipsis))
+                          ],
+                        )
+                      else if (widget.conversation.latestMessageType == 'poll')
+                        Row(
+                          children: [
+                            if (user?.role == 'Accommodation Rental Company')
+                              Container(
+                                  width: 24, // Size of the icon
+                                  height: 24,
+                                  decoration: BoxDecoration(
+                                    color: Color.fromARGB(255, 159, 118,
+                                        249), // Purple background color
+                                    shape: BoxShape.circle, // Make it circular
+                                  ),
+                                  alignment: Alignment
+                                      .center, // Center the letter inside the circle
+                                  child: const Text(
+                                    'A',
+                                    style: TextStyle(
+                                      color: Colors
+                                          .white, // White text for contrast
+                                      fontWeight: FontWeight
+                                          .bold, // Bold text for visibility
+                                      fontSize: 14, // Font size of the letter
+                                    ),
+                                  ))
+                            else if (user?.role == 'Car Rental Company')
+                              Container(
+                                width: 24, // Size of the icon
+                                height: 24,
+                                decoration: BoxDecoration(
+                                  color: Color.fromARGB(255, 159, 118,
+                                      249), // Purple background color
+                                  shape: BoxShape.circle, // Make it circular
+                                ),
+                                alignment: Alignment
+                                    .center, // Center the letter inside the circle
+                                child: const Text(
+                                  'C',
+                                  style: TextStyle(
+                                    color:
+                                        Colors.white, // White text for contrast
+                                    fontWeight: FontWeight
+                                        .bold, // Bold text for visibility
+                                    fontSize: 14, // Font size of the letter
+                                  ),
+                                ),
+                              )
+                            else if (user?.role == 'Travel Company')
+                              Container(
+                                width: 24, // Size of the icon
+                                height: 24,
+                                decoration: BoxDecoration(
+                                  color: Color.fromARGB(255, 159, 118,
+                                      249), // Purple background color
+                                  shape: BoxShape.circle, // Make it circular
+                                ),
+                                alignment: Alignment
+                                    .center, // Center the letter inside the circle
+                                child: const Text(
+                                  'T',
+                                  style: TextStyle(
+                                    color:
+                                        Colors.white, // White text for contrast
+                                    fontWeight: FontWeight
+                                        .bold, // Bold text for visibility
+                                    fontSize: 14, // Font size of the letter
+                                  ),
+                                ),
+                              ),
+                            SizedBox(
+                              width: 5,
+                            ),
+                            Icon(
+                              Icons.poll,
+                              color: Colors.blue,
+                            ),
+                            SizedBox(width: 8),
+                            Text('Poll'),
+                          ],
+                        )
+                      else if (widget.conversation.latestMessageType == 'pic')
+                        Row(
+                          children: [
+                            if (user?.role == 'Accommodation Rental Company')
+                              Container(
+                                  width: 24, // Size of the icon
+                                  height: 24,
+                                  decoration: BoxDecoration(
+                                    color: Color.fromARGB(255, 159, 118,
+                                        249), // Purple background color
+                                    shape: BoxShape.circle, // Make it circular
+                                  ),
+                                  alignment: Alignment
+                                      .center, // Center the letter inside the circle
+                                  child: const Text(
+                                    'A',
+                                    style: TextStyle(
+                                      color: Colors
+                                          .white, // White text for contrast
+                                      fontWeight: FontWeight
+                                          .bold, // Bold text for visibility
+                                      fontSize: 14, // Font size of the letter
+                                    ),
+                                  ))
+                            else if (user?.role == 'Car Rental Company')
+                              Container(
+                                width: 24, // Size of the icon
+                                height: 24,
+                                decoration: BoxDecoration(
+                                  color: Color.fromARGB(255, 159, 118,
+                                      249), // Purple background color
+                                  shape: BoxShape.circle, // Make it circular
+                                ),
+                                alignment: Alignment
+                                    .center, // Center the letter inside the circle
+                                child: const Text(
+                                  'C',
+                                  style: TextStyle(
+                                    color:
+                                        Colors.white, // White text for contrast
+                                    fontWeight: FontWeight
+                                        .bold, // Bold text for visibility
+                                    fontSize: 14, // Font size of the letter
+                                  ),
+                                ),
+                              )
+                            else if (user?.role == 'Travel Company')
+                              Container(
+                                width: 24, // Size of the icon
+                                height: 24,
+                                decoration: BoxDecoration(
+                                  color: Color.fromARGB(255, 159, 118,
+                                      249), // Purple background color
+                                  shape: BoxShape.circle, // Make it circular
+                                ),
+                                alignment: Alignment
+                                    .center, // Center the letter inside the circle
+                                child: const Text(
+                                  'T',
+                                  style: TextStyle(
+                                    color:
+                                        Colors.white, // White text for contrast
+                                    fontWeight: FontWeight
+                                        .bold, // Bold text for visibility
+                                    fontSize: 14, // Font size of the letter
+                                  ),
+                                ),
+                              ),
+                            SizedBox(
+                              width: 5,
+                            ),
+                            Icon(
+                              Icons.image,
+                              color: Colors.blue,
+                            ),
+                            SizedBox(width: 8),
+                            Text('Pic'),
+                          ],
+                        )
+                      else if (widget.conversation.latestMessageType == 'video')
+                        Row(
+                          children: [
+                            if (user?.role == 'Accommodation Rental Company')
+                              Container(
+                                  width: 24, // Size of the icon
+                                  height: 24,
+                                  decoration: BoxDecoration(
+                                    color: Color.fromARGB(255, 159, 118,
+                                        249), // Purple background color
+                                    shape: BoxShape.circle, // Make it circular
+                                  ),
+                                  alignment: Alignment
+                                      .center, // Center the letter inside the circle
+                                  child: const Text(
+                                    'A',
+                                    style: TextStyle(
+                                      color: Colors
+                                          .white, // White text for contrast
+                                      fontWeight: FontWeight
+                                          .bold, // Bold text for visibility
+                                      fontSize: 14, // Font size of the letter
+                                    ),
+                                  ))
+                            else if (user?.role == 'Car Rental Company')
+                              Container(
+                                width: 24, // Size of the icon
+                                height: 24,
+                                decoration: BoxDecoration(
+                                  color: Color.fromARGB(255, 159, 118,
+                                      249), // Purple background color
+                                  shape: BoxShape.circle, // Make it circular
+                                ),
+                                alignment: Alignment
+                                    .center, // Center the letter inside the circle
+                                child: const Text(
+                                  'C',
+                                  style: TextStyle(
+                                    color:
+                                        Colors.white, // White text for contrast
+                                    fontWeight: FontWeight
+                                        .bold, // Bold text for visibility
+                                    fontSize: 14, // Font size of the letter
+                                  ),
+                                ),
+                              )
+                            else if (user?.role == 'Travel Company')
+                              Container(
+                                width: 24, // Size of the icon
+                                height: 24,
+                                decoration: BoxDecoration(
+                                  color: Color.fromARGB(255, 159, 118,
+                                      249), // Purple background color
+                                  shape: BoxShape.circle, // Make it circular
+                                ),
+                                alignment: Alignment
+                                    .center, // Center the letter inside the circle
+                                child: const Text(
+                                  'T',
+                                  style: TextStyle(
+                                    color:
+                                        Colors.white, // White text for contrast
+                                    fontWeight: FontWeight
+                                        .bold, // Bold text for visibility
+                                    fontSize: 14, // Font size of the letter
+                                  ),
+                                ),
+                              ),
+                            SizedBox(
+                              width: 5,
+                            ),
+                            Icon(
+                              Icons.video_camera_back_rounded,
+                              color: Colors.blue,
+                            ),
+                            SizedBox(width: 8),
+                            Text('Video'),
+                          ],
+                        )
+                      else if (widget.conversation.latestMessageType == 'file')
+                        Row(
+                          children: [
+                            if (user?.role == 'Accommodation Rental Company')
+                              Container(
+                                  width: 24, // Size of the icon
+                                  height: 24,
+                                  decoration: BoxDecoration(
+                                    color: Color.fromARGB(255, 159, 118,
+                                        249), // Purple background color
+                                    shape: BoxShape.circle, // Make it circular
+                                  ),
+                                  alignment: Alignment
+                                      .center, // Center the letter inside the circle
+                                  child: const Text(
+                                    'A',
+                                    style: TextStyle(
+                                      color: Colors
+                                          .white, // White text for contrast
+                                      fontWeight: FontWeight
+                                          .bold, // Bold text for visibility
+                                      fontSize: 14, // Font size of the letter
+                                    ),
+                                  ))
+                            else if (user?.role == 'Car Rental Company')
+                              Container(
+                                width: 24, // Size of the icon
+                                height: 24,
+                                decoration: BoxDecoration(
+                                  color: Color.fromARGB(255, 159, 118,
+                                      249), // Purple background color
+                                  shape: BoxShape.circle, // Make it circular
+                                ),
+                                alignment: Alignment
+                                    .center, // Center the letter inside the circle
+                                child: const Text(
+                                  'C',
+                                  style: TextStyle(
+                                    color:
+                                        Colors.white, // White text for contrast
+                                    fontWeight: FontWeight
+                                        .bold, // Bold text for visibility
+                                    fontSize: 14, // Font size of the letter
+                                  ),
+                                ),
+                              )
+                            else if (user?.role == 'Travel Company')
+                              Container(
+                                width: 24, // Size of the icon
+                                height: 24,
+                                decoration: BoxDecoration(
+                                  color: Color.fromARGB(255, 159, 118,
+                                      249), // Purple background color
+                                  shape: BoxShape.circle, // Make it circular
+                                ),
+                                alignment: Alignment
+                                    .center, // Center the letter inside the circle
+                                child: const Text(
+                                  'T',
+                                  style: TextStyle(
+                                    color:
+                                        Colors.white, // White text for contrast
+                                    fontWeight: FontWeight
+                                        .bold, // Bold text for visibility
+                                    fontSize: 14, // Font size of the letter
+                                  ),
+                                ),
+                              ),
+                            SizedBox(
+                              width: 5,
+                            ),
+                            Icon(
+                              Icons.file_copy_rounded,
+                              color: Colors.blue,
+                            ),
+                            SizedBox(width: 8),
+                            Text('File'),
+                          ],
+                        )
+                      else
+                        const Text(''),
+                    ],
+                  ),
+                ),
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.end, // Align to right
+                  children: [
+                    if (widget.conversation.latestMessageSendDateTime != null)
+                      Text(
+                        DateFormat('hh:mm a').format(
+                          widget.conversation.latestMessageSendDateTime!,
+                        ),
+                        style: TextStyle(
+                          color: Colors.grey.shade600,
+                          fontSize: 12,
+                        ),
+                      ),
+                    const SizedBox(height: 4),
+                    if (widget.conversation
+                            .unreadMessage![widget.currentUserId] !=
+                        0)
                       Container(
                         width: 30,
                         height: 30,
@@ -211,17 +569,8 @@ class _ConversationTileState extends State<ConversationTile> {
                           ),
                         ),
                       ),
-                    ] else
-                      Row(
-                        children: [
-                          if (widget.conversation.latestMessageSendDateTime !=
-                              null)
-                            Text(DateFormat('hh:mm a').format(widget
-                                .conversation.latestMessageSendDateTime!)),
-                        ],
-                      ),
                   ],
-                )
+                ),
               ],
             ),
           ),

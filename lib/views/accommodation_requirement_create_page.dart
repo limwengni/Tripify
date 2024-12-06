@@ -20,6 +20,7 @@ class AccommodationRequirementCreatePage extends StatefulWidget {
 class _AccommodationRequirementCreatePageState
     extends State<AccommodationRequirementCreatePage> {
   final FocusNode _focusNode = FocusNode(); // Declare the FocusNode
+  bool isLoading = false; // Track loading state
 
   @override
   void dispose() {
@@ -95,7 +96,21 @@ class _AccommodationRequirementCreatePageState
                           labelText: 'Check-Out Date',
                           border: OutlineInputBorder(),
                         ),
-                        validator: FormBuilderValidators.required(),
+                        validator: FormBuilderValidators.compose([
+                          FormBuilderValidators.required(
+                              errorText: 'This field is required'),
+                          (value) {
+                            final checkinDate = _formKey
+                                .currentState?.fields['checkin_date']?.value;
+
+                            if (checkinDate != null && value != null) {
+                              if (value.isBefore(checkinDate)) {
+                                return 'Checkout date must be after check-in date';
+                              }
+                            }
+                            return null; // Validation passed
+                          },
+                        ]),
                       ),
                       const SizedBox(height: 15),
                       FormBuilderTextField(
@@ -108,7 +123,12 @@ class _AccommodationRequirementCreatePageState
                         onChanged: (val) {
                           print('Guest Number: $val');
                         },
-                        validator: FormBuilderValidators.required(),
+                        validator: FormBuilderValidators.compose([
+                          FormBuilderValidators.required(
+                              errorText: 'Guest Number is required'),
+                          FormBuilderValidators.integer(
+                              errorText: 'Please enter a valid number'),
+                        ]),
                       ),
                       const SizedBox(height: 15),
                       FormBuilderTextField(
@@ -121,7 +141,12 @@ class _AccommodationRequirementCreatePageState
                         onChanged: (val) {
                           print('Bed Number: $val');
                         },
-                        validator: FormBuilderValidators.required(),
+                        validator: FormBuilderValidators.compose([
+                          FormBuilderValidators.required(
+                              errorText: 'Guest Number is required'),
+                          FormBuilderValidators.integer(
+                              errorText: 'Please enter a valid number'),
+                        ]),
                       ),
                       const SizedBox(height: 15),
                       FormBuilderDropdown<String>(
@@ -169,7 +194,14 @@ class _AccommodationRequirementCreatePageState
                         onChanged: (val) {
                           print('Price: $val');
                         },
-                        validator: FormBuilderValidators.required(),
+                        validator: FormBuilderValidators.compose([
+                          FormBuilderValidators.required(
+                              errorText: 'Guest Number is required'),
+                          FormBuilderValidators.numeric(
+                              errorText: 'Please enter a valid number'),
+                          FormBuilderValidators.positiveNumber(
+                              errorText: 'Please enter a positive number'),
+                        ]),
                       ),
                       const SizedBox(height: 15),
                       FormBuilderTextField(
@@ -192,57 +224,79 @@ class _AccommodationRequirementCreatePageState
             Container(
               width: double.infinity,
               padding: const EdgeInsets.symmetric(vertical: 10.0),
-              child: MaterialButton(
-                padding: const EdgeInsets.all(15),
-                color: const Color.fromARGB(255, 159, 118, 249),
-                onPressed: () async {
-                  if (_formKey.currentState?.saveAndValidate() ?? false) {
-                    final formValues = _formKey.currentState?.value;
+              child: isLoading
+                  ? const Center(
+                      child: CircularProgressIndicator()) // Show loader
+                  : MaterialButton(
+                      padding: const EdgeInsets.all(15),
+                      color: const Color.fromARGB(255, 159, 118, 249),
+                      onPressed: () async {
+                        if (_formKey.currentState?.saveAndValidate() ?? false) {
+                          setState(() {
+                            isLoading = true; // Start loading
+                          });
+                          final formValues = _formKey.currentState?.value;
 
-                    final accommodationRequirement =
-                        AccommodationRequirementModel(
-                      id: '',
-                      title: formValues?['title'] ?? '',
-                      location: controller.text,
-                      checkinDate:
-                          formValues?['checkin_date'] ?? DateTime.now(),
-                      checkoutDate:
-                          formValues?['checkout_date'] ?? DateTime.now(),
-                      guestNum:
-                          int.tryParse(formValues?['guest_num'] ?? '') ?? 0,
-                      bedNum: int.tryParse(formValues?['bed_num'] ?? '') ?? 0,
-                      budget: double.tryParse(formValues?['budget']
-                                  ?.replaceAll(RegExp(r'[^0-9.]'), '') ??
-                              '0.0') ??
-                          0.0,
-                      additionalRequirement:
-                          formValues?['additional_requirement'] ?? '',
-                      houseType: HouseType.values.firstWhere(
-                        (e) =>
-                            e.toString().split('.').last ==
-                            formValues?['house_type'],
-                        orElse: () => HouseType.condo, // Default value
+                          final accommodationRequirement =
+                              AccommodationRequirementModel(
+                            createdAt: DateTime.now(),
+                            id: '',
+                            title: formValues?['title'] ?? '',
+                            location: controller.text,
+                            checkinDate:
+                                formValues?['checkin_date'] ?? DateTime.now(),
+                            checkoutDate:
+                                formValues?['checkout_date'] ?? DateTime.now(),
+                            guestNum:
+                                int.tryParse(formValues?['guest_num'] ?? '') ??
+                                    0,
+                            bedNum:
+                                int.tryParse(formValues?['bed_num'] ?? '') ?? 0,
+                            budget: double.tryParse(formValues?['budget']
+                                        ?.replaceAll(RegExp(r'[^0-9.]'), '') ??
+                                    '0.0') ??
+                                0.0,
+                            additionalRequirement:
+                                formValues?['additional_requirement'] ?? '',
+                            houseType: HouseType.values.firstWhere(
+                              (e) =>
+                                  e.toString().split('.').last ==
+                                  formValues?['house_type'],
+                              orElse: () => HouseType.condo, // Default value
+                            ),
+                            userDocId: FirebaseAuth.instance.currentUser!.uid,
+                          );
+                          try {
+                            await firestoreService.insertDataWithAutoID(
+                              'Accommodation_Requirement',
+                              accommodationRequirement.toMap(),
+                            );
+
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                    'Accommodation Requirement Successfully Created!'),
+                                duration: Duration(seconds: 5),
+                              ),
+                            );
+                          } catch (e) {
+                            print('${e}');
+                          } finally {
+                            // Clear form inputs and controller
+                            _formKey.currentState
+                                ?.reset(); // Reset the FormBuilder fields
+                            controller.clear(); // Clear the location text field
+                            setState(() {
+                              isLoading = false; // Stop loading
+                            });
+                          }
+                        }
+                      },
+                      child: const Text(
+                        'Create',
+                        style: TextStyle(color: Colors.white),
                       ),
-                      userDocId: FirebaseAuth.instance.currentUser!.uid,
-                    );
-                    try {
-                      await firestoreService.insertDataWithAutoID(
-                        'Accommodation_Requirement',
-                        accommodationRequirement.toMap(),
-                      );
-
-                      Navigator.pop(context,
-                          'Accommodation requirement created successfully');
-                    } catch (e) {
-                      print('${e}');
-                    }
-                  }
-                },
-                child: const Text(
-                  'Create',
-                  style: TextStyle(color: Colors.white),
-                ),
-              ),
+                    ),
             ),
           ],
         ),
@@ -257,7 +311,7 @@ class _AccommodationRequirementCreatePageState
         textEditingController: controller,
         googleAPIKey: "AIzaSyBKL2cfygOtYMNsbA8lMz84HrNnAAHAkc8",
         inputDecoration: const InputDecoration(
-          hintText: "Search your location",
+          // hintText: "Search your location",
           labelText: 'Location',
           border: OutlineInputBorder(),
         ),

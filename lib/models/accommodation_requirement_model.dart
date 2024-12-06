@@ -20,6 +20,7 @@ class AccommodationRequirementModel {
   final String additionalRequirement;
   final HouseType houseType;
   final String userDocId;
+  final DateTime createdAt;
 
   AccommodationRequirementModel({
     required this.id,
@@ -33,20 +34,22 @@ class AccommodationRequirementModel {
     required this.additionalRequirement,
     required this.houseType,
     required this.userDocId,
+    required this.createdAt,
   });
   Map<String, dynamic> toMap() {
     return {
       'id': id,
       'title': title,
       'location': location,
-      'checkinDate':  Timestamp.fromDate(checkinDate),
-      'checkoutDate':  Timestamp.fromDate(checkoutDate),
-      'guestNum': guestNum,
-      'bedNum': bedNum,
+      'checkin_date':  Timestamp.fromDate(checkinDate),
+      'checkout_date':  Timestamp.fromDate(checkoutDate),
+      'guest_num': guestNum,
+      'bed_num': bedNum,
       'budget': budget,
-      'additionalRequirement': additionalRequirement,
-      'houseType': houseType.toString().split('.').last,
-      'userDocId': userDocId,
+      'additional_requirement': additionalRequirement,
+      'house_type': houseType.toString().split('.').last,
+      'user_doc_id': userDocId,
+      'created_at': createdAt,
     };
   }
 factory AccommodationRequirementModel.fromMap(Map<String, dynamic> data) {
@@ -54,21 +57,23 @@ factory AccommodationRequirementModel.fromMap(Map<String, dynamic> data) {
     id: data['id'] as String,
     title: data['title'] as String,
     location: data['location'] as String,
-    checkinDate: (data['checkinDate'] is Timestamp)
-        ? (data['checkinDate'] as Timestamp).toDate()
-        : DateTime.parse(data['checkinDate']),
-    checkoutDate: (data['checkoutDate'] is Timestamp)
-        ? (data['checkoutDate'] as Timestamp).toDate()
-        : DateTime.parse(data['checkoutDate']),
-    guestNum: data['guestNum'] as int,
-    bedNum: data['bedNum'] as int,
+    checkinDate: (data['checkin_date'] is Timestamp)
+        ? (data['checkin_date'] as Timestamp).toDate()
+        : DateTime.parse(data['checkin_date']),
+    checkoutDate: (data['checkout_date'] is Timestamp)
+        ? (data['checkout_date'] as Timestamp).toDate()
+        : DateTime.parse(data['checkout_date']),    createdAt: (data['created_at'] is Timestamp)
+        ? (data['created_at'] as Timestamp).toDate()
+        : DateTime.parse(data['created_at']),
+    guestNum: data['guest_num'] as int,
+    bedNum: data['bed_num'] as int,
     budget: data['budget'] as double,
-    additionalRequirement: data['additionalRequirement'] as String? ?? '',
+    additionalRequirement: data['additional_requirement'] as String? ?? '',
     houseType: HouseType.values.firstWhere(
-      (e) => e.toString().split('.').last == data['houseType'],
+      (e) => e.toString().split('.').last == data['house_type'],
       orElse: () => HouseType.condo,
     ),
-    userDocId: data['userDocId'] as String,
+    userDocId: data['user_doc_id'] as String,
   );
 }
 

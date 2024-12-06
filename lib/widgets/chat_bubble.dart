@@ -241,9 +241,19 @@ class _ChatBubbleState extends State<ChatBubble> {
                         ),
                       )
                     else if (widget.contentType == "text")
-                      Text(
-                        widget.message,
-                        style: const TextStyle(color: Colors.white),
+                      ConstrainedBox(
+                        constraints: BoxConstraints(
+                          maxWidth: MediaQuery.of(context).size.width *
+                              0.75, // Limit bubble width
+                        ),
+                        child: Text(
+                          widget.message,
+                          style: const TextStyle(color: Colors.white),
+                          softWrap:
+                              true, // Allows the text to wrap to the next line
+                          overflow: TextOverflow
+                              .visible, // Ensures text is visible in multiline
+                        ),
                       )
                     else if (widget.contentType == "pic")
                       Stack(
