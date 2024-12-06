@@ -139,9 +139,8 @@ class ReceiptPage extends StatelessWidget {
                 Expanded(
                   child: ElevatedButton.icon(
                     onPressed: () {
-                      bool isCompleted = true;
-                      Navigator.pop(context, isCompleted);
-                      Navigator.pop(context, isCompleted);
+                      Navigator.pop(context);
+                      Navigator.pop(context);
                     },
                     icon: Icon(Icons.wallet, color: Colors.white),
                     label: Text('Return to Wallet',
