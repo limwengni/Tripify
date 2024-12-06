@@ -138,179 +138,228 @@ class _TravelPackagePurchasedCardState
       purchaseRate = double.parse(purchaseRate!.toStringAsFixed(2));
     }
     return GestureDetector(
-      onTap: () {
-        print('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%');
-        print('1: ' + travelPackage!.id);
-        print('2' + widget.currentUserId);
-        print('3' + travelCompanyUser!.role);
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => TravelPackageDetailsPage(
-              travelPackage: travelPackage!,
-              currentUserId: widget.currentUserId,
-              travelPackageUser: travelCompanyUser!,
-            ),
-          ),
-        );
-      },
-      child: Card(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12.0),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ClipRRect(
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(12.0),
-                topRight: Radius.circular(12.0),
+        onTap: () {
+          print('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%');
+          print('1: ' + travelPackage!.id);
+          print('2' + widget.currentUserId);
+          print('3' + travelCompanyUser!.role);
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => TravelPackageDetailsPage(
+                travelPackage: travelPackage!,
+                currentUserId: widget.currentUserId,
+                travelPackageUser: travelCompanyUser!,
               ),
-              child: Container(
-                height: 150,
-                width: double.infinity,
-                child: CarouselSlider.builder(
-                  itemCount: travelPackage!.images!.length,
-                  options: CarouselOptions(
-                    viewportFraction: 1,
-                    autoPlay: true,
-                    enableInfiniteScroll: false,
+            ),
+          );
+        },
+        child: Card(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12.0),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ClipRRect(
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(12.0),
+                    topRight: Radius.circular(12.0),
                   ),
-                  itemBuilder: (ctx, index, realIdx) {
-                    return Stack(
-                      children: [
-                        Positioned.fill(
-                          child: Shimmer.fromColors(
-                            baseColor: Colors.grey[300]!,
-                            highlightColor: Colors.grey[100]!,
-                            child: Container(
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                        Image.network(
-                          travelPackage?.images?[index] ?? '',
-                          width: double.infinity,
-                          fit: BoxFit.cover,
-                          loadingBuilder: (context, child, loadingProgress) {
-                            if (loadingProgress == null) {
-                              return child;
-                            }
-                            return Shimmer.fromColors(
-                              baseColor: Colors.grey[300]!,
-                              highlightColor: Colors.grey[100]!,
-                              child: Container(
-                                color: Colors.white,
-                                height: 150,
-                                width: double.infinity,
-                              ),
-                            );
-                          },
-                          errorBuilder: (context, error, stackTrace) => Icon(
-                            Icons.broken_image,
-                            size: 50,
-                            color: Colors.grey,
-                          ),
-                        ),
-                      ],
-                    );
-                  },
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Column(
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                  child: Container(
+                    height: 150,
+                    width: double.infinity,
+                    child: CarouselSlider.builder(
+                      itemCount: travelPackage!.images!.length,
+                      options: CarouselOptions(
+                        viewportFraction: 1,
+                        autoPlay: true,
+                        enableInfiniteScroll: false,
+                      ),
+                      itemBuilder: (ctx, index, realIdx) {
+                        return Stack(
                           children: [
-                            Text(
-                              travelPackage?.name ?? 'Loading...',
-                              style: Theme.of(context).textTheme.titleMedium,
-                            ),
-                            Text(
-                                '${DateFormat('yyyy-MM-dd').format(travelPackage!.startDate)} - ${DateFormat('yyyy-MM-dd').format(travelPackage!.endDate)}'),
-                            const SizedBox(height: 5),
-                          ],
-                        ),
-                      ),
-                      Text(
-                        'RM ' + travelPackage!.price.toString(),
-                        style: Theme.of(context).textTheme.bodyLarge,
-                      ),
-                    ],
-                  ),
-                  Row(
-                    children: [
-                      Text(
-                        'Resell Quantity: ${widget.travelPackageOnShelve.quantity}',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.normal,
-                          color: Colors.black,
-                        ),
-                      ),
-                    ],
-                  ),
-                  Row(
-                    children: [
-                      Icon(Icons.remove_red_eye),
-                      SizedBox(
-                        width: 5,
-                      ),
-                      Text(viewNum != null ? '$viewNum' : '0'),
-                      Spacer(),
-                      if (_hasAds && _status == 'running') ...[
-                        TextButton(
-                          onPressed: () {
-                            // Logic to view ads performance
-                          },
-                          style: TextButton.styleFrom(
-                            backgroundColor: Colors.green,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(
-                                vertical: 8, horizontal: 12),
-                          ),
-                          child: const Text('View Ads Performance'),
-                        ),
-                      ] else if (_status == 'ended') ...[
-                        TextButton(
-                          onPressed: () {
-                            // Logic to renew the ad
-                          },
-                          style: TextButton.styleFrom(
-                            backgroundColor: Colors.orange,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(
-                                vertical: 8, horizontal: 12),
-                          ),
-                          child: const Text('Renew Ads'),
-                        ),
-                      ] else ...[
-                        TextButton(
-                          onPressed: () {
-                            String id = widget.travelPackageOnShelve.id;
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) =>
-                                    CreateAdsPage(travelPackageId: id),
+                            Positioned.fill(
+                              child: Shimmer.fromColors(
+                                baseColor: Colors.grey[300]!,
+                                highlightColor: Colors.grey[100]!,
+                                child: Container(
+                                  color: Colors.white,
+                                ),
                               ),
-                            );
-                          },
-                          style: TextButton.styleFrom(
-                            backgroundColor: Colors.blue,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(
-                                vertical: 8, horizontal: 12),
+                            ),
+                            Image.network(
+                              travelPackage?.images?[index] ?? '',
+                              width: double.infinity,
+                              fit: BoxFit.cover,
+                              loadingBuilder:
+                                  (context, child, loadingProgress) {
+                                if (loadingProgress == null) {
+                                  return child;
+                                }
+                                return Shimmer.fromColors(
+                                  baseColor: Colors.grey[300]!,
+                                  highlightColor: Colors.grey[100]!,
+                                  child: Container(
+                                    color: Colors.white,
+                                    height: 150,
+                                    width: double.infinity,
+                                  ),
+                                );
+                              },
+                              errorBuilder: (context, error, stackTrace) =>
+                                  Icon(
+                                Icons.broken_image,
+                                size: 50,
+                                color: Colors.grey,
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Column(
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  travelPackage?.name ?? 'Loading...',
+                                  style:
+                                      Theme.of(context).textTheme.titleMedium,
+                                ),
+                                Text(
+                                    '${DateFormat('yyyy-MM-dd').format(travelPackage!.startDate)} - ${DateFormat('yyyy-MM-dd').format(travelPackage!.endDate)}'),
+                                const SizedBox(height: 5),
+                              ],
+                            ),
                           ),
-                          child: const Text('Create Ads'),
-                        ),
-                      ],
-                      const SizedBox(width: 8),
+                          Text(
+                            'RM ' + travelPackage!.price.toString(),
+                            style: Theme.of(context).textTheme.bodyLarge,
+                          ),
+                        ],
+                      ),
+                      Row(
+                        children: [
+                          Text(
+                            'Resell Quantity: ${widget.travelPackageOnShelve.quantity}',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.normal,
+                              color: Colors.black,
+                            ),
+                          ),
+                        ],
+                      ),
+                      Row(
+                        children: [
+                          Icon(Icons.remove_red_eye),
+                          SizedBox(
+                            width: 5,
+                          ),
+                          Text(viewNum != null ? '$viewNum' : '0'),
+                          Spacer(),
+                          if (_hasAds && _status == 'running') ...[
+                            TextButton(
+                              onPressed: () {
+                                // Logic to view ads performance
+                              },
+                              style: TextButton.styleFrom(
+                                backgroundColor: Colors.green,
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(
+                                    vertical: 8, horizontal: 12),
+                              ),
+                              child: const Text('View Ads Performance'),
+                            ),
+                          ] else if (_status == 'ended') ...[
+                            TextButton(
+                              onPressed: () {
+                                // Logic to renew the ad
+                              },
+                              style: TextButton.styleFrom(
+                                backgroundColor: Colors.orange,
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(
+                                    vertical: 8, horizontal: 12),
+                              ),
+                              child: const Text('Renew Ads'),
+                            ),
+                          ] else ...[
+                            TextButton(
+                              onPressed: () async {
+                                String currentUserId =
+                                    FirebaseAuth.instance.currentUser!.uid;
+
+                                // Check the wallet status before proceeding
+                                DocumentSnapshot userDoc =
+                                    await FirebaseFirestore.instance
+                                        .collection('User')
+                                        .doc(currentUserId)
+                                        .get();
+
+                                if (!walletActivated) {
+                                  showDialog(
+                                    context: context,
+                                    builder: (context) => AlertDialog(
+                                      title: Text('Activate Wallet'),
+                                      content: Text(
+                                          'You need to activate your wallet to use ads credits and buy ads.'),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () {
+                                            Navigator.pop(context);
+                                          },
+                                          child: Text('Cancel'),
+                                        ),
+                                        TextButton(
+                                          onPressed: () {
+                                            // Redirect to wallet activation
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) =>
+                                                    WalletPage(
+                                                        walletBalance: 0.00),
+                                              ),
+                                            );
+                                          },
+                                          child: Text('Activate Wallet'),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                } else {
+                                  String id = widget.travelPackageOnShelve.id;
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => CreateAdsPage(
+                                        travelPackageId: id,
+                                        adsCredit:
+                                            userDoc['ads_credit'] ?? 0.00,
+                                      ),
+                                    ),
+                                  );
+                                }
+                              },
+                              style: TextButton.styleFrom(
+                                backgroundColor: Colors.blue,
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(
+                                    vertical: 8, horizontal: 12),
+                              ),
+                              child: const Text('Create Ads'),
+                            ),
+                          ],
+                          const SizedBox(width: 8),
 
                           // Delete button
                           TextButton(
@@ -557,35 +606,31 @@ class _TravelPackagePurchasedCardState
                     ],
                   ),
                 ),
-              ],
-            ),
-          ),
-        ),
-        if (!widget.travelPackageOnShelve.isAvailable)
-          Positioned.fill(
-            child: Padding(
-              padding: const EdgeInsets.all(4.0),
-              child: Container(
-                decoration: BoxDecoration(
-                  color:
-                      Colors.black.withOpacity(0.5), // Grey transparent overlay
-                  borderRadius: BorderRadius.circular(12.0),
-                ),
-                child: Center(
-                  child: Text(
-                    'Not Available',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
+                if (!widget.travelPackageOnShelve.isAvailable)
+                  Positioned.fill(
+                    child: Padding(
+                      padding: const EdgeInsets.all(4.0),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.black
+                              .withOpacity(0.5), // Grey transparent overlay
+                          borderRadius: BorderRadius.circular(12.0),
+                        ),
+                        child: Center(
+                          child: Text(
+                            'Not Available',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
                     ),
                   ),
-                ),
-              ),
-            ),
-          ),
-      ],
-    );
+              ],
+            )));
   }
 
   void _showDeleteDialog(BuildContext context) {
