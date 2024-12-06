@@ -84,6 +84,10 @@ class _TravelPackagePurchasedCardState
       setState(() {
         walletActivated = userDoc['wallet_activated'] ?? false;
       });
+    } else {
+      setState(() {
+        walletActivated = false;
+      });
     }
   }
 
@@ -103,6 +107,7 @@ class _TravelPackagePurchasedCardState
       for (var ad in adDetails) {
         String adId = ad['id']; // Get the ad ID
         status = ad['status']; // Get the status of the ad
+        String renewalType = ad['renewal_type']; // Get renewal type
       }
     } else {
       _hasAds = false;
@@ -320,16 +325,24 @@ class _TravelPackagePurchasedCardState
                                           child: Text('Cancel'),
                                         ),
                                         TextButton(
-                                          onPressed: () {
-                                            // Redirect to wallet activation
-                                            Navigator.push(
+                                          onPressed: () async {
+                                            Navigator.pop(context);
+
+                                            final bool? result =
+                                                await Navigator.push(
                                               context,
                                               MaterialPageRoute(
                                                 builder: (context) =>
                                                     WalletPage(
-                                                        walletBalance: 0.00),
+                                                        walletBalance: 0),
                                               ),
                                             );
+
+                                            if (result != null && result) {
+                                              setState(() {
+                                                walletActivated = true;
+                                              });
+                                            }
                                           },
                                           child: Text('Activate Wallet'),
                                         ),
@@ -344,7 +357,7 @@ class _TravelPackagePurchasedCardState
                                       builder: (context) => CreateAdsPage(
                                         travelPackageId: id,
                                         adsCredit:
-                                            userDoc['ads_credit'] ?? 0.00,
+                                            userDoc['ads_credit'] ?? 0,
                                       ),
                                     ),
                                   );

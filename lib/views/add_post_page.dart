@@ -477,14 +477,12 @@ class _NewPostPageState extends State<NewPostPage> {
                               }
                               if (!isPollSectionVisible) {
                                 _pollOptions.add('Yes');
-                                _pollOptionControllers.add(
-                                    TextEditingController(
-                                        text: 'Yes'));
+                                _pollOptionControllers
+                                    .add(TextEditingController(text: 'Yes'));
 
                                 _pollOptions.add('No');
-                                _pollOptionControllers.add(
-                                    TextEditingController(
-                                        text: 'No'));
+                                _pollOptionControllers
+                                    .add(TextEditingController(text: 'No'));
                               }
                               // Toggle the visibility state
                               isPollSectionVisible = !isPollSectionVisible;
@@ -744,24 +742,27 @@ class _NewPostPageState extends State<NewPostPage> {
                       ),
                     ),
                     const SizedBox(height: 16),
-
+                    
                     // Preview Button
-                    Center(
-                      child: ElevatedButton(
-                        onPressed: () {
-                          // Navigate to the Preview Post and pass data
-                          _goToNextPage();
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor:
-                              const Color.fromARGB(255, 159, 118, 249),
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(
-                              vertical: 12.0, horizontal: 24.0),
-                        ),
-                        child: Text('Next', style: TextStyle(fontSize: 16)),
-                      ),
-                    ),
+                    Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 0),
+                        child: Center(
+                          child: ElevatedButton(
+                            onPressed: () {
+                              // Navigate to the Preview Post and pass data
+                              _goToNextPage();
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor:
+                                  const Color.fromARGB(255, 159, 118, 249),
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(
+                                  vertical: 12.0, horizontal: 24.0),
+                              minimumSize: Size(double.infinity, 48),
+                            ),
+                            child: Text('Next', style: TextStyle(fontSize: 16)),
+                          ),
+                        )),
                   ],
                 ),
               ),

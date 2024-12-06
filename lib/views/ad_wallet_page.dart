@@ -3,9 +3,12 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:tripify/views/top_up_page.dart';
+import 'package:tripify/models/ad_transaction_model.dart';
+import 'package:tripify/view_models/ad_transaction_provider.dart';
 
 class WalletPage extends StatefulWidget {
-  final double walletBalance;
+  final int walletBalance;
 
   WalletPage({required this.walletBalance});
 
@@ -24,16 +27,28 @@ class _WalletPageState extends State<WalletPage> {
   }
 
   Future<void> _fetchWalletStatus() async {
-    String currentUserId = FirebaseAuth.instance.currentUser!.uid;
+    try {
+      String currentUserId = FirebaseAuth.instance.currentUser!.uid;
 
-    DocumentSnapshot userDoc = await FirebaseFirestore.instance
-        .collection('User')
-        .doc(currentUserId)
-        .get();
+      DocumentSnapshot userDoc = await FirebaseFirestore.instance
+          .collection('User')
+          .doc(currentUserId)
+          .get();
 
-    if (userDoc.exists) {
+      if (userDoc.exists) {
+        setState(() {
+          walletActivated = userDoc['wallet_activated'] ?? false;
+          isLoading = false;
+        });
+      } else {
+        setState(() {
+          walletActivated = false;
+          isLoading = false;
+        });
+      }
+    } catch (e) {
+      // Handle potential errors
       setState(() {
-        walletActivated = userDoc['wallet_activated'] ?? false;
         isLoading = false;
       });
     }
@@ -57,7 +72,9 @@ class _WalletPageState extends State<WalletPage> {
           backgroundColor: Color(0xFF9F76F9)),
     );
 
-    Navigator.pop(context);
+    bool isActivated = true;
+
+    Navigator.pop(context, isActivated);
   }
 
   @override
@@ -72,30 +89,10 @@ class _WalletPageState extends State<WalletPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             isLoading
-                ? Shimmer.fromColors(
-                    baseColor: Colors.grey[300]!,
-                    highlightColor: Colors.grey[100]!,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          width: 150,
-                          height: 20,
-                          color: Colors.white,
-                        ),
-                        SizedBox(height: 10),
-                        Row(
-                          children: [
-                            Icon(Icons.account_balance_wallet, size: 40),
-                            SizedBox(width: 10),
-                            Container(
-                              width: 100,
-                              height: 20,
-                              color: Colors.white,
-                            ),
-                          ],
-                        ),
-                      ],
+                ? Expanded(
+                    child: Center(
+                      child:
+                          CircularProgressIndicator(color: Color(0xFF9F76F9)),
                     ),
                   )
                 : (walletActivated
@@ -110,22 +107,39 @@ class _WalletPageState extends State<WalletPage> {
                           SizedBox(height: 10),
                           Row(
                             children: [
-                              Icon(Icons.account_balance_wallet,
-                                  size: 40, color: Colors.green),
+                              Icon(Icons.account_balance_wallet, size: 40),
                               SizedBox(width: 10),
                               Text(
                                 "RM${widget.walletBalance.toStringAsFixed(2)}",
                                 style: TextStyle(
-                                    fontSize: 36,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.green),
+                                    fontSize: 36, fontWeight: FontWeight.bold),
+                              ),
+                              Spacer(),
+                              ElevatedButton(
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => TopUpPage(),
+                                    ),
+                                  );
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Color(0xFF9F76F9),
+                                ),
+                                child: Text('Top Up',
+                                    style: TextStyle(
+                                        fontSize: 18, color: Colors.white)),
                               ),
                             ],
                           ),
                         ],
                       )
-                    : Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                    : Expanded(
+                        child: Center(
+                            child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
                           Text(
                             "Wallet is not yet activated",
@@ -143,31 +157,72 @@ class _WalletPageState extends State<WalletPage> {
                                     fontSize: 18, color: Colors.white)),
                           ),
                         ],
-                      )),
+                      )))),
             SizedBox(height: 20),
-            Divider(),
-            SizedBox(height: 10),
-            Text(
-              "Transaction History",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 10),
-            Expanded(
-              child: ListView.builder(
-                itemCount: 5, // Replace with your actual transaction list count
-                itemBuilder: (context, index) {
-                  return ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: Text("Transaction ${index + 1}", style: TextStyle(fontWeight: FontWeight.w500, fontSize: 14)),
-                    subtitle:  Text("Date: ${DateFormat('dd MMM yyyy hh:mm:ss a').format(DateTime.now())}"),
-                    trailing: Text(
-                      "+RM1000.00", // Replace with actual transaction amount
-                      style: TextStyle(fontWeight: FontWeight.w500, fontSize: 14),
-                    ),
-                  );
-                },
+            if (walletActivated) ...[
+              Divider(),
+              SizedBox(height: 10),
+              Text(
+                "Transaction History",
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
-            ),
+              SizedBox(height: 10),
+              FutureBuilder<List<AdsTransaction>>(
+                future: TransactionProvider().getTransactionsByUserId(
+                    FirebaseAuth.instance.currentUser!.uid),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return Expanded(
+                        child: Center(
+                            child: CircularProgressIndicator(
+                                color: Color(0xFF9F76F9))));
+                  }
+
+                  if (snapshot.hasError) {
+                    return Center(child: Text('Error fetching transactions.'));
+                  }
+
+                  if (snapshot.hasData) {
+                    List<AdsTransaction> transactions = snapshot.data ?? [];
+
+                    if (transactions.isEmpty) {
+                      return Expanded(
+                          child: Center(child: Text('No transactions found.')));
+                    }
+
+                    return Expanded(
+                      child: ListView.builder(
+                        itemCount: transactions
+                            .length, // Use the length of actual transactions
+                        itemBuilder: (context, index) {
+                          final transaction =
+                              transactions[index]; // Get the actual transaction
+
+                          return ListTile(
+                            contentPadding: EdgeInsets.zero,
+                            title: Text(
+                              "Transaction ${transaction.transactionId}",
+                              style: TextStyle(
+                                  fontWeight: FontWeight.w500, fontSize: 16),
+                            ),
+                            subtitle: Text(
+                              "Date: ${DateFormat('dd MMM yyyy hh:mm:ss a').format(transaction.date.toLocal())}",
+                            ),
+                            trailing: Text(
+                              "+RM${transaction.amount.toStringAsFixed(2)}", // Display actual transaction amount
+                              style: TextStyle(
+                                  fontWeight: FontWeight.w500, fontSize: 16),
+                            ),
+                          );
+                        },
+                      ),
+                    );
+                  }
+
+                  return Center(child: Text('No transactions found.'));
+                },
+              )
+            ]
           ],
         ),
       ),

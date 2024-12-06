@@ -9,7 +9,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 class CreateAdsPage extends StatefulWidget {
   final String travelPackageId;
-  final double adsCredit;
+  final int adsCredit;
 
   CreateAdsPage({required this.travelPackageId, required this.adsCredit});
 
@@ -23,15 +23,16 @@ class _CreateAdsPageState extends State<CreateAdsPage> {
 
   TravelPackageModel? _selectedPackage;
   String? _selectedAdType;
-  double _totalPrice = 0.0;
+  int _totalPrice = 0;
   DateTime? _startDate;
   DateTime? _endDate;
-  late double currentAdsCredit;
+  late int currentAdsCredit;
+  String? _renewalType;
 
   final Map<String, Map<String, dynamic>> _adPackages = {
-    "3 Days": {"duration": 3, "price": 50.0},
-    "7 Days": {"duration": 7, "price": 100.0},
-    "1 Month": {"duration": 30, "price": 300.0},
+    "3 Days": {"duration": 3, "price": 50},
+    "7 Days": {"duration": 7, "price": 100},
+    "1 Month": {"duration": 30, "price": 300},
   };
 
   @override
@@ -118,7 +119,8 @@ class _CreateAdsPageState extends State<CreateAdsPage> {
     if (_selectedPackage == null ||
         _selectedAdType == null ||
         _startDate == null ||
-        _endDate == null) {
+        _endDate == null ||
+        _renewalType == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Please fill in all fields'),
@@ -143,6 +145,7 @@ class _CreateAdsPageState extends State<CreateAdsPage> {
         startDate: _startDate!,
         endDate: _endDate!,
         status: 'ongoing',
+        renewalType: _renewalType!,
         createdAt: DateTime.now(),
       );
 
@@ -209,6 +212,35 @@ class _CreateAdsPageState extends State<CreateAdsPage> {
             ),
             SizedBox(height: 30),
 
+            Text('Renewal Type:', style: TextStyle(fontSize: 18)),
+            SizedBox(height: 20),
+            
+            RadioListTile<String>(
+              title: Text('Automatic Renewal'),
+              value: 'automatic',
+              groupValue: _renewalType,
+              onChanged: (value) {
+                setState(() {
+                  _renewalType = value;
+                });
+              },
+            ),
+            RadioListTile<String>(
+              title: Text('Manual Renewal'),
+              value: 'manual',
+              groupValue: _renewalType,
+              onChanged: (value) {
+                setState(() {
+                  _renewalType = value;
+                });
+              },
+            ),
+
+            SizedBox(height: 20),
+
+            Text('Start and End Date:', style: TextStyle(fontSize: 18)),
+            SizedBox(height: 20),
+
             // Start Date Picker
             ElevatedButton(
               onPressed: () => _selectStartDate(context),
@@ -231,6 +263,8 @@ class _CreateAdsPageState extends State<CreateAdsPage> {
                 ),
               ),
 
+            SizedBox(height: 20),
+
             // Submit Button
             SizedBox(height: 30),
             Spacer(),
@@ -240,7 +274,7 @@ class _CreateAdsPageState extends State<CreateAdsPage> {
                 child: Padding(
                   padding: const EdgeInsets.symmetric(vertical: 10),
                   child: Text(
-                    'Total Price: RM${_totalPrice.toStringAsFixed(2)}',
+                    'Total Price: RM ${_totalPrice.toStringAsFixed(2)}',
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,

@@ -531,18 +531,21 @@ class _PostFormPageState extends State<PostFormPage> {
             SizedBox(height: 10),
 
             // Post button
-            Center(
-              child: ElevatedButton(
-                onPressed: _submitPost, // Trigger the post submission
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Color.fromARGB(255, 159, 118, 249),
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(
-                      vertical: 12.0, horizontal: 24.0),
-                ),
-                child: Text("Post", style: TextStyle(fontSize: 16)),
-              ),
-            ),
+            Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16),
+                child: Center(
+                  child: ElevatedButton(
+                    onPressed: _submitPost,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Color.fromARGB(255, 159, 118, 249),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 12.0, horizontal: 24.0),
+                      minimumSize: Size(double.infinity, 48),
+                    ),
+                    child: Text("Post", style: TextStyle(fontSize: 16)),
+                  ),
+                )),
             SizedBox(height: 20),
           ],
         ),

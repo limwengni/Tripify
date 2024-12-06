@@ -7,6 +7,10 @@ import 'package:tripify/views/ad_wallet_page.dart';
 import 'package:tripify/widgets/travel_packages_on_shelves_card_list.dart';
 
 class TravelPackageOnShelvesRepoPage extends StatefulWidget {
+  final int adsCredit;
+
+  TravelPackageOnShelvesRepoPage({required this.adsCredit});
+
   @override
   _TravelPackageOnShelvesRepoPageState createState() =>
       _TravelPackageOnShelvesRepoPageState();
@@ -16,6 +20,12 @@ class _TravelPackageOnShelvesRepoPageState
     extends State<TravelPackageOnShelvesRepoPage> {
   FirestoreService _firestoreService = FirestoreService();
   String currentUserId = FirebaseAuth.instance.currentUser!.uid;
+  int adsCredit = 0;
+
+  @override
+  void initState() {
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -36,13 +46,13 @@ class _TravelPackageOnShelvesRepoPageState
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => WalletPage(walletBalance: 0.00),
+                  builder: (context) => WalletPage(walletBalance: widget.adsCredit),
                 ),
               );
             },
             icon: Icon(Icons.account_balance_wallet),
             label: Text(
-              "RM0.00",
+              'RM${widget.adsCredit.toStringAsFixed(2)}',
             ),
           ),
         ],
