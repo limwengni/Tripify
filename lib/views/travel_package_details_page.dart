@@ -159,7 +159,8 @@ class _TravelPackageDetailsPageState extends State<TravelPackageDetailsPage> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'RM${widget.travelPackage.price.toStringAsFixed(2)}',
+              'RM ${widget.travelPackage.price.toStringAsFixed(2)}',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             ElevatedButton(
               onPressed: () {
@@ -208,12 +209,12 @@ class _TravelPackageDetailsPageState extends State<TravelPackageDetailsPage> {
                 }
               },
               style: ElevatedButton.styleFrom(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-              ),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  backgroundColor: const Color.fromARGB(255, 159, 118, 249)),
               child: const Text(
                 'Book Now',
-                style: TextStyle(fontSize: 16),
+                style: TextStyle(fontSize: 16, color: Colors.white),
               ),
             ),
           ],
@@ -237,14 +238,14 @@ class _TravelPackageDetailsPageState extends State<TravelPackageDetailsPage> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         SizedBox(
-                          height: 20,
+                          height: 10,
                         ),
                         Text(
                           'Quantity: $quantity',
                           style: TextStyle(fontSize: 18),
                         ),
                         SizedBox(
-                          height: 20,
+                          height: 10,
                         ),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -278,14 +279,13 @@ class _TravelPackageDetailsPageState extends State<TravelPackageDetailsPage> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         SizedBox(
-                          height: 20,
+                          height: 10,
                         ),
                         Text(
-                          'Are you sure to purchase?\nResell Travel Package can\'t select quantity!',
-                          style: TextStyle(fontSize: 18),
+                          'Are you sure to purchase?\nResell Travel Package can\'t select quantity and can\'t refund!',
                         ),
                         SizedBox(
-                          height: 20,
+                          height: 10,
                         ),
                       ],
                     );
@@ -306,13 +306,15 @@ class _TravelPackageDetailsPageState extends State<TravelPackageDetailsPage> {
                     String currentUser = FirebaseAuth.instance.currentUser!.uid;
                     Map<String, dynamic>? travelPackagePurchasedBeforeMap;
 
-                    travelPackagePurchasedBeforeMap =
-                        await firestoreService.getSubCollectionOneDataByFields(
+                    travelPackagePurchasedBeforeMap = await firestoreService
+                        .getSubCollectionOneDataByTwoFields(
                             'User',
                             currentUser,
                             'Travel_Packages_Purchased',
                             'travel_package_id',
-                            widget.travelPackage.id);
+                            widget.travelPackage.id,
+                            'is_purchase_resale_package',
+                            false);
 
                     String id = widget.travelPackage.id;
 
@@ -335,12 +337,12 @@ class _TravelPackageDetailsPageState extends State<TravelPackageDetailsPage> {
                     if (travelPackagePurchasedBeforeMap == null) {
                       TravelPackagePurchasedModel travelPackagePurchased =
                           TravelPackagePurchasedModel(
-                        id: '',
-                        travelPackageId: widget.travelPackage.id,
-                        price: amount,
-                        quantity: quantity,
-                        ticketIdList: ticketIdListForPurchasedModel,
-                      );
+                              id: '',
+                              travelPackageId: widget.travelPackage.id,
+                              price: amount,
+                              quantity: quantity,
+                              ticketIdList: ticketIdListForPurchasedModel,
+                              isPurchaseResalePackage: false);
 
                       travelPackagePurchasedId = await _firestoreService
                           .insertSubCollectionDataWithAutoIDReturnValue(
@@ -370,6 +372,7 @@ class _TravelPackageDetailsPageState extends State<TravelPackageDetailsPage> {
                           travelPackagePurchasedBeforeMap['quantity'] +
                               quantity;
                       List<String> ticketListUpdated = [];
+
                       if (travelPackagePurchasedBeforeMap != null &&
                           travelPackagePurchasedBeforeMap['ticket_id_list']
                               is List) {
@@ -388,7 +391,16 @@ class _TravelPackageDetailsPageState extends State<TravelPackageDetailsPage> {
                         field: 'quantity',
                         value: updatedQuantity,
                       );
-
+                      double amountForUpdate =
+                          amount + travelPackagePurchasedBeforeMap['price'];
+                      await _firestoreService.updateSubCollectionField(
+                        collection: 'User',
+                        documentId: currentUser,
+                        subCollection: 'Travel_Packages_Purchased',
+                        subDocumentId: travelPackagePurchasedBeforeMap['id'],
+                        field: 'price',
+                        value: amountForUpdate,
+                      );
                       await _firestoreService.addItemToSubCollectionList(
                         collectionName: 'User',
                         documentId: currentUser,
@@ -524,6 +536,7 @@ class _TravelPackageDetailsPageState extends State<TravelPackageDetailsPage> {
                           value: updatedTicketNoList);
                     }
 
+                    //add travel package purchased
                     TravelPackagePurchasedModel travelPackagePurchased =
                         TravelPackagePurchasedModel(
                       id: '',
@@ -532,6 +545,7 @@ class _TravelPackageDetailsPageState extends State<TravelPackageDetailsPage> {
                       price: amount,
                       quantity: widget.travelPackage.quantity,
                       ticketIdList: ticketIdListOfPurchasedModel,
+                      isPurchaseResalePackage: true,
                     );
 
                     travelPackagePurchasedId = await _firestoreService
@@ -542,13 +556,27 @@ class _TravelPackageDetailsPageState extends State<TravelPackageDetailsPage> {
                       travelPackagePurchased.toMap(),
                     );
 
-                    print('groupchatid: ${widget.travelPackage.groupChatId}');
+                    //update the original travel package for ticket no
+                    for (int i = 0;
+                        i < ticketIdListOfPurchasedModel.length;
+                        i++) {
+                      await _firestoreService.updateMapField(
+                          'Travel_Packages',
+                          widget.travelPackage.travelPackageIdForResale!,
+                          'ticket_id_map',
+                          '${ticketIdListOfPurchasedModel[i]}',
+                          currentUser);
+                    }
+
+                    //group chat part
                     Map<String, dynamic>? groupChatMap =
                         await _firestoreService.getDataById(
                             'Conversations', widget.travelPackage.groupChatId!);
                     if (groupChatMap != null) {
                       ConversationModel groupChat =
                           ConversationModel.fromMap(groupChatMap);
+
+                      //only add the user into the group chat when they are not inside the group chat
                       if (!groupChat.participants.contains(currentUser)) {
                         List<String> newItem = [widget.currentUserId];
                         await _firestoreService.addItemToCollectionList(
@@ -585,6 +613,7 @@ class _TravelPackageDetailsPageState extends State<TravelPackageDetailsPage> {
                       UserModel reseller = UserModel.fromMap(
                           resellerMap, widget.travelPackage.resellerId!);
 
+                      //update reseller wallet
                       double walletCreditUpdated = 0;
                       if (reseller.walletCredit != null) {
                         walletCreditUpdated = reseller.walletCredit! + amount;
@@ -598,8 +627,51 @@ class _TravelPackageDetailsPageState extends State<TravelPackageDetailsPage> {
                           walletCreditUpdated);
                     }
 
+                    //change state for the resale travel package
                     await _firestoreService.updateField('Travel_Packages',
                         widget.travelPackage.id, 'is_available', false);
+
+                    //decrease the resell quantity for the travel package purchased of the reseller
+                    await _firestoreService.incrementFieldInSubCollection(
+                        'User',
+                        widget.travelPackage.resellerId!,
+                        'Travel_Packages_Purchased',
+                        widget.travelPackage.travelPackagePurchasedId!,
+                        -widget.travelPackage.quantity,
+                        'resale_quantity');
+
+                    //increase the sold quantity for the travel package purchased of the reseller
+                    await _firestoreService.incrementFieldInSubCollection(
+                        'User',
+                        widget.travelPackage.resellerId!,
+                        'Travel_Packages_Purchased',
+                        widget.travelPackage.travelPackagePurchasedId!,
+                        widget.travelPackage.quantity,
+                        'sold');
+
+                    //check the reseller still have the package or not, if no more package then it will be kick out to the group chat
+                    Map<String, dynamic>? travelPackageMapForChecking =
+                        await _firestoreService.getDataById('Travel_Packages',
+                            widget.travelPackage.travelPackageIdForResale!);
+                    print(
+                        '%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%');
+                    print(
+                        'travelPackage: ${travelPackageMapForChecking.toString()}');
+                    if (travelPackageMapForChecking != null) {
+                      TravelPackageModel travelPackageModelForChecking =
+                          TravelPackageModel.fromMap(
+                              travelPackageMapForChecking);
+                      print('travelPackge if 1');
+                      if (!travelPackageModelForChecking.ticketIdNumMap!
+                          .containsValue(widget.travelPackage.resellerId)) {
+                        print('travelPackge if 2');
+                        await _firestoreService.removeItemFromFirestoreList(
+                            collectionPath: 'Conversations',
+                            documentId: widget.travelPackage.groupChatId!,
+                            fieldName: 'participants',
+                            itemToRemove: widget.travelPackage.resellerId!);
+                      }
+                    }
 
                     Navigator.pushReplacement(
                       context,

@@ -33,10 +33,17 @@ class _TravelPackagePurchasedCardState
   TravelPackageModel? travelPackage;
   int quantity = 1;
   int resaleQuantity = 0;
+  int resaleAvailable = 0;
+  int sold =0;
   TravelPackageModel? travelPackageResale;
 
   @override
   void initState() {
+    resaleQuantity = widget.travelPackagePurchased.resaleQuantity!;
+    resaleAvailable = widget.travelPackagePurchased.quantity - widget.travelPackagePurchased.resaleQuantity!- widget.travelPackagePurchased.soldQuantity!;
+
+    print('resale available: ${resaleAvailable}');
+    sold = widget.travelPackagePurchased.soldQuantity!;
     super.initState();
     fetchTravelPackageAndTravelCompany();
   }
@@ -54,11 +61,11 @@ class _TravelPackagePurchasedCardState
           widget.currentUserId,
           'travel_package_id_for_resale',
           widget.travelPackagePurchased.id);
+
       if (travelPackageResaleMapList.isEmpty) {
         for (int i = 0; i < travelPackageResaleMapList.length; i++) {
           travelPackageResale =
               TravelPackageModel.fromMap(travelPackageResaleMapList[i]);
-          resaleQuantity = resaleQuantity + travelPackageResale!.quantity;
         }
       }
       setState(() {
@@ -84,8 +91,6 @@ class _TravelPackagePurchasedCardState
     }
   }
 
-
-
   @override
   Widget build(BuildContext context) {
     if (!userLoaded || travelPackage == null) {
@@ -97,7 +102,9 @@ class _TravelPackagePurchasedCardState
           context,
           MaterialPageRoute(
             builder: (context) => TravelPackageDetailsPage(
-              travelPackage: travelPackage!,currentUserId: widget.currentUserId, travelPackageUser: travelCompanyUser!,
+              travelPackage: travelPackage!,
+              currentUserId: widget.currentUserId,
+              travelPackageUser: travelCompanyUser!,
             ),
           ),
         );
@@ -189,7 +196,7 @@ class _TravelPackagePurchasedCardState
                         ),
                       ),
                       Text(
-                        travelPackage!.price.toString(),
+                        'RM ' + travelPackage!.price.toStringAsFixed(2),
                         style: Theme.of(context).textTheme.bodyLarge,
                       ),
                     ],
@@ -200,7 +207,8 @@ class _TravelPackagePurchasedCardState
                           ? Container(
                               child: CircleAvatar(
                                 radius: 15,
-                                backgroundImage: NetworkImage(travelCompanyUser!.profilePic),
+                                backgroundImage:
+                                    NetworkImage(travelCompanyUser!.profilePic),
                                 backgroundColor: Colors.grey[200],
                               ),
                             )
@@ -239,7 +247,8 @@ class _TravelPackagePurchasedCardState
                           }
                         },
                         style: TextButton.styleFrom(
-                          backgroundColor: const Color.fromARGB(255, 159, 118,249), // Blue background color
+                          backgroundColor: const Color.fromARGB(
+                              255, 159, 118, 249), // Blue background color
                           foregroundColor: Colors
                               .white, // Text color (white text on blue background)
                           padding: const EdgeInsets.symmetric(
@@ -270,7 +279,7 @@ class _TravelPackagePurchasedCardState
                       ),
                       Expanded(
                         child: Text(
-                          'Sold: ${widget.travelPackagePurchased.soldQuantity}',
+                          'Sold: ${sold}',
                           textAlign: TextAlign
                               .right, // Optional: Align text to the center
                           style: const TextStyle(color: Colors.grey),
@@ -331,7 +340,7 @@ class _TravelPackagePurchasedCardState
                           icon: const Icon(Icons.add),
                           onPressed: () {
                             if (quantity <
-                                widget.travelPackagePurchased.quantity) {
+                                resaleAvailable) {
                               setState(() {
                                 quantity++;
                               });
@@ -367,7 +376,6 @@ class _TravelPackagePurchasedCardState
                   price = double.parse(
                       price.toStringAsFixed(2)); // Round to 2 decimal places
 
-        
                   TravelPackageModel travelPackageResale = TravelPackageModel(
                       id: '',
                       name: travelPackage!.name,
@@ -381,12 +389,12 @@ class _TravelPackagePurchasedCardState
                       groupChatId: travelPackage!.groupChatId,
                       resellerId: widget.currentUserId,
                       isResale: true,
-                      createdAt: travelPackage!.createdAt,
-                    
-                      quantityAvailable:quantity,
-                      ticketIdNumMap: travelPackage!.ticketIdNumMap
-                      ,travelPackageIdForResale: travelPackage!.id,
-                      travelPackagePurchasedId: widget.travelPackagePurchased.id);
+                      createdAt: DateTime.now(),
+                      quantityAvailable: quantity,
+                      ticketIdNumMap: travelPackage!.ticketIdNumMap,
+                      travelPackageIdForResale: travelPackage!.id,
+                      travelPackagePurchasedId:
+                          widget.travelPackagePurchased.id);
                   try {
                     await _firestoreService.insertDataWithAutoID(
                         'Travel_Packages', travelPackageResale.toMap());
@@ -401,11 +409,13 @@ class _TravelPackagePurchasedCardState
                         value: newResaleQuantity);
                     setState(() {
                       resaleQuantity = newResaleQuantity;
+                      resaleAvailable = widget.travelPackagePurchased.quantity - resaleQuantity - sold;
+                      quantity = 0;
                     });
                   } catch (e) {}
                   Navigator.of(context).pop();
                   ScaffoldMessenger.of(context).showSnackBar(
-                     const SnackBar(content: Text('Successfully On Shelves')));
+                      const SnackBar(content: Text('Successfully On Shelves')));
                 }
               },
               child: const Text('Confirm'),
