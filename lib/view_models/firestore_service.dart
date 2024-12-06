@@ -193,7 +193,6 @@ class FirestoreService {
     }
   }
 
-
   Future<void> removeMapKey(
       String collection, String documentId, String field, String key) async {
     try {
@@ -206,7 +205,6 @@ class FirestoreService {
       print("Error removing key from field: $e");
     }
   }
-
 
   Future<void> updateSubCollectionField(
       {required String collection,
@@ -231,74 +229,76 @@ class FirestoreService {
     }
   }
 
-Future<void> removeItemFromFirestoreList({
-  required String collectionPath,
-  required String documentId,
-  required String fieldName,
-  required dynamic itemToRemove,
-}) async {
-  try {
-    // Reference to the Firestore document
-    DocumentReference documentRef =
-        FirebaseFirestore.instance.collection(collectionPath).doc(documentId);
+  Future<void> removeItemFromFirestoreList({
+    required String collectionPath,
+    required String documentId,
+    required String fieldName,
+    required dynamic itemToRemove,
+  }) async {
+    try {
+      // Reference to the Firestore document
+      DocumentReference documentRef =
+          FirebaseFirestore.instance.collection(collectionPath).doc(documentId);
 
-    // Update the document by removing the specific item
-    await documentRef.update({
-      fieldName: FieldValue.arrayRemove([itemToRemove]),
-    });
+      // Update the document by removing the specific item
+      await documentRef.update({
+        fieldName: FieldValue.arrayRemove([itemToRemove]),
+      });
 
-    print("Item removed successfully.");
-  } catch (e) {
-    print("Error removing item: $e");
+      print("Item removed successfully.");
+    } catch (e) {
+      print("Error removing item: $e");
+    }
   }
-}
 
-Future<void> addItemToSubCollectionList({
-  required String documentId,
-  required String collectionName,  required String subDocumentId,
-  required String subCollectionName,
+  Future<void> addItemToSubCollectionList({
+    required String documentId,
+    required String collectionName,
+    required String subDocumentId,
+    required String subCollectionName,
+    required String fieldName,
+    required List<String> newItems,
+  }) async {
+    try {
+      // Reference to the document
+      DocumentReference documentRef = FirebaseFirestore.instance
+          .collection(collectionName)
+          .doc(documentId)
+          .collection(subCollectionName)
+          .doc(subDocumentId);
 
-  required String fieldName,
-  required List<String> newItems,
-}) async {
-  try {
-    // Reference to the document
-    DocumentReference documentRef =
-        FirebaseFirestore.instance.collection(collectionName).doc(documentId).collection(subCollectionName).doc(subDocumentId);
+      // Update the list using arrayUnion to add the new item
+      await documentRef.update({
+        fieldName: FieldValue.arrayUnion(newItems),
+      });
 
-    // Update the list using arrayUnion to add the new item
-    await documentRef.update({
-      fieldName: FieldValue.arrayUnion(newItems),
-    });
-
-    print('Item added successfully to the list!');
-  } catch (e) {
-    print('Error adding item to the list: $e');
+      print('Item added successfully to the list!');
+    } catch (e) {
+      print('Error adding item to the list: $e');
+    }
   }
-}
 
-Future<void> addItemToCollectionList({
-  required String documentId,
-  required String collectionName,  
+  Future<void> addItemToCollectionList({
+    required String documentId,
+    required String collectionName,
+    required String fieldName,
+    required List<String> newItems,
+  }) async {
+    try {
+      // Reference to the document
+      DocumentReference documentRef =
+          FirebaseFirestore.instance.collection(collectionName).doc(documentId);
 
-  required String fieldName,
-  required List<String> newItems,
-}) async {
-  try {
-    // Reference to the document
-    DocumentReference documentRef =
-        FirebaseFirestore.instance.collection(collectionName).doc(documentId);
+      // Update the list using arrayUnion to add the new item
+      await documentRef.update({
+        fieldName: FieldValue.arrayUnion(newItems),
+      });
 
-    // Update the list using arrayUnion to add the new item
-    await documentRef.update({
-      fieldName: FieldValue.arrayUnion(newItems),
-    });
-
-    print('Item added successfully to the list!');
-  } catch (e) {
-    print('Error adding item to the list: $e');
+      print('Item added successfully to the list!');
+    } catch (e) {
+      print('Error adding item to the list: $e');
+    }
   }
-}
 
   // Delete Data
   Future<void> deleteData(String collection, String documentId) async {
@@ -324,29 +324,59 @@ Future<void> addItemToCollectionList({
       return [];
     }
   }
-Stream<QuerySnapshot> getStreamDataByField({
-  required String collection,
-  required String field,
-  required dynamic value,
-  bool? descending,
-  String? orderBy,
-}) {
-  try {
-    // Create the query
-    var query = _db.collection(collection).where(field, isEqualTo: value);
 
-    // Add optional ordering
-    if (orderBy != null) {
-      query = query.orderBy(orderBy, descending: descending ?? false);
+  Stream<QuerySnapshot> getStreamDataByField({
+    required String collection,
+    required String field,
+    required dynamic value,
+    bool? descending,
+    String? orderBy,
+  }) {
+    try {
+      // Create the query
+      var query = _db.collection(collection).where(field, isEqualTo: value);
+
+      // Add optional ordering
+      if (orderBy != null) {
+        query = query.orderBy(orderBy, descending: descending ?? false);
+      }
+
+      // Return the stream of snapshots
+      return query.snapshots();
+    } catch (e) {
+      print("Error fetching stream data by field: $e");
+      return const Stream.empty(); // Fallback for errors
     }
-
-    // Return the stream of snapshots
-    return query.snapshots();
-  } catch (e) {
-    print("Error fetching stream data by field: $e");
-    return const Stream.empty(); // Fallback for errors
   }
-}
+
+  Stream<QuerySnapshot> getStreamDataByTwoField({
+    required String collection,
+    required String field,
+    required dynamic value,
+    required String field2,
+    required dynamic value2,
+    bool? descending,
+    String? orderBy,
+  }) {
+    try {
+      // Create the query
+      var query = _db
+          .collection(collection)
+          .where(field, isEqualTo: value)
+          .where(field2, isEqualTo: value2);
+
+      // Add optional ordering
+      if (orderBy != null) {
+        query = query.orderBy(orderBy, descending: descending ?? false);
+      }
+
+      // Return the stream of snapshots
+      return query.snapshots();
+    } catch (e) {
+      print("Error fetching stream data by field: $e");
+      return const Stream.empty(); // Fallback for errors
+    }
+  }
 
   // Select Data (Get All Sub Collection Data)
   Stream<QuerySnapshot> getSubCollectionMessagesStreamData({
@@ -427,20 +457,29 @@ Stream<QuerySnapshot> getStreamDataByField({
     }
   }
 
-Future<void> incrementFieldInSubCollection(String collection, String documentId,String subCollection, String subDocumentId, int increaseNum, String field) async {
-  try {
-   
+  Future<void> incrementFieldInSubCollection(
+      String collection,
+      String documentId,
+      String subCollection,
+      String subDocumentId,
+      int increaseNum,
+      String field) async {
+    try {
+      // Update the document by incrementing the numeric field
+      await FirebaseFirestore.instance
+          .collection(collection)
+          .doc(documentId)
+          .collection(subCollection)
+          .doc(subDocumentId)
+          .update({
+        field: FieldValue.increment(increaseNum),
+      });
 
-    // Update the document by incrementing the numeric field
-    await FirebaseFirestore.instance.collection(collection).doc(documentId).collection(subCollection).doc(subDocumentId).update({
-      field: FieldValue.increment(increaseNum), 
-    });
-
-    print("Field incremented successfully!");
-  } catch (e) {
-    print("Error incrementing field: $e");
+      print("Field incremented successfully!");
+    } catch (e) {
+      print("Error incrementing field: $e");
+    }
   }
-}
 
 // Select Data (Get by Field Value)
   Future<List<Map<String, dynamic>>> getDataByField(
@@ -533,13 +572,13 @@ Future<void> incrementFieldInSubCollection(String collection, String documentId,
     }
   }
 
-
   Future<Map<String, dynamic>?> getSubCollectionOneDataByTwoFields(
     String parentCollection,
     String parentDocId,
     String subCollection,
     String field1,
-    dynamic value1,    String field2,
+    dynamic value1,
+    String field2,
     dynamic value2,
   ) async {
     try {

@@ -653,10 +653,7 @@ class _TravelPackageDetailsPageState extends State<TravelPackageDetailsPage> {
                     Map<String, dynamic>? travelPackageMapForChecking =
                         await _firestoreService.getDataById('Travel_Packages',
                             widget.travelPackage.travelPackageIdForResale!);
-                    print(
-                        '%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%');
-                    print(
-                        'travelPackage: ${travelPackageMapForChecking.toString()}');
+
                     if (travelPackageMapForChecking != null) {
                       TravelPackageModel travelPackageModelForChecking =
                           TravelPackageModel.fromMap(
@@ -673,6 +670,23 @@ class _TravelPackageDetailsPageState extends State<TravelPackageDetailsPage> {
                       }
                     }
 
+                    // Map<String, dynamic>?
+                    //     travelPackagePurchasedForCheckSoldandOwnMap =
+                    //     await _firestoreService.getSubCollectionDataById(
+                    //         collection: 'User',
+                    //         subCollection: 'Travel_Packages_Purchased',
+                    //         docId: widget.travelPackage.resellerId!,
+                    //         subDocId:
+                    //             widget.travelPackage.travelPackagePurchasedId!);
+                    // if (travelPackagePurchasedForCheckSoldandOwnMap != null) {
+                    //   TravelPackagePurchasedModel
+                    //       travelPackagePurchasedForCheckSoldandOwn =
+                    //       TravelPackagePurchasedModel.fromMap(
+                    //           travelPackagePurchasedForCheckSoldandOwnMap);
+                    //           if(travelPackagePurchasedForCheckSoldandOwn.quantity == travelPackagePurchasedForCheckSoldandOwn.soldQuantity){
+                    //             //
+                    //           }
+                    // }
                     Navigator.pushReplacement(
                       context,
                       MaterialPageRoute(

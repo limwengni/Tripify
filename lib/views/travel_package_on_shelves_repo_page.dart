@@ -23,10 +23,12 @@ class _TravelPackageOnShelvesRepoPageState
         title: Text("Travel Packages On Shelves"),
       ),
       body: StreamBuilder<QuerySnapshot>(
-        stream: _firestoreService.getStreamDataByField(
+        stream: _firestoreService.getStreamDataByTwoField(
           collection: 'Travel_Packages',
           field: 'created_by',
           value: currentUserId,
+          field2: 'is_resale',
+          value2: false,
           orderBy: 'created_at', // Assuming you have a `created_at` field
           descending: true,
         ),

@@ -76,6 +76,13 @@ class TripifyDrawer extends StatelessWidget {
               Navigator.pop(context);
             },
           ),
+                    ListTile(
+            title: const Text('Wallet'),
+            onTap: () {
+              onItemTapped(14);
+              Navigator.pop(context);
+            },
+          ),
         ],
       ),
     );

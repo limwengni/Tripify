@@ -12,10 +12,12 @@ import 'package:tripify/views/accommodation_requirement_create_page.dart';
 import 'package:tripify/views/car_rental_requirement_create_page.dart';
 import 'package:tripify/views/car_rental_requirement_page.dart';
 import 'package:tripify/views/conversations_page.dart';
+import 'package:tripify/views/refund_page.dart';
 import 'package:tripify/views/request_selection_page.dart';
 import 'package:tripify/views/test_map.dart';
 import 'package:tripify/views/travel_package_create_page.dart';
 import 'package:tripify/views/verify_email_page.dart';
+import 'package:tripify/views/wallet_page_page.dart';
 import 'package:tripify/widgets/accommodation_car_rental_drawer.dart';
 import 'package:tripify/widgets/accommodation_car_rental_nav_bar.dart';
 import 'package:tripify/widgets/travel_company_drawer.dart';
@@ -182,7 +184,10 @@ class MainPageState extends State<MainPage> {
       'title': 'Accommodation Request',
       'widget': const AccommodationRequirementCreatePage()
     },
-    {'title': 'Car Rental Request', 'widget': const CarRentalRequirementCreatePage()},
+    {
+      'title': 'Car Rental Request',
+      'widget': const CarRentalRequirementCreatePage()
+    },
     {'title': 'Profile', 'widget': ProfilePage()},
     {'title': 'AI Chat', 'widget': TravelAssistantPage()},
     {'title': 'Emergency Call', 'widget': const EmergencyCallPage()},
@@ -196,7 +201,8 @@ class MainPageState extends State<MainPage> {
     {
       'title': 'On Shelves Travel Package',
       'widget': const TravelPackageCreatePage()
-    }
+    },
+    {'title': 'Wallet', 'widget': WalletPage()},
   ];
   List<Map<String, dynamic>> accommodationWidgetItems = [
     {'title': 'Home', 'widget': HomePage()},
@@ -220,19 +226,15 @@ class MainPageState extends State<MainPage> {
     {'title': 'Settings', 'widget': SettingsPage()},
   ];
 
-   List<Map<String, dynamic>> travelPackageCompanyWidgetItems = [
+  List<Map<String, dynamic>> travelPackageCompanyWidgetItems = [
     {'title': 'Home', 'widget': HomePage()},
-    {
-      'title': 'Marketplace',
-      'widget':  MarketplacePage()
-    },
-    {
-      'title': 'On Shelves Travel Package',
-      'widget':  TravelPackageCreatePage()
-    },
+    {'title': 'Marketplace', 'widget': MarketplacePage()},
+    {'title': 'On Shelves Travel Package', 'widget': TravelPackageCreatePage()},
     {'title': 'Profile', 'widget': ProfilePage()},
     {'title': 'Document Repository', 'widget': const DocumentRepositoryPage()},
     {'title': 'Settings', 'widget': SettingsPage()},
+    {'title': 'Refund Applications', 'widget':RefundPage()},
+    
   ];
   List<int> navigationStack = [];
 
@@ -253,7 +255,7 @@ class MainPageState extends State<MainPage> {
           widgetItems = accommodationWidgetItems;
         } else if (user!.role == 'Car Rental Company') {
           widgetItems = carRentalWidgetItems;
-        }else if(user!.role == 'Travel Company'){
+        } else if (user!.role == 'Travel Company') {
           widgetItems = travelPackageCompanyWidgetItems;
         }
       });
@@ -302,7 +304,6 @@ class MainPageState extends State<MainPage> {
     });
   }
 
-  
   void travelCompanyOnItemTapped(int index) {
     setState(() {
       // Store the current index to the stack before navigating
@@ -315,7 +316,7 @@ class MainPageState extends State<MainPage> {
       _title = widgetItems[_currentIndex]['title'];
 
       // Manage bottom navigation index based on current page
-      if (_currentIndex > 2 && _currentIndex < 6) {
+      if (_currentIndex > 2 && _currentIndex < 7) {
         _btmNavIndex = 3;
       } else {
         _btmNavIndex = _currentIndex;
@@ -485,10 +486,8 @@ class MainPageState extends State<MainPage> {
         ),
         drawer: user != null ? _buildDrawerBasedOnRole(user!.role) : null,
         body: widgetItems[_currentIndex]['widget'],
-        bottomNavigationBar: user != null
-            ? _buildNavBarBasedOnRole(
-                user!.role) 
-            : null,
+        bottomNavigationBar:
+            user != null ? _buildNavBarBasedOnRole(user!.role) : null,
         // floatingActionButton: floatingButtonReturn(_currentIndex),
       ),
     );
@@ -512,7 +511,7 @@ class MainPageState extends State<MainPage> {
           currentIndex: _btmNavIndex,
           onItemTapped: accommodationCarRentalOnItemTapped,
         );
-              case 'Travel Company':
+      case 'Travel Company':
         return TravelCompanyNavBar(
           currentIndex: _btmNavIndex,
           onItemTapped: travelCompanyOnItemTapped,
@@ -544,11 +543,12 @@ class MainPageState extends State<MainPage> {
       case 'Car Rental Company':
         return AccommodationCarRentalDrawer(
           onItemTapped: accommodationCarRentalOnItemTapped,
-        );    case 'Travel Company':
+        );
+      case 'Travel Company':
         return TravelCompanyDrawer(
           onItemTapped: travelCompanyOnItemTapped,
-        );  
-      
+        );
+
       // case 'moderator':
       //   return ModeratorNavBar(
       //     currentIndex: _btmNavIndex,

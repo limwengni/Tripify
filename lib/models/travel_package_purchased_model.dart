@@ -11,6 +11,8 @@ class TravelPackagePurchasedModel {
   final int? soldQuantity;
   final List<String> ticketIdList;
   final bool isPurchaseResalePackage;
+  final bool isRefunding;
+  final bool isRefund;
 
   // Constructor
   TravelPackagePurchasedModel({
@@ -23,6 +25,8 @@ class TravelPackagePurchasedModel {
     this.soldQuantity,
     required this.ticketIdList,
     required this.isPurchaseResalePackage,
+    this.isRefund = false,
+    this.isRefunding = false,
   });
 
   // Factory method for creating a TravelPackageModel from a JSON object
@@ -38,7 +42,9 @@ class TravelPackagePurchasedModel {
       soldQuantity: data['sold'] ?? 0,
       ticketIdList: (data['ticket_id_list'] is List) 
         ? List<String>.from(data['ticket_id_list'].map((item) => item.toString())) 
-        : [],  // Convert to List<String> or use an empty list
+        : [], 
+        isRefund: data['is_refund'] ?? false,
+        isRefunding: data['is_refunding']??false,
     );
   }
 
@@ -54,6 +60,8 @@ class TravelPackagePurchasedModel {
       'resale_quantity': resaleQuantity ?? 0,
       'sold': soldQuantity ?? 0,
       'ticket_id_list': ticketIdList,
+      'is_refund': isRefund?? false,
+      'is_refunding': isRefunding?? false,
     };
   }
 }
