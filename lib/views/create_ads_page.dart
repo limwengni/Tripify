@@ -9,8 +9,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 class CreateAdsPage extends StatefulWidget {
   final String travelPackageId;
+  final double adsCredit;
 
-  CreateAdsPage({required this.travelPackageId});
+  CreateAdsPage({required this.travelPackageId, required this.adsCredit});
 
   @override
   _CreateAdsPageState createState() => _CreateAdsPageState();
@@ -22,19 +23,22 @@ class _CreateAdsPageState extends State<CreateAdsPage> {
 
   TravelPackageModel? _selectedPackage;
   String? _selectedAdType;
+  double _totalPrice = 0.0;
   DateTime? _startDate;
   DateTime? _endDate;
+  late double currentAdsCredit;
 
-  final Map<String, int> _adTypeDurations = {
-    "3 Days": 3,
-    "7 Days": 7,
-    "1 Month": 30,
+  final Map<String, Map<String, dynamic>> _adPackages = {
+    "3 Days": {"duration": 3, "price": 50.0},
+    "7 Days": {"duration": 7, "price": 100.0},
+    "1 Month": {"duration": 30, "price": 300.0},
   };
 
   @override
   void initState() {
     super.initState();
     _fetchPackage();
+    currentAdsCredit = widget.adsCredit;
   }
 
   @override
@@ -104,8 +108,8 @@ class _CreateAdsPageState extends State<CreateAdsPage> {
   void _calculateEndDate() {
     if (_startDate != null && _selectedAdType != null) {
       setState(() {
-        _endDate =
-            _startDate!.add(Duration(days: _adTypeDurations[_selectedAdType]!));
+        _endDate = _startDate!
+            .add(Duration(days: _adPackages[_selectedAdType!]!['duration']));
       });
     }
   }
@@ -124,18 +128,35 @@ class _CreateAdsPageState extends State<CreateAdsPage> {
       return;
     }
 
-    Advertisement newAd = Advertisement(
-      id: '',
-      packageId: widget.travelPackageId,
-      adType: _selectedAdType!,
-      startDate: _startDate!,
-      endDate: _endDate!,
-      status: 'ongoing',
-      createdAt: DateTime.now(),
-    );
+    if (widget.adsCredit >= _totalPrice) {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) =>
+            Center(child: CircularProgressIndicator(color: Color(0xFF9F76F9))),
+      );
 
-    await AdProvider().createAdvertisement(newAd, context);
-    Navigator.pop(context);
+      Advertisement newAd = Advertisement(
+        id: '',
+        packageId: widget.travelPackageId,
+        adType: _selectedAdType!,
+        startDate: _startDate!,
+        endDate: _endDate!,
+        status: 'ongoing',
+        createdAt: DateTime.now(),
+      );
+
+      await AdProvider().createAdvertisement(newAd, context);
+      Navigator.pop(context);
+      Navigator.pop(context);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content: Text(
+                'Not enough credit for this ad. Please top up your wallet.'),
+            backgroundColor: Colors.red),
+      );
+    }
   }
 
   @override
@@ -169,7 +190,7 @@ class _CreateAdsPageState extends State<CreateAdsPage> {
                 labelText: 'Ad Type',
                 border: OutlineInputBorder(),
               ),
-              items: _adTypeDurations.keys
+              items: _adPackages.keys
                   .map((type) => DropdownMenuItem(
                         value: type,
                         child: Text(type),
@@ -181,6 +202,8 @@ class _CreateAdsPageState extends State<CreateAdsPage> {
                   if (_startDate != null) {
                     _calculateEndDate();
                   }
+
+                  _totalPrice = _adPackages[_selectedAdType!]!['price'];
                 });
               },
             ),
@@ -211,6 +234,19 @@ class _CreateAdsPageState extends State<CreateAdsPage> {
             // Submit Button
             SizedBox(height: 30),
             Spacer(),
+
+            Align(
+                alignment: Alignment.centerRight,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  child: Text(
+                    'Total Price: RM${_totalPrice.toStringAsFixed(2)}',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                )),
             ElevatedButton(
               onPressed: _submitAd,
               style: ElevatedButton.styleFrom(

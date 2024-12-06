@@ -12,6 +12,9 @@ import 'package:tripify/view_models/ad_provider.dart';
 import 'package:tripify/view_models/firestore_service.dart';
 import 'package:tripify/views/travel_package_details_page.dart';
 import 'package:tripify/views/create_ads_page.dart';
+import 'package:tripify/views/ad_wallet_page.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class TravelPackageOnShelvesCard extends StatefulWidget {
   final TravelPackageModel travelPackageOnShelve;
@@ -42,6 +45,7 @@ class _TravelPackagePurchasedCardState
   TextButton? actionButton;
   List<Map<String, dynamic>> _adDetails = [];
   String _status = '';
+  bool walletActivated = false;
 
   AdProvider adProvider = new AdProvider();
 
@@ -52,6 +56,7 @@ class _TravelPackagePurchasedCardState
     super.initState();
     checkIfAds(travelPackage!.id);
     updateAdStatus();
+    _fetchWalletStatus();
   }
 
   void fetchTravelCompany() async {
@@ -67,13 +72,25 @@ class _TravelPackagePurchasedCardState
     });
   }
 
+  Future<void> _fetchWalletStatus() async {
+    String currentUserId = FirebaseAuth.instance.currentUser!.uid;
+
+    DocumentSnapshot userDoc = await FirebaseFirestore.instance
+        .collection('User')
+        .doc(currentUserId)
+        .get();
+
+    if (userDoc.exists) {
+      setState(() {
+        walletActivated = userDoc['wallet_activated'] ?? false;
+      });
+    }
+  }
+
   Future<bool> checkIfAds(String travelPackageId) async {
     // Fetch the ad details using your provider
     List<Map<String, dynamic>> adDetails =
         await adProvider.getAdDetails(travelPackageId);
-
-    // Print the ad details for debugging
-    print("Ad details: $adDetails");
 
     // Initialize the status variable
     String status = '';
@@ -87,8 +104,6 @@ class _TravelPackagePurchasedCardState
         String adId = ad['id']; // Get the ad ID
         status = ad['status']; // Get the status of the ad
       }
-
-      print("Ad status: $status");
     } else {
       _hasAds = false;
       print("No ads available for this travel package.");
@@ -97,7 +112,6 @@ class _TravelPackagePurchasedCardState
     // Update the state with the final status
     setState(() {
       _status = status;
-      print("Updated status: $_status");
     });
 
     return _hasAds;
@@ -277,15 +291,59 @@ class _TravelPackagePurchasedCardState
                         ),
                       ] else ...[
                         TextButton(
-                          onPressed: () {
-                            String id = widget.travelPackageOnShelve.id;
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) =>
-                                    CreateAdsPage(travelPackageId: id),
-                              ),
-                            );
+                          onPressed: () async {
+                            String currentUserId =
+                                FirebaseAuth.instance.currentUser!.uid;
+
+                            // Check the wallet status before proceeding
+                            DocumentSnapshot userDoc = await FirebaseFirestore
+                                .instance
+                                .collection('User')
+                                .doc(currentUserId)
+                                .get();
+
+                            if (!walletActivated) {
+                              showDialog(
+                                context: context,
+                                builder: (context) => AlertDialog(
+                                  title: Text('Activate Wallet'),
+                                  content: Text(
+                                      'You need to activate your wallet to use ads credits and buy ads.'),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () {
+                                        Navigator.pop(context);
+                                      },
+                                      child: Text('Cancel'),
+                                    ),
+                                    TextButton(
+                                      onPressed: () {
+                                        // Redirect to wallet activation
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) =>
+                                                WalletPage(walletBalance: 0.00),
+                                          ),
+                                        );
+                                      },
+                                      child: Text('Activate Wallet'),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            } else {
+                              String id = widget.travelPackageOnShelve.id;
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => CreateAdsPage(
+                                    travelPackageId: id,
+                                    adsCredit: userDoc['ads_credit'] ?? 0.00,
+                                  ),
+                                ),
+                              );
+                            }
                           },
                           style: TextButton.styleFrom(
                             backgroundColor: Colors.blue,

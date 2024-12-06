@@ -26,11 +26,11 @@ class AdReport {
   // Convert to a map for Firestore
   Map<String, dynamic> toMap() {
     return {
-      'adId': adId,
-      'reportDate': reportDate,
-      'clickCount': clickCount,
-      'engagementRate': engagementRate,
-      'successRate': successRate,
+      'ad_id': adId,
+      'report_date': reportDate,
+      'click_count': clickCount,
+      'engagement_rate': engagementRate,
+      'success_rate': successRate,
       'reach': reach,
       'cost': cost,
       'cpc': cpc,
