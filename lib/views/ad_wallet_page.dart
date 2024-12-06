@@ -26,6 +26,14 @@ class _WalletPageState extends State<WalletPage> {
     _fetchWalletStatus();
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (walletActivated) {
+      _fetchWalletStatus();
+    }
+  }
+
   Future<void> _fetchWalletStatus() async {
     try {
       String currentUserId = FirebaseAuth.instance.currentUser!.uid;
@@ -122,7 +130,14 @@ class _WalletPageState extends State<WalletPage> {
                                     MaterialPageRoute(
                                       builder: (context) => TopUpPage(),
                                     ),
-                                  );
+                                  ).then((value) {
+                                    if (value != null && value) {
+                                      setState(() {
+                                        isLoading = true;
+                                      });
+                                      _fetchWalletStatus();
+                                    }
+                                  });
                                 },
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: Color(0xFF9F76F9),
