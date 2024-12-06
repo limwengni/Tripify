@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:tripify/models/ad_model.dart';
+import 'package:tripify/models/ad_report_model.dart';
 
 class AdProvider with ChangeNotifier {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
@@ -10,7 +11,23 @@ class AdProvider with ChangeNotifier {
       Advertisement ad, BuildContext context) async {
     try {
       // Add advertisement to the "Advertisement" collection
-      await _db.collection('Advertisement').add(ad.toMap());
+      DocumentReference adRef =
+          await _db.collection('Advertisement').add(ad.toMap());
+
+      AdReport adReport = AdReport(
+        adId: adRef.id,
+        reportDate: DateTime.now(),
+        clickCount: 0,
+        engagementRate: 0.0,
+        successRate: 0.0,
+        reach: 0,
+        cost: 0.0,
+        cpc: 0.0,
+        revenue: 0.0,
+        roas: 0.0,
+      );
+
+      await _db.collection('AdReport').add(adReport.toMap());
 
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('Advertisement created successfully!',
@@ -71,8 +88,7 @@ class AdProvider with ChangeNotifier {
       for (var doc in querySnapshot.docs) {
         adDetails.add({
           'id': doc.id,
-          'status':
-              doc['status'], 
+          'status': doc['status'],
         });
       }
 
@@ -80,6 +96,25 @@ class AdProvider with ChangeNotifier {
     } catch (e) {
       print("Error fetching ad details: $e");
       return [];
+    }
+  }
+
+  // Ad Report
+  Future<void> updateAdReport(String adId, int clickCount) async {
+    try {
+      var adReportRef =
+          _db.collection('AdReport').where('ad_id', isEqualTo: adId).limit(1);
+
+      var snapshot = await adReportRef.get();
+      if (snapshot.docs.isNotEmpty) {
+        var reportDoc = snapshot.docs.first;
+        await reportDoc.reference.update({
+          'click_ount': clickCount,
+          // Update other fields as necessary
+        });
+      }
+    } catch (e) {
+      print("Error updating ad report: $e");
     }
   }
 }

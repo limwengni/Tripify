@@ -12,6 +12,9 @@ import 'package:tripify/view_models/ad_provider.dart';
 import 'package:tripify/view_models/firestore_service.dart';
 import 'package:tripify/views/travel_package_details_page.dart';
 import 'package:tripify/views/create_ads_page.dart';
+import 'package:tripify/views/ad_wallet_page.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class TravelPackageOnShelvesCard extends StatefulWidget {
   final TravelPackageModel travelPackageOnShelve;
@@ -42,6 +45,7 @@ class _TravelPackagePurchasedCardState
   TextButton? actionButton;
   List<Map<String, dynamic>> _adDetails = [];
   String _status = '';
+  bool walletActivated = false;
 
   AdProvider adProvider = new AdProvider();
 
@@ -52,6 +56,7 @@ class _TravelPackagePurchasedCardState
     super.initState();
     checkIfAds(travelPackage!.id);
     updateAdStatus();
+    _fetchWalletStatus();
   }
 
   void fetchTravelCompany() async {
@@ -67,13 +72,29 @@ class _TravelPackagePurchasedCardState
     });
   }
 
+  Future<void> _fetchWalletStatus() async {
+    String currentUserId = FirebaseAuth.instance.currentUser!.uid;
+
+    DocumentSnapshot userDoc = await FirebaseFirestore.instance
+        .collection('User')
+        .doc(currentUserId)
+        .get();
+
+    if (userDoc.exists) {
+      setState(() {
+        walletActivated = userDoc['wallet_activated'] ?? false;
+      });
+    } else {
+      setState(() {
+        walletActivated = false;
+      });
+    }
+  }
+
   Future<bool> checkIfAds(String travelPackageId) async {
     // Fetch the ad details using your provider
     List<Map<String, dynamic>> adDetails =
         await adProvider.getAdDetails(travelPackageId);
-
-    // Print the ad details for debugging
-    print("Ad details: $adDetails");
 
     // Initialize the status variable
     String status = '';
@@ -86,9 +107,8 @@ class _TravelPackagePurchasedCardState
       for (var ad in adDetails) {
         String adId = ad['id']; // Get the ad ID
         status = ad['status']; // Get the status of the ad
+        String renewalType = ad['renewal_type']; // Get renewal type
       }
-
-      print("Ad status: $status");
     } else {
       _hasAds = false;
       print("No ads available for this travel package.");
@@ -97,7 +117,6 @@ class _TravelPackagePurchasedCardState
     // Update the state with the final status
     setState(() {
       _status = status;
-      print("Updated status: $_status");
     });
 
     return _hasAds;
@@ -123,25 +142,24 @@ class _TravelPackagePurchasedCardState
           clickNum!;
       purchaseRate = double.parse(purchaseRate!.toStringAsFixed(2));
     }
-
-    return Stack(
-      children: [
-        GestureDetector(
-          onTap: widget.travelPackageOnShelve.isAvailable
-              ? () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => TravelPackageDetailsPage(
-                        travelPackage: travelPackage!,
-                        currentUserId: widget.currentUserId,
-                        travelPackageUser: travelCompanyUser!,
-                      ),
-                    ),
-                  );
-                }
-              : null,
-          child: Card(
+    return GestureDetector(
+        onTap: () {
+          print('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%');
+          print('1: ' + travelPackage!.id);
+          print('2' + widget.currentUserId);
+          print('3' + travelCompanyUser!.role);
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => TravelPackageDetailsPage(
+                travelPackage: travelPackage!,
+                currentUserId: widget.currentUserId,
+                travelPackageUser: travelCompanyUser!,
+              ),
+            ),
+          );
+        },
+        child: Card(
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12.0),
             ),
@@ -229,7 +247,8 @@ class _TravelPackagePurchasedCardState
                             ),
                           ),
                           Text(
-                            'RM ${widget.travelPackageOnShelve.price}',
+                            'RM ' + travelPackage!.price.toString(),
+                            style: Theme.of(context).textTheme.bodyLarge,
                           ),
                         ],
                       ),
@@ -252,28 +271,107 @@ class _TravelPackagePurchasedCardState
                           ),
                           Text(viewNum != null ? '$viewNum' : '0'),
                           Spacer(),
-
-                          // Ads button (later need to change..)
-                          TextButton(
-                            onPressed: () {
-                              String id = widget.travelPackageOnShelve.id;
-
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      CreateAdsPage(travelPackageId: id),
-                                ),
-                              );
-                            },
-                            style: TextButton.styleFrom(
-                              backgroundColor: Colors.blue,
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(
-                                  vertical: 8, horizontal: 12),
+                          if (_hasAds && _status == 'running') ...[
+                            TextButton(
+                              onPressed: () {
+                                // Logic to view ads performance
+                              },
+                              style: TextButton.styleFrom(
+                                backgroundColor: Colors.green,
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(
+                                    vertical: 8, horizontal: 12),
+                              ),
+                              child: const Text('View Ads Performance'),
                             ),
-                            child: const Text('Create Ads'),
-                          ),
+                          ] else if (_status == 'ended') ...[
+                            TextButton(
+                              onPressed: () {
+                                // Logic to renew the ad
+                              },
+                              style: TextButton.styleFrom(
+                                backgroundColor: Colors.orange,
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(
+                                    vertical: 8, horizontal: 12),
+                              ),
+                              child: const Text('Renew Ads'),
+                            ),
+                          ] else ...[
+                            TextButton(
+                              onPressed: () async {
+                                String currentUserId =
+                                    FirebaseAuth.instance.currentUser!.uid;
+
+                                // Check the wallet status before proceeding
+                                DocumentSnapshot userDoc =
+                                    await FirebaseFirestore.instance
+                                        .collection('User')
+                                        .doc(currentUserId)
+                                        .get();
+
+                                if (!walletActivated) {
+                                  showDialog(
+                                    context: context,
+                                    builder: (context) => AlertDialog(
+                                      title: Text('Activate Wallet'),
+                                      content: Text(
+                                          'You need to activate your wallet to use ads credits and buy ads.'),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () {
+                                            Navigator.pop(context);
+                                          },
+                                          child: Text('Cancel'),
+                                        ),
+                                        TextButton(
+                                          onPressed: () async {
+                                            Navigator.pop(context);
+
+                                            final bool? result =
+                                                await Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) =>
+                                                    WalletPage(
+                                                        walletBalance: 0),
+                                              ),
+                                            );
+
+                                            if (result != null && result) {
+                                              setState(() {
+                                                walletActivated = true;
+                                              });
+                                            }
+                                          },
+                                          child: Text('Activate Wallet'),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                } else {
+                                  String id = widget.travelPackageOnShelve.id;
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => CreateAdsPage(
+                                        travelPackageId: id,
+                                        adsCredit:
+                                            userDoc['ads_credit'] ?? 0,
+                                      ),
+                                    ),
+                                  );
+                                }
+                              },
+                              style: TextButton.styleFrom(
+                                backgroundColor: Colors.blue,
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(
+                                    vertical: 8, horizontal: 12),
+                              ),
+                              child: const Text('Create Ads'),
+                            ),
+                          ],
                           const SizedBox(width: 8),
 
                           // Delete button
@@ -521,35 +619,31 @@ class _TravelPackagePurchasedCardState
                     ],
                   ),
                 ),
-              ],
-            ),
-          ),
-        ),
-        if (!widget.travelPackageOnShelve.isAvailable)
-          Positioned.fill(
-            child: Padding(
-              padding: const EdgeInsets.all(4.0),
-              child: Container(
-                decoration: BoxDecoration(
-                  color:
-                      Colors.black.withOpacity(0.5), // Grey transparent overlay
-                  borderRadius: BorderRadius.circular(12.0),
-                ),
-                child: Center(
-                  child: Text(
-                    'Not Available',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
+                if (!widget.travelPackageOnShelve.isAvailable)
+                  Positioned.fill(
+                    child: Padding(
+                      padding: const EdgeInsets.all(4.0),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.black
+                              .withOpacity(0.5), // Grey transparent overlay
+                          borderRadius: BorderRadius.circular(12.0),
+                        ),
+                        child: Center(
+                          child: Text(
+                            'Not Available',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
                     ),
                   ),
-                ),
-              ),
-            ),
-          ),
-      ],
-    );
+              ],
+            )));
   }
 
   void _showDeleteDialog(BuildContext context) {

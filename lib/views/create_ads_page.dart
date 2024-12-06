@@ -9,8 +9,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 class CreateAdsPage extends StatefulWidget {
   final String travelPackageId;
+  final int adsCredit;
 
-  CreateAdsPage({required this.travelPackageId});
+  CreateAdsPage({required this.travelPackageId, required this.adsCredit});
 
   @override
   _CreateAdsPageState createState() => _CreateAdsPageState();
@@ -22,19 +23,23 @@ class _CreateAdsPageState extends State<CreateAdsPage> {
 
   TravelPackageModel? _selectedPackage;
   String? _selectedAdType;
+  int _totalPrice = 0;
   DateTime? _startDate;
   DateTime? _endDate;
+  late int currentAdsCredit;
+  String? _renewalType;
 
-  final Map<String, int> _adTypeDurations = {
-    "3 Days": 3,
-    "7 Days": 7,
-    "1 Month": 30,
+  final Map<String, Map<String, dynamic>> _adPackages = {
+    "3 Days": {"duration": 3, "price": 50},
+    "7 Days": {"duration": 7, "price": 100},
+    "1 Month": {"duration": 30, "price": 300},
   };
 
   @override
   void initState() {
     super.initState();
     _fetchPackage();
+    currentAdsCredit = widget.adsCredit;
   }
 
   @override
@@ -104,8 +109,8 @@ class _CreateAdsPageState extends State<CreateAdsPage> {
   void _calculateEndDate() {
     if (_startDate != null && _selectedAdType != null) {
       setState(() {
-        _endDate =
-            _startDate!.add(Duration(days: _adTypeDurations[_selectedAdType]!));
+        _endDate = _startDate!
+            .add(Duration(days: _adPackages[_selectedAdType!]!['duration']));
       });
     }
   }
@@ -114,7 +119,8 @@ class _CreateAdsPageState extends State<CreateAdsPage> {
     if (_selectedPackage == null ||
         _selectedAdType == null ||
         _startDate == null ||
-        _endDate == null) {
+        _endDate == null ||
+        _renewalType == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Please fill in all fields'),
@@ -124,18 +130,36 @@ class _CreateAdsPageState extends State<CreateAdsPage> {
       return;
     }
 
-    Advertisement newAd = Advertisement(
-      id: '',
-      packageId: widget.travelPackageId,
-      adType: _selectedAdType!,
-      startDate: _startDate!,
-      endDate: _endDate!,
-      status: 'ongoing',
-      createdAt: DateTime.now(),
-    );
+    if (widget.adsCredit >= _totalPrice) {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) =>
+            Center(child: CircularProgressIndicator(color: Color(0xFF9F76F9))),
+      );
 
-    await AdProvider().createAdvertisement(newAd, context);
-    Navigator.pop(context);
+      Advertisement newAd = Advertisement(
+        id: '',
+        packageId: widget.travelPackageId,
+        adType: _selectedAdType!,
+        startDate: _startDate!,
+        endDate: _endDate!,
+        status: 'ongoing',
+        renewalType: _renewalType!,
+        createdAt: DateTime.now(),
+      );
+
+      await AdProvider().createAdvertisement(newAd, context);
+      Navigator.pop(context);
+      Navigator.pop(context);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content: Text(
+                'Not enough credit for this ad. Please top up your wallet.'),
+            backgroundColor: Colors.red),
+      );
+    }
   }
 
   @override
@@ -169,7 +193,7 @@ class _CreateAdsPageState extends State<CreateAdsPage> {
                 labelText: 'Ad Type',
                 border: OutlineInputBorder(),
               ),
-              items: _adTypeDurations.keys
+              items: _adPackages.keys
                   .map((type) => DropdownMenuItem(
                         value: type,
                         child: Text(type),
@@ -181,10 +205,41 @@ class _CreateAdsPageState extends State<CreateAdsPage> {
                   if (_startDate != null) {
                     _calculateEndDate();
                   }
+
+                  _totalPrice = _adPackages[_selectedAdType!]!['price'];
                 });
               },
             ),
             SizedBox(height: 30),
+
+            Text('Renewal Type:', style: TextStyle(fontSize: 18)),
+            SizedBox(height: 20),
+            
+            RadioListTile<String>(
+              title: Text('Automatic Renewal'),
+              value: 'automatic',
+              groupValue: _renewalType,
+              onChanged: (value) {
+                setState(() {
+                  _renewalType = value;
+                });
+              },
+            ),
+            RadioListTile<String>(
+              title: Text('Manual Renewal'),
+              value: 'manual',
+              groupValue: _renewalType,
+              onChanged: (value) {
+                setState(() {
+                  _renewalType = value;
+                });
+              },
+            ),
+
+            SizedBox(height: 20),
+
+            Text('Start and End Date:', style: TextStyle(fontSize: 18)),
+            SizedBox(height: 20),
 
             // Start Date Picker
             ElevatedButton(
@@ -208,9 +263,24 @@ class _CreateAdsPageState extends State<CreateAdsPage> {
                 ),
               ),
 
+            SizedBox(height: 20),
+
             // Submit Button
             SizedBox(height: 30),
             Spacer(),
+
+            Align(
+                alignment: Alignment.centerRight,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  child: Text(
+                    'Total Price: RM ${_totalPrice.toStringAsFixed(2)}',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                )),
             ElevatedButton(
               onPressed: _submitAd,
               style: ElevatedButton.styleFrom(

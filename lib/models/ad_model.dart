@@ -7,6 +7,7 @@ class Advertisement {
   final DateTime startDate;
   final DateTime endDate;
   final String status; // "ongoing", "ended"
+  final String renewalType;
   final DateTime createdAt;
 
   Advertisement({
@@ -16,6 +17,7 @@ class Advertisement {
     required this.startDate,
     required this.endDate,
     required this.status,
+    required this.renewalType,
     required this.createdAt,
   });
 
@@ -27,6 +29,7 @@ class Advertisement {
       'start_date': startDate,
       'end_date': endDate,
       'status': status,
+      'renewal_type': renewalType,
       'created_at': createdAt,
     };
   }
@@ -42,6 +45,7 @@ class Advertisement {
       startDate: (data['start_date'] as Timestamp).toDate(),
       endDate: (data['end_date'] as Timestamp).toDate(),
       status: data['status'] ?? '',
+      renewalType: data['renewal_type'] ?? '',
       createdAt: (data['created_at'] as Timestamp).toDate(),
     );
   }

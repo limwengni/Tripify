@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:tripify/views/receipt_repo_page.dart';
 import 'package:tripify/views/resale_travel_package_repo_page.dart';
 import 'package:tripify/views/travel_package_on_shelves_repo_page.dart';
@@ -70,11 +72,26 @@ class DocumentRepositoryPage extends StatelessWidget {
                   title: const Text("Travel Package On Shelves Document"),
                   subtitle: const Text("View your travel packages on shelves."),
                   trailing: const Icon(Icons.arrow_forward),
-                  onTap: () {
+                  onTap: () async {
+                    String currentUserId = FirebaseAuth.instance.currentUser!.uid;
+                    int adsCredit = 0;
+
+                      DocumentSnapshot userDoc = await FirebaseFirestore
+                          .instance
+                          .collection('User')
+                          .doc(currentUserId)
+                          .get();
+
+                      if (userDoc.exists) {
+                          adsCredit = userDoc['ads_credit'] ?? 0;
+                      } else {
+                          adsCredit = userDoc['ads_credit'] ?? 0;
+                      }
+                    
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => TravelPackageOnShelvesRepoPage(),
+                        builder: (context) => TravelPackageOnShelvesRepoPage(adsCredit: adsCredit),
                       ),
                     );
                   },
