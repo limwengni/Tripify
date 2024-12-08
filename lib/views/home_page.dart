@@ -238,7 +238,7 @@ class _HomePageState extends State<HomePage> {
                         ),
                         elevation: 5,
                         child: SizedBox(
-                          width: 200,
+                          width: 170,
                           child: Column(
                             children: [
                               if (package.images != null &&
