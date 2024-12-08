@@ -50,8 +50,13 @@ class _GroupChatManagementPageState extends State<GroupChatManagementPage> {
       // Add the new users to the group chat user list
       widget.groupChatUserList.addAll(updatedUserList);
     });
+    List<String> userIds = widget.groupChatUserList
+    .map((user) => user.uid) // Extract the id from each UserModel
+    .toList(); // Convert it to a List<String>
+
+print(userIds);
     await _firestoreService.updateField('Conversations', widget.conversation.id,
-        'participants', widget.groupChatUserList.toList());
+        'participants', userIds);
   }
 
   @override

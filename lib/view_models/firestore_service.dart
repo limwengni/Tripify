@@ -349,6 +349,19 @@ class FirestoreService {
     }
   }
 
+  Future<List<Map<String, dynamic>>> queryData({
+    required String collection,
+    required String field,
+    required String query,
+  }) async {
+    final snapshot = await _db
+        .collection(collection)
+        .where(field, isGreaterThanOrEqualTo: query)
+        .where(field, isLessThan: query + '\uf8ff') // For prefix matching
+        .get();
+
+    return snapshot.docs.map((doc) => doc.data()).toList();
+  }
   Stream<QuerySnapshot> getStreamDataByTwoField({
     required String collection,
     required String field,

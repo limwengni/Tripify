@@ -184,21 +184,22 @@ class _GroupChatPageState extends State<GroupChatPage> {
               ],
             ),
             actions: [
-              IconButton(
-                  onPressed: () {
-                    Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (builder) => GroupChatManagementPage(
-                            conversation: widget.conversation,
-                            groupChatUserList: groupChatUserList!,
-                            onGroupMemberUpdated: _updateGroupChatUserList,
-                            onGroupNameUpdated: _updateGroupName,
-                            onGroupImageUpdated: _updatedGroupPic,
-                          ),
-                        ));
-                  },
-                  icon: const Icon(Icons.more_vert_outlined)),
+              // if (widget.conversation.host == widget.currentUserId)
+                IconButton(
+                    onPressed: () {
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (builder) => GroupChatManagementPage(
+                              conversation: widget.conversation,
+                              groupChatUserList: groupChatUserList!,
+                              onGroupMemberUpdated: _updateGroupChatUserList,
+                              onGroupNameUpdated: _updateGroupName,
+                              onGroupImageUpdated: _updatedGroupPic,
+                            ),
+                          ));
+                    },
+                    icon: const Icon(Icons.more_vert_outlined)),
             ]),
         body: Column(
           children: [
