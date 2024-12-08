@@ -309,16 +309,44 @@ class _TravelPackageDetailsPageState extends State<TravelPackageDetailsPage> {
                     String currentUser = FirebaseAuth.instance.currentUser!.uid;
                     Map<String, dynamic>? travelPackagePurchasedBeforeMap;
 
-                    travelPackagePurchasedBeforeMap = await firestoreService
-                        .getSubCollectionOneDataByTwoFields(
-                      'User',
-                      currentUser,
-                      'Travel_Packages_Purchased',
-                      'travel_package_id',
-                      widget.travelPackage.id,
-                      'is_purchase_resale_package',
-                      false,
-                    );
+                    // travelPackagePurchasedBeforeMap = await firestoreService
+                    //     .getSubCollectionOneDataByTwoFields(
+                    //   'User',
+                    //   currentUser,
+                    //   'Travel_Packages_Purchased',
+                    //   'travel_package_id',
+                    //   widget.travelPackage.id,
+                    //   'is_purchase_resale_package',
+                    //   false,
+                    // );
+
+                    if (widget.adId != null && widget.adId!.isNotEmpty) {
+                      travelPackagePurchasedBeforeMap = await firestoreService
+                          .getSubCollectionOneDataByThreeFields(
+                        'User',
+                        currentUser,
+                        'Travel_Packages_Purchased',
+                        'travel_package_id',
+                        widget.travelPackage.id,
+                        'is_purchase_resale_package',
+                        false,
+                        'ad_id',
+                        widget.adId,
+                      );
+                    } else {
+                      travelPackagePurchasedBeforeMap = await firestoreService
+                          .getSubCollectionOneDataByThreeFields(
+                        'User',
+                        currentUser,
+                        'Travel_Packages_Purchased',
+                        'travel_package_id',
+                        widget.travelPackage.id,
+                        'is_purchase_resale_package',
+                        false,
+                        'ad_id',
+                        '',
+                      );
+                    }
 
                     String id = widget.travelPackage.id;
 
@@ -502,6 +530,15 @@ class _TravelPackageDetailsPageState extends State<TravelPackageDetailsPage> {
                         }
                       }
                     }
+
+                    bool condition =
+                        travelPackagePurchasedBeforeMap!['ad_id'] == '' &&
+                            travelPackagePurchasedBeforeMap[
+                                    'travel_package_id'] ==
+                                widget.travelPackage.id;
+                    print('Condition met: $condition');
+                    print(
+                        "ad id: ${travelPackagePurchasedBeforeMap['ad_id'] == ''}");
 
                     //receipt part
                     ReceiptModel receipt = ReceiptModel(
