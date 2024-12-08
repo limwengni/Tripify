@@ -5,8 +5,9 @@ class AdReport {
   final double engagementRate;
   final double successRate;
   final int reach;
-  final double cost;
   final double cpc;
+  final double cpm;
+  final double flatRate;
   final double revenue;
   final double roas;
 
@@ -17,8 +18,9 @@ class AdReport {
     required this.engagementRate,
     required this.successRate,
     required this.reach,
-    required this.cost,
     required this.cpc,
+    required this.cpm,
+    required this.flatRate,
     required this.revenue,
     required this.roas,
   });
@@ -32,8 +34,9 @@ class AdReport {
       'engagement_rate': engagementRate,
       'success_rate': successRate,
       'reach': reach,
-      'cost': cost,
       'cpc': cpc,
+      'cpm': cpm,
+      'flat_rate': flatRate,
       'revenue': revenue,
       'roas': roas,
     };

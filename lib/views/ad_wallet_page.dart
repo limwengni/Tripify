@@ -19,6 +19,7 @@ class WalletPage extends StatefulWidget {
 class _WalletPageState extends State<WalletPage> {
   bool walletActivated = false;
   bool isLoading = true;
+  int walletBalance = 0;
 
   @override
   void initState() {
@@ -46,17 +47,20 @@ class _WalletPageState extends State<WalletPage> {
       if (userDoc.exists) {
         setState(() {
           walletActivated = userDoc['wallet_activated'] ?? false;
+          walletBalance = userDoc['ads_credit'] ?? 0;
           isLoading = false;
         });
       } else {
         setState(() {
           walletActivated = false;
+          walletBalance = 0;
           isLoading = false;
         });
       }
     } catch (e) {
       // Handle potential errors
       setState(() {
+        walletBalance = 0;
         isLoading = false;
       });
     }
@@ -90,6 +94,12 @@ class _WalletPageState extends State<WalletPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text("Wallet"),
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.pop(context, true);
+          },
+        ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -118,7 +128,7 @@ class _WalletPageState extends State<WalletPage> {
                               Icon(Icons.account_balance_wallet, size: 40),
                               SizedBox(width: 10),
                               Text(
-                                "RM${widget.walletBalance.toStringAsFixed(2)}",
+                                "RM${walletBalance.toStringAsFixed(2)}",
                                 style: TextStyle(
                                     fontSize: 36, fontWeight: FontWeight.bold),
                               ),
@@ -207,24 +217,41 @@ class _WalletPageState extends State<WalletPage> {
 
                     return Expanded(
                       child: ListView.builder(
-                        itemCount: transactions
-                            .length, // Use the length of actual transactions
+                        itemCount: transactions.length,
                         itemBuilder: (context, index) {
-                          final transaction =
-                              transactions[index]; // Get the actual transaction
+                          final transaction = transactions[index];
+                          String transactionType = transaction.transactionType;
 
                           return ListTile(
                             contentPadding: EdgeInsets.zero,
-                            title: Text(
-                              "Transaction ${transaction.transactionId}",
-                              style: TextStyle(
-                                  fontWeight: FontWeight.w500, fontSize: 16),
+                            title: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  transactionType == 'topup'
+                                      ? "Top Up"
+                                      : "Ads Purchase",
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w500,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                                Text(
+                                  "ID: ${transaction.transactionId}",
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w500,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ],
                             ),
                             subtitle: Text(
-                              "Date: ${DateFormat('dd MMM yyyy hh:mm:ss a').format(transaction.date.toLocal())}",
+                              "Date: ${DateFormat('dd MMM yyyy hh:mm:ss a').format(transaction.date.toLocal().add(Duration(hours: 8)))}",
                             ),
                             trailing: Text(
-                              "+RM${transaction.amount.toStringAsFixed(2)}", // Display actual transaction amount
+                              transactionType == 'topup'
+                                  ? "+RM${transaction.amount.toStringAsFixed(2)}"
+                                  : "-RM${transaction.amount.toStringAsFixed(2)}",
                               style: TextStyle(
                                   fontWeight: FontWeight.w500, fontSize: 16),
                             ),

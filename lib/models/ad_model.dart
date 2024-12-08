@@ -6,9 +6,12 @@ class Advertisement {
   final String adType;
   final DateTime startDate;
   final DateTime endDate;
-  final String status; // "ongoing", "ended"
+  final String status; // "ongoing", "paused", "ended"
   final String renewalType;
   final DateTime createdAt;
+  final double cpcRate;
+  final double cpmRate;
+  final double flatRate;
 
   Advertisement({
     required this.id,
@@ -19,6 +22,9 @@ class Advertisement {
     required this.status,
     required this.renewalType,
     required this.createdAt,
+    required this.cpcRate,
+    required this.cpmRate,
+    required this.flatRate,
   });
 
   // Convert Advertisement object to a Map to store in Firestore
@@ -31,6 +37,9 @@ class Advertisement {
       'status': status,
       'renewal_type': renewalType,
       'created_at': createdAt,
+      'cpc_rate': cpcRate,
+      'cpm_rate': cpmRate,
+      'flat_rate': flatRate,
     };
   }
 
@@ -47,6 +56,9 @@ class Advertisement {
       status: data['status'] ?? '',
       renewalType: data['renewal_type'] ?? '',
       createdAt: (data['created_at'] as Timestamp).toDate(),
+      cpcRate: data['cpc_rate']?.toDouble() ?? 0.0,
+      cpmRate: data['cpm_rate']?.toDouble() ?? 0.0,
+      flatRate: data['flat_rate']?.toDouble() ?? 0.0,
     );
   }
 }

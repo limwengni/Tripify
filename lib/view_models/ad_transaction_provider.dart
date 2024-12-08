@@ -13,11 +13,14 @@ class TransactionProvider {
       // Get the current timestamp
       DateTime now = DateTime.now();
 
+      String transactionType = 'topup';
+
       DocumentReference docRef =
-          await FirebaseFirestore.instance.collection('TopUpTransaction').add({
+          await FirebaseFirestore.instance.collection('AdsCredTransaction').add({
         'user_id': userId,
         'amount': amount,
         'created_at': now,
+        'type': transactionType,
       });
 
       String transactionId = docRef.id;
@@ -27,6 +30,7 @@ class TransactionProvider {
         userId: userId,
         amount: amount,
         date: now,
+        transactionType: transactionType,
       );
 
       DocumentReference userRef =
@@ -66,7 +70,7 @@ class TransactionProvider {
   Future<List<AdsTransaction>> getTransactionsByUserId(String userId) async {
     try {
       QuerySnapshot querySnapshot = await _firestore
-          .collection('TopUpTransaction')
+          .collection('AdsCredTransaction')
           .where('user_id', isEqualTo: userId)
           .get();
 
@@ -78,8 +82,11 @@ class TransactionProvider {
           userId: data['user_id'] ?? '',
           amount: data['amount'] ?? 0,
           date: (data['created_at'] as Timestamp).toDate(),
+          transactionType: (data['type']),
         );
       }).toList();
+
+      transactions.sort((a, b) => b.date.compareTo(a.date));
 
       return transactions;
     } catch (e) {

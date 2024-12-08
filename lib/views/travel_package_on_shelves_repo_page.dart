@@ -21,10 +21,38 @@ class _TravelPackageOnShelvesRepoPageState
   FirestoreService _firestoreService = FirestoreService();
   String currentUserId = FirebaseAuth.instance.currentUser!.uid;
   int adsCredit = 0;
+  int walletBalance = 0;
 
   @override
   void initState() {
     super.initState();
+    walletBalance = widget.adsCredit;
+  }
+
+  Future<void> _fetchWalletBal() async {
+    try {
+      String currentUserId = FirebaseAuth.instance.currentUser!.uid;
+
+      DocumentSnapshot userDoc = await FirebaseFirestore.instance
+          .collection('User')
+          .doc(currentUserId)
+          .get();
+
+      if (userDoc.exists) {
+        setState(() {
+          walletBalance = userDoc['ads_credit'] ?? 0;
+        });
+      } else {
+        setState(() {
+          walletBalance = 0;
+        });
+      }
+    } catch (e) {
+      // Handle potential errors
+      setState(() {
+        walletBalance = 0;
+      });
+    }
   }
 
   @override
@@ -46,13 +74,18 @@ class _TravelPackageOnShelvesRepoPageState
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => WalletPage(walletBalance: widget.adsCredit),
+                  builder: (context) =>
+                      WalletPage(walletBalance: widget.adsCredit),
                 ),
-              );
+              ).then((result) {
+                if (result != null && result) {
+                  _fetchWalletBal();
+                }
+              });
             },
             icon: Icon(Icons.account_balance_wallet),
             label: Text(
-              'RM${widget.adsCredit.toStringAsFixed(2)}',
+              'RM${walletBalance.toStringAsFixed(2)}',
             ),
           ),
         ],

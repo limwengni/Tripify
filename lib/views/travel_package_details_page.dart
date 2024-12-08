@@ -17,12 +17,14 @@ class TravelPackageDetailsPage extends StatefulWidget {
   final TravelPackageModel travelPackage; // Identifier for the travel package
   final String currentUserId;
   final UserModel travelPackageUser;
+  final String? adId;
 
   const TravelPackageDetailsPage(
       {Key? key,
       required this.travelPackage,
       required this.currentUserId,
-      required this.travelPackageUser})
+      required this.travelPackageUser,
+      this.adId})
       : super(key: key);
 
   @override
@@ -38,6 +40,7 @@ class _TravelPackageDetailsPageState extends State<TravelPackageDetailsPage> {
   void initState() {
     super.initState();
     addClickNum();
+    print('ad Id: ${widget.adId}');
   }
 
   void addClickNum() async {
@@ -299,22 +302,51 @@ class _TravelPackageDetailsPageState extends State<TravelPackageDetailsPage> {
                   bool paymentSuccess =
                       await StripeService.instance.makePayment(amount, 'myr');
                   List<String> ticketIdListForPurchasedModel = [];
-                  String travelPackagePurchasedId;
+                  String travelPackagePurchasedId = '';
 
                   if (paymentSuccess) {
                     FirestoreService firestoreService = FirestoreService();
                     String currentUser = FirebaseAuth.instance.currentUser!.uid;
                     Map<String, dynamic>? travelPackagePurchasedBeforeMap;
 
-                    travelPackagePurchasedBeforeMap = await firestoreService
-                        .getSubCollectionOneDataByTwoFields(
-                            'User',
-                            currentUser,
-                            'Travel_Packages_Purchased',
-                            'travel_package_id',
-                            widget.travelPackage.id,
-                            'is_purchase_resale_package',
-                            false);
+                    // travelPackagePurchasedBeforeMap = await firestoreService
+                    //     .getSubCollectionOneDataByTwoFields(
+                    //   'User',
+                    //   currentUser,
+                    //   'Travel_Packages_Purchased',
+                    //   'travel_package_id',
+                    //   widget.travelPackage.id,
+                    //   'is_purchase_resale_package',
+                    //   false,
+                    // );
+
+                    if (widget.adId != null && widget.adId!.isNotEmpty) {
+                      travelPackagePurchasedBeforeMap = await firestoreService
+                          .getSubCollectionOneDataByThreeFields(
+                        'User',
+                        currentUser,
+                        'Travel_Packages_Purchased',
+                        'travel_package_id',
+                        widget.travelPackage.id,
+                        'is_purchase_resale_package',
+                        false,
+                        'ad_id',
+                        widget.adId!,
+                      );
+                    } else {
+                      travelPackagePurchasedBeforeMap = await firestoreService
+                          .getSubCollectionOneDataByThreeFields(
+                        'User',
+                        currentUser,
+                        'Travel_Packages_Purchased',
+                        'travel_package_id',
+                        widget.travelPackage.id,
+                        'is_purchase_resale_package',
+                        false,
+                        'ad_id',
+                        '',
+                      );
+                    }
 
                     String id = widget.travelPackage.id;
 
@@ -334,16 +366,32 @@ class _TravelPackageDetailsPageState extends State<TravelPackageDetailsPage> {
                       }
                     }
 
+                    // Assuming `travelPackagePurchasedBeforeMap` is the existing record fetched from Firestore
                     if (travelPackagePurchasedBeforeMap == null) {
-                      TravelPackagePurchasedModel travelPackagePurchased =
-                          TravelPackagePurchasedModel(
-                              id: '',
-                              travelPackageId: widget.travelPackage.id,
-                              price: amount,
-                              quantity: quantity,
-                              ticketIdList: ticketIdListForPurchasedModel,
-                              isPurchaseResalePackage: false);
+                      TravelPackagePurchasedModel travelPackagePurchased;
+                      if (widget.adId != null && widget.adId!.isNotEmpty) {
+                        travelPackagePurchased = TravelPackagePurchasedModel(
+                          id: '',
+                          travelPackageId: widget.travelPackage.id,
+                          price: amount,
+                          quantity: quantity,
+                          ticketIdList: ticketIdListForPurchasedModel,
+                          isPurchaseResalePackage: false,
+                          adId: widget.adId!,
+                        );
+                      } else {
+                        travelPackagePurchased = TravelPackagePurchasedModel(
+                          id: '',
+                          travelPackageId: widget.travelPackage.id,
+                          price: amount,
+                          quantity: quantity,
+                          ticketIdList: ticketIdListForPurchasedModel,
+                          isPurchaseResalePackage: false,
+                          adId: '', 
+                        );
+                      }
 
+                      // Insert the new record into Firestore
                       travelPackagePurchasedId = await _firestoreService
                           .insertSubCollectionDataWithAutoIDReturnValue(
                         'User',
@@ -352,64 +400,171 @@ class _TravelPackageDetailsPageState extends State<TravelPackageDetailsPage> {
                         travelPackagePurchased.toMap(),
                       );
 
+                      // Add the user to the conversation (chat)
                       List<String> newItem = [widget.currentUserId];
                       await _firestoreService.addItemToCollectionList(
-                          documentId: widget.travelPackage.groupChatId!,
-                          collectionName: 'Conversations',
-                          fieldName: 'participants',
-                          newItems: newItem);
+                        documentId: widget.travelPackage.groupChatId!,
+                        collectionName: 'Conversations',
+                        fieldName: 'participants',
+                        newItems: newItem,
+                      );
 
+                      // Update unread message count
                       await _firestoreService.updateMapField(
-                          'Conversations',
-                          widget.travelPackage.groupChatId!,
-                          'unread_message',
-                          currentUser,
-                          0);
+                        'Conversations',
+                        widget.travelPackage.groupChatId!,
+                        'unread_message',
+                        currentUser,
+                        0,
+                      );
                     } else {
-                      travelPackagePurchasedId =
-                          travelPackagePurchasedBeforeMap['id'];
-                      int updatedQuantity =
-                          travelPackagePurchasedBeforeMap['quantity'] +
-                              quantity;
-                      List<String> ticketListUpdated = [];
+                      // Check for Ads Purchase
+                      if (widget.adId != null && widget.adId!.isNotEmpty) {
+                        // If `adId` matches the previous purchase, update it
+                        if (travelPackagePurchasedBeforeMap['ad_id'] ==
+                            widget.adId) {
+                          // Update the existing purchase (same ad)
+                          travelPackagePurchasedId =
+                              travelPackagePurchasedBeforeMap['id'];
+                          int updatedQuantity =
+                              travelPackagePurchasedBeforeMap['quantity'] +
+                                  quantity;
+                          double updatedPrice =
+                              travelPackagePurchasedBeforeMap['price'] + amount;
+                          List<String> ticketListUpdated = List<String>.from(
+                              travelPackagePurchasedBeforeMap['ticket_id_list']
+                                  .map((item) => item.toString()));
+                          ticketListUpdated
+                              .addAll(ticketIdListForPurchasedModel);
 
-                      if (travelPackagePurchasedBeforeMap != null &&
-                          travelPackagePurchasedBeforeMap['ticket_id_list']
-                              is List) {
-                        ticketListUpdated = List<String>.from(
-                            travelPackagePurchasedBeforeMap['ticket_id_list']
-                                .map((item) => item.toString()));
+                          await _firestoreService.updateSubCollectionField(
+                            collection: 'User',
+                            documentId: currentUser,
+                            subCollection: 'Travel_Packages_Purchased',
+                            subDocumentId:
+                                travelPackagePurchasedBeforeMap['id'],
+                            field: 'quantity',
+                            value: updatedQuantity,
+                          );
+
+                          await _firestoreService.updateSubCollectionField(
+                            collection: 'User',
+                            documentId: currentUser,
+                            subCollection: 'Travel_Packages_Purchased',
+                            subDocumentId:
+                                travelPackagePurchasedBeforeMap['id'],
+                            field: 'price',
+                            value: updatedPrice,
+                          );
+
+                          await _firestoreService.addItemToSubCollectionList(
+                            collectionName: 'User',
+                            documentId: currentUser,
+                            subCollectionName: 'Travel_Packages_Purchased',
+                            subDocumentId:
+                                travelPackagePurchasedBeforeMap['id'],
+                            fieldName: 'ticket_id_list',
+                            newItems: ticketListUpdated,
+                          );
+                        } else {
+                          // Different `adId`, create a new record for Ads purchase
+                          TravelPackagePurchasedModel travelPackagePurchased =
+                              TravelPackagePurchasedModel(
+                            id: '',
+                            travelPackageId: widget.travelPackage.id,
+                            price: amount,
+                            quantity: quantity,
+                            ticketIdList: ticketIdListForPurchasedModel,
+                            isPurchaseResalePackage: false,
+                            adId:
+                                widget.adId!, // Include `adId` for Ads purchase
+                          );
+
+                          travelPackagePurchasedId = await _firestoreService
+                              .insertSubCollectionDataWithAutoIDReturnValue(
+                            'User',
+                            'Travel_Packages_Purchased',
+                            currentUser,
+                            travelPackagePurchased.toMap(),
+                          );
+
+                          List<String> newItem = [widget.currentUserId];
+                          await _firestoreService.addItemToCollectionList(
+                            documentId: widget.travelPackage.groupChatId!,
+                            collectionName: 'Conversations',
+                            fieldName: 'participants',
+                            newItems: newItem,
+                          );
+
+                          await _firestoreService.updateMapField(
+                            'Conversations',
+                            widget.travelPackage.groupChatId!,
+                            'unread_message',
+                            currentUser,
+                            0,
+                          );
+                        }
+                      } else {
+                        // Marketplace purchase that has already been made
+                        if (travelPackagePurchasedBeforeMap['ad_id'] == '' &&
+                            travelPackagePurchasedBeforeMap[
+                                    'travel_package_id'] ==
+                                widget.travelPackage.id) {
+                          travelPackagePurchasedId =
+                              travelPackagePurchasedBeforeMap['id'];
+                          int updatedQuantity =
+                              travelPackagePurchasedBeforeMap['quantity'] +
+                                  quantity;
+                          double updatedPrice =
+                              travelPackagePurchasedBeforeMap['price'] + amount;
+                          List<String> ticketListUpdated = List<String>.from(
+                              travelPackagePurchasedBeforeMap['ticket_id_list']
+                                  .map((item) => item.toString()));
+                          ticketListUpdated
+                              .addAll(ticketIdListForPurchasedModel);
+
+                          // Update the existing record with updated quantity and price
+                          await _firestoreService.updateSubCollectionField(
+                            collection: 'User',
+                            documentId: currentUser,
+                            subCollection: 'Travel_Packages_Purchased',
+                            subDocumentId:
+                                travelPackagePurchasedBeforeMap['id'],
+                            field: 'quantity',
+                            value: updatedQuantity,
+                          );
+
+                          await _firestoreService.updateSubCollectionField(
+                            collection: 'User',
+                            documentId: currentUser,
+                            subCollection: 'Travel_Packages_Purchased',
+                            subDocumentId:
+                                travelPackagePurchasedBeforeMap['id'],
+                            field: 'price',
+                            value: updatedPrice,
+                          );
+
+                          await _firestoreService.addItemToSubCollectionList(
+                            collectionName: 'User',
+                            documentId: currentUser,
+                            subCollectionName: 'Travel_Packages_Purchased',
+                            subDocumentId:
+                                travelPackagePurchasedBeforeMap['id'],
+                            fieldName: 'ticket_id_list',
+                            newItems: ticketListUpdated,
+                          );
+                        }
                       }
-                      ticketListUpdated.addAll(ticketIdListForPurchasedModel);
-                      print(travelPackagePurchasedBeforeMap['id']);
-
-                      await _firestoreService.updateSubCollectionField(
-                        collection: 'User',
-                        documentId: currentUser,
-                        subCollection: 'Travel_Packages_Purchased',
-                        subDocumentId: travelPackagePurchasedBeforeMap['id'],
-                        field: 'quantity',
-                        value: updatedQuantity,
-                      );
-                      double amountForUpdate =
-                          amount + travelPackagePurchasedBeforeMap['price'];
-                      await _firestoreService.updateSubCollectionField(
-                        collection: 'User',
-                        documentId: currentUser,
-                        subCollection: 'Travel_Packages_Purchased',
-                        subDocumentId: travelPackagePurchasedBeforeMap['id'],
-                        field: 'price',
-                        value: amountForUpdate,
-                      );
-                      await _firestoreService.addItemToSubCollectionList(
-                        collectionName: 'User',
-                        documentId: currentUser,
-                        subCollectionName: 'Travel_Packages_Purchased',
-                        subDocumentId: travelPackagePurchasedBeforeMap['id'],
-                        fieldName: 'ticket_id_list',
-                        newItems: ticketListUpdated,
-                      );
                     }
+
+                    bool condition =
+                        travelPackagePurchasedBeforeMap!['ad_id'] == '' &&
+                            travelPackagePurchasedBeforeMap[
+                                    'travel_package_id'] ==
+                                widget.travelPackage.id;
+                    print('Condition met: $condition');
+                    print(
+                        "ad id: ${travelPackagePurchasedBeforeMap['ad_id'] == ''}");
 
                     //receipt part
                     ReceiptModel receipt = ReceiptModel(

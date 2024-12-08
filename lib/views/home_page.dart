@@ -6,11 +6,16 @@ import 'package:shimmer/shimmer.dart';
 import 'package:tripify/view_models/post_provider.dart';
 import 'package:tripify/view_models/user_provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:get_thumbnail_video/video_thumbnail.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:tripify/models/post_model.dart';
+import 'package:tripify/models/ad_model.dart';
+import 'package:tripify/models/user_model.dart';
+import 'package:tripify/models/travel_package_model.dart';
 import 'package:tripify/views/post_detail_page.dart';
+import 'package:tripify/views/travel_package_details_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -30,9 +35,8 @@ class _HomePageState extends State<HomePage> {
   Future<void> _fetchPosts() async {
     final postProvider = Provider.of<PostProvider>(context, listen: false);
     try {
-      final postsWithIds =
-          await postProvider.fetchRecommendedPosts(
-              FirebaseAuth.instance.currentUser?.uid ?? '');
+      final postsWithIds = await postProvider
+          .fetchRecommendedPosts(FirebaseAuth.instance.currentUser?.uid ?? '');
       postProvider.setHomePosts(postsWithIds);
 
       for (var postEntry in postsWithIds) {
@@ -62,11 +66,229 @@ class _HomePageState extends State<HomePage> {
         child: ListView(
           padding: const EdgeInsets.all(16.0),
           children: [
+            _buildAdvertisementSection(),
             // Grid for displaying user posts
             _buildPostGrid(postProvider),
           ],
         ),
       ),
+    );
+  }
+
+  Future<List<TravelPackageModel>> fetchAdvertisementsWithPackages() async {
+    final adSnapshot = await FirebaseFirestore.instance
+        .collection('Advertisement')
+        .where('status', isEqualTo: 'ongoing')
+        .get();
+
+    List<String> packageIds =
+        adSnapshot.docs.map((doc) => doc['package_id'] as String).toList();
+
+    if (packageIds.isEmpty) return [];
+
+    final packageSnapshot = await FirebaseFirestore.instance
+        .collection('Travel_Packages')
+        .where(FieldPath.documentId, whereIn: packageIds)
+        .get();
+
+    return packageSnapshot.docs
+        .map((doc) => TravelPackageModel.fromMap(doc.data()))
+        .toList();
+  }
+
+  Widget _buildAdvertisementSection() {
+    return FutureBuilder<List<TravelPackageModel>>(
+      future: fetchAdvertisementsWithPackages(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          // Show a loading indicator while ads are being fetched
+          return Center(
+              child: CircularProgressIndicator(color: Color(0xFF9F76F9)));
+        }
+
+        if (snapshot.hasError || !snapshot.hasData || snapshot.data!.isEmpty) {
+          return SizedBox.shrink();
+        }
+
+        List<TravelPackageModel> ads = snapshot.data!;
+        List<TravelPackageModel> shuffledAds = ads..shuffle();
+        List<TravelPackageModel> displayedAds = shuffledAds.take(5).toList();
+
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 14.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Section Title
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                child: Text(
+                  "Sponsored Ads",
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8.0),
+              // Ads Section
+              SizedBox(
+                height: 150,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: displayedAds.length,
+                  itemBuilder: (context, index) {
+                    TravelPackageModel package = displayedAds[index];
+
+                    return GestureDetector(
+                      onTap: () async {
+                        // Fetch the creator's user data
+                        final userSnapshot = await FirebaseFirestore.instance
+                            .collection('User')
+                            .doc(package.createdBy)
+                            .get();
+
+                        if (userSnapshot.exists) {
+                          // Create a UserModel instance for the creator of the package
+                          UserModel travelPackageUser = UserModel.fromMap(
+                              userSnapshot.data()!, package.createdBy);
+
+                          // Fetch the advertisement related to the package, if ongoing
+                          final adSnapshot = await FirebaseFirestore.instance
+                              .collection('Advertisement')
+                              .where('package_id', isEqualTo: package.id)
+                              .where('status', isEqualTo: 'ongoing')
+                              .get();
+
+                          // Check if the advertisement exists
+                          if (adSnapshot.docs.isNotEmpty) {
+                            final adId = adSnapshot.docs.first.id;
+
+                            final existingClickSnapshot =
+                                await FirebaseFirestore.instance
+                                    .collection('AdInteraction')
+                                    .where('ad_id', isEqualTo: adId)
+                                    .where('user_id',
+                                        isEqualTo: FirebaseAuth
+                                                .instance.currentUser?.uid ??
+                                            '')
+                                    .get();
+
+                            // If no previous click exists, track the new click
+                            if (existingClickSnapshot.docs.isEmpty) {
+                              await FirebaseFirestore.instance
+                                  .collection('AdInteraction')
+                                  .add({
+                                'ad_id': adId,
+                                'user_id':
+                                    FirebaseAuth.instance.currentUser?.uid ??
+                                        '',
+                                'timestamp': FieldValue.serverTimestamp(),
+                              });
+
+                              final adReportSnapshot = await FirebaseFirestore
+                                  .instance
+                                  .collection('AdReport')
+                                  .where('ad_id', isEqualTo: adId)
+                                  .get();
+
+                              if (adReportSnapshot.docs.isNotEmpty) {
+                                final adReportDoc = adReportSnapshot.docs.first;
+                                await FirebaseFirestore.instance
+                                    .collection('AdReport')
+                                    .doc(adReportDoc.id)
+                                    .update({
+                                  'click_count': FieldValue.increment(1),
+                                });
+                              }
+                            }
+
+                            // Navigate to the Travel Package Details Page after checking the ad interaction
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => TravelPackageDetailsPage(
+                                  travelPackage: package,
+                                  currentUserId:
+                                      FirebaseAuth.instance.currentUser?.uid ??
+                                          '',
+                                  travelPackageUser: travelPackageUser,
+                                  adId: adId,
+                                ),
+                              ),
+                            );
+                          } else {
+                            // Handle the case where the advertisement is not found or not ongoing
+                            print("No ongoing advertisement for this package.");
+                            // You could show a message or handle it in another way
+                          }
+                        } else {
+                          // Handle case where the user document doesn't exist
+                          print("Travel package creator not found.");
+                          // Optionally show an error message
+                        }
+                      },
+                      child: Card(
+                        margin: const EdgeInsets.symmetric(horizontal: 8.0),
+                        color: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(15),
+                        ),
+                        elevation: 5,
+                        child: SizedBox(
+                          width: 170,
+                          child: Column(
+                            children: [
+                              if (package.images != null &&
+                                  package.images!.isNotEmpty)
+                                ClipRRect(
+                                  borderRadius: BorderRadius.vertical(
+                                    top: Radius.circular(15),
+                                  ),
+                                  child: Image.network(
+                                    package.images!.first,
+                                    height: 100,
+                                    width: double.infinity,
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 8.0, vertical: 5.0),
+                                child: Text(
+                                  package.name,
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 8.0),
+                                child: Text(
+                                  'Price: \RM${package.price.toStringAsFixed(2)}',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.grey[600],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 

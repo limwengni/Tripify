@@ -617,6 +617,41 @@ class FirestoreService {
     }
   }
 
+  Future<Map<String, dynamic>?> getSubCollectionOneDataByThreeFields(
+    String parentCollection,
+    String parentDocId,
+    String subCollection,
+    String field1,
+    dynamic value1,
+    String field2,
+    dynamic value2,
+    String field3, // New field
+    dynamic value3, // New value
+  ) async {
+    try {
+      final querySnapshot = await _db
+          .collection(parentCollection) // Parent collection
+          .doc(parentDocId) // Parent document ID
+          .collection(subCollection) // Subcollection
+          .where(field1, isEqualTo: value1) // Filter by first field
+          .where(field2, isEqualTo: value2) // Filter by second field
+          .where(field3, isEqualTo: value3) // Filter by third field
+          .get();
+
+      // Check if any documents exist in the query
+      if (querySnapshot.docs.isNotEmpty) {
+        // Return the first matching document's data
+        return querySnapshot.docs.first.data() as Map<String, dynamic>;
+      } else {
+        print("No matching documents found in the subcollection.");
+        return null;
+      }
+    } catch (e) {
+      print("Error fetching data from subcollection by fields: $e");
+      return null;
+    }
+  }
+
 // Stream Data (Get Conversations Stream)
   Stream<List<Map<String, dynamic>>> getConversationsStream(
       String currentUserId) {
