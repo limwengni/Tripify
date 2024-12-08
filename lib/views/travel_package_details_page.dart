@@ -331,7 +331,7 @@ class _TravelPackageDetailsPageState extends State<TravelPackageDetailsPage> {
                         'is_purchase_resale_package',
                         false,
                         'ad_id',
-                        widget.adId,
+                        widget.adId!,
                       );
                     } else {
                       travelPackagePurchasedBeforeMap = await firestoreService
@@ -367,23 +367,31 @@ class _TravelPackageDetailsPageState extends State<TravelPackageDetailsPage> {
                     }
 
                     // Assuming `travelPackagePurchasedBeforeMap` is the existing record fetched from Firestore
-                    if (travelPackagePurchasedBeforeMap == null ||
-                        (travelPackagePurchasedBeforeMap['ad_id'] == '' &&
-                            travelPackagePurchasedBeforeMap[
-                                    'travel_package_id'] !=
-                                widget.travelPackage.id)) {
-                      // No previous record for this travel package (Marketplace case)
-                      TravelPackagePurchasedModel travelPackagePurchased =
-                          TravelPackagePurchasedModel(
-                        id: '',
-                        travelPackageId: widget.travelPackage.id,
-                        price: amount,
-                        quantity: quantity,
-                        ticketIdList: ticketIdListForPurchasedModel,
-                        isPurchaseResalePackage: false,
-                        adId: '', // Empty adId for Marketplace purchase
-                      );
+                    if (travelPackagePurchasedBeforeMap == null) {
+                      TravelPackagePurchasedModel travelPackagePurchased;
+                      if (widget.adId != null && widget.adId!.isNotEmpty) {
+                        travelPackagePurchased = TravelPackagePurchasedModel(
+                          id: '',
+                          travelPackageId: widget.travelPackage.id,
+                          price: amount,
+                          quantity: quantity,
+                          ticketIdList: ticketIdListForPurchasedModel,
+                          isPurchaseResalePackage: false,
+                          adId: widget.adId!,
+                        );
+                      } else {
+                        travelPackagePurchased = TravelPackagePurchasedModel(
+                          id: '',
+                          travelPackageId: widget.travelPackage.id,
+                          price: amount,
+                          quantity: quantity,
+                          ticketIdList: ticketIdListForPurchasedModel,
+                          isPurchaseResalePackage: false,
+                          adId: '', 
+                        );
+                      }
 
+                      // Insert the new record into Firestore
                       travelPackagePurchasedId = await _firestoreService
                           .insertSubCollectionDataWithAutoIDReturnValue(
                         'User',
@@ -392,6 +400,7 @@ class _TravelPackageDetailsPageState extends State<TravelPackageDetailsPage> {
                         travelPackagePurchased.toMap(),
                       );
 
+                      // Add the user to the conversation (chat)
                       List<String> newItem = [widget.currentUserId];
                       await _firestoreService.addItemToCollectionList(
                         documentId: widget.travelPackage.groupChatId!,
@@ -400,6 +409,7 @@ class _TravelPackageDetailsPageState extends State<TravelPackageDetailsPage> {
                         newItems: newItem,
                       );
 
+                      // Update unread message count
                       await _firestoreService.updateMapField(
                         'Conversations',
                         widget.travelPackage.groupChatId!,
@@ -476,6 +486,22 @@ class _TravelPackageDetailsPageState extends State<TravelPackageDetailsPage> {
                             'Travel_Packages_Purchased',
                             currentUser,
                             travelPackagePurchased.toMap(),
+                          );
+
+                          List<String> newItem = [widget.currentUserId];
+                          await _firestoreService.addItemToCollectionList(
+                            documentId: widget.travelPackage.groupChatId!,
+                            collectionName: 'Conversations',
+                            fieldName: 'participants',
+                            newItems: newItem,
+                          );
+
+                          await _firestoreService.updateMapField(
+                            'Conversations',
+                            widget.travelPackage.groupChatId!,
+                            'unread_message',
+                            currentUser,
+                            0,
                           );
                         }
                       } else {
