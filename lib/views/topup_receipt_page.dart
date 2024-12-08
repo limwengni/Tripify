@@ -68,7 +68,7 @@ class ReceiptPage extends StatelessWidget {
                     _buildTransactionDetailRow(
                       'Date and Time:',
                       DateFormat('dd MMM yyyy hh:mm:ss a')
-                          .format(transaction.date.toLocal()),
+                          .format(transaction.date.toLocal().add(Duration(hours: 8))),
                     ),
                   ],
                 ),
@@ -105,7 +105,7 @@ class ReceiptPage extends StatelessWidget {
                                     style: pw.TextStyle(fontSize: 18)),
                                 pw.SizedBox(height: 8),
                                 pw.Text(
-                                    'Date and Time: ${DateFormat('dd MMM yyyy hh:mm:ss a').format(transaction.date.toLocal())}',
+                                    'Date and Time: ${DateFormat('dd MMM yyyy hh:mm:ss a').format(transaction.date.toLocal().add(Duration(hours: 8)))}',
                                     style: pw.TextStyle(fontSize: 18)),
                               ],
                             ),
@@ -140,7 +140,7 @@ class ReceiptPage extends StatelessWidget {
                   child: ElevatedButton.icon(
                     onPressed: () {
                       Navigator.pop(context);
-                      Navigator.pop(context);
+                      Navigator.pop(context, true);
                     },
                     icon: Icon(Icons.wallet, color: Colors.white),
                     label: Text('Return to Wallet',

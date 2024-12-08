@@ -30,9 +30,27 @@ class _CreateAdsPageState extends State<CreateAdsPage> {
   String? _renewalType;
 
   final Map<String, Map<String, dynamic>> _adPackages = {
-    "3 Days": {"duration": 3, "price": 50},
-    "7 Days": {"duration": 7, "price": 100},
-    "1 Month": {"duration": 30, "price": 300},
+    "3 Days": {
+      "duration": 3,
+      "price": 50,
+      "estimatedClicks": 100,
+      "estimatedImpressions": 1000,
+      "flatRate": 50.0,
+    },
+    "7 Days": {
+      "duration": 7,
+      "price": 100,
+      "estimatedClicks": 200,
+      "estimatedImpressions": 2000,
+      "flatRate": 100.0,
+    },
+    "1 Month": {
+      "duration": 30,
+      "price": 300,
+      "estimatedClicks": 600,
+      "estimatedImpressions": 6000,
+      "flatRate": 300.0,
+    },
   };
 
   @override
@@ -130,6 +148,10 @@ class _CreateAdsPageState extends State<CreateAdsPage> {
       return;
     }
 
+    double cpcRate = _calculateCPC();
+    double cpmRate = _calculateCPM();
+    double flatRate = _calculateFlatRate();
+
     if (widget.adsCredit >= _totalPrice) {
       showDialog(
         context: context,
@@ -147,11 +169,14 @@ class _CreateAdsPageState extends State<CreateAdsPage> {
         status: 'ongoing',
         renewalType: _renewalType!,
         createdAt: DateTime.now(),
+        cpcRate: cpcRate,
+        cpmRate: cpmRate,
+        flatRate: flatRate,
       );
 
-      await AdProvider().createAdvertisement(newAd, context);
+      await AdProvider().createAdvertisement(newAd, context, _totalPrice);
       Navigator.pop(context);
-      Navigator.pop(context);
+      Navigator.pop(context, true);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -160,6 +185,32 @@ class _CreateAdsPageState extends State<CreateAdsPage> {
             backgroundColor: Colors.red),
       );
     }
+  }
+
+  double _calculateCPC() {
+    if (_selectedAdType != null) {
+      int price = _adPackages[_selectedAdType!]!['price'];
+      int estimatedClicks = _adPackages[_selectedAdType!]!['estimatedClicks'];
+      return price / estimatedClicks;
+    }
+    return 0.0;
+  }
+
+  double _calculateCPM() {
+    if (_selectedAdType != null) {
+      int price = _adPackages[_selectedAdType!]!['price'];
+      int estimatedImpressions =
+          _adPackages[_selectedAdType!]!['estimatedImpressions'] ?? 1;
+      return (price / estimatedImpressions) * 1000;
+    }
+    return 0.0;
+  }
+
+  double _calculateFlatRate() {
+    if (_selectedAdType != null) {
+      return _adPackages[_selectedAdType!]!['flatRate']?.toDouble() ?? 0.0;
+    }
+    return 0.0;
   }
 
   @override
@@ -214,7 +265,7 @@ class _CreateAdsPageState extends State<CreateAdsPage> {
 
             Text('Renewal Type:', style: TextStyle(fontSize: 18)),
             SizedBox(height: 20),
-            
+
             RadioListTile<String>(
               title: Text('Automatic Renewal'),
               value: 'automatic',
@@ -269,6 +320,27 @@ class _CreateAdsPageState extends State<CreateAdsPage> {
             SizedBox(height: 30),
             Spacer(),
 
+            if (_selectedAdType != null) ... [
+              Align(
+                  alignment: Alignment.centerRight,
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 10),
+                    child: Text(
+                      'CPC: RM ${_calculateCPC().toStringAsFixed(2)}',
+                      style:
+                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                  )),
+            Align(
+                alignment: Alignment.centerRight,
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 10),
+                  child: Text(
+                    'CPM: RM ${_calculateCPM().toStringAsFixed(2)}',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                )),
+            ],
             Align(
                 alignment: Alignment.centerRight,
                 child: Padding(

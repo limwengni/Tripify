@@ -13,6 +13,7 @@ class TravelPackagePurchasedModel {
   final bool isPurchaseResalePackage;
   final bool isRefunding;
   final bool isRefund;
+  final String? adId;
 
   // Constructor
   TravelPackagePurchasedModel({
@@ -27,6 +28,7 @@ class TravelPackagePurchasedModel {
     required this.isPurchaseResalePackage,
     this.isRefund = false,
     this.isRefunding = false,
+    this.adId,
   });
 
   // Factory method for creating a TravelPackageModel from a JSON object
@@ -45,6 +47,7 @@ class TravelPackagePurchasedModel {
         : [], 
         isRefund: data['is_refund'] ?? false,
         isRefunding: data['is_refunding']??false,
+        adId: data['ad_id'],
     );
   }
 
@@ -62,6 +65,7 @@ class TravelPackagePurchasedModel {
       'ticket_id_list': ticketIdList,
       'is_refund': isRefund?? false,
       'is_refunding': isRefunding?? false,
+      'ad_id': adId,
     };
   }
 }

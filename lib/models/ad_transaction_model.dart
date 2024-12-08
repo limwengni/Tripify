@@ -5,12 +5,14 @@ class AdsTransaction {
   final String userId;
   final int amount;
   final DateTime date;
+  final String transactionType;
 
   AdsTransaction({
     required this.transactionId,
     required this.userId,
     required this.amount,
     required this.date,
+    required this.transactionType,
   });
 
   // Convert Transaction object to a Map to store in Firestore
@@ -20,6 +22,7 @@ class AdsTransaction {
       'user_id': userId,
       'amount': amount,
       'created_at': date,
+      'type': transactionType,
     };
   }
 
@@ -32,6 +35,7 @@ class AdsTransaction {
       userId: data['user_id'] ?? '',
       amount: data['amount'] ?? 0,
       date: (data['created_at'] as Timestamp).toDate(),
+      transactionType: (data['type']),
     );
   }
 }

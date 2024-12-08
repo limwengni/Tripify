@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
@@ -15,6 +16,7 @@ import 'package:tripify/views/create_ads_page.dart';
 import 'package:tripify/views/ad_wallet_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:tripify/views/view_ad_perf.dart';
 
 class TravelPackageOnShelvesCard extends StatefulWidget {
   final TravelPackageModel travelPackageOnShelve;
@@ -42,10 +44,15 @@ class _TravelPackagePurchasedCardState
   UserModel? travelCompanyUser;
 
   bool _hasAds = false;
+  bool _isAdEnded = false;
   TextButton? actionButton;
   List<Map<String, dynamic>> _adDetails = [];
+  String _adId = '';
   String _status = '';
+  String _renewalType = '';
   bool walletActivated = false;
+  bool _isEligible = false;
+  Timer? _adStatusTimer;
 
   AdProvider adProvider = new AdProvider();
 
@@ -54,9 +61,21 @@ class _TravelPackagePurchasedCardState
     travelPackage = widget.travelPackageOnShelve;
     fetchTravelCompany();
     super.initState();
+    _startAdStatusTimer();
     checkIfAds(travelPackage!.id);
-    updateAdStatus();
     _fetchWalletStatus();
+  }
+
+  void _startAdStatusTimer() {
+    _adStatusTimer = Timer.periodic(Duration(seconds: 5), (timer) {
+      checkIfAds(travelPackage!.id);
+    });
+  }
+
+  void dispose() {
+    // Always cancel the timer when the widget is disposed to avoid memory leaks
+    _adStatusTimer?.cancel();
+    super.dispose();
   }
 
   void fetchTravelCompany() async {
@@ -91,13 +110,25 @@ class _TravelPackagePurchasedCardState
     }
   }
 
+  Future<void> checkAdEligibility(String packageId) async {
+    bool isEligible = await adProvider.checkAdEligibility(packageId);
+
+    setState(() {
+      _isEligible = isEligible;
+    });
+
+    print("eligible: $_isEligible");
+  }
+
   Future<bool> checkIfAds(String travelPackageId) async {
     // Fetch the ad details using your provider
     List<Map<String, dynamic>> adDetails =
         await adProvider.getAdDetails(travelPackageId);
 
     // Initialize the status variable
+    String adId = '';
     String status = '';
+    String renewalType = '';
 
     // Check if there are ads available
     if (adDetails.isNotEmpty) {
@@ -105,19 +136,31 @@ class _TravelPackagePurchasedCardState
 
       // Loop through the fetched ad details
       for (var ad in adDetails) {
-        String adId = ad['id']; // Get the ad ID
+        adId = ad['id']; // Get the ad ID
         status = ad['status']; // Get the status of the ad
-        String renewalType = ad['renewal_type']; // Get renewal type
+        renewalType = ad['renewal_type']; // Get renewal type
       }
+
+      updateAdStatus();
+
+      // Update the state with the final status
+      setState(() {
+        _adId = adId;
+        _status = status;
+        if (_hasAds && _status == 'ended') {
+          _isAdEnded = true;
+        } else {
+          _isAdEnded = false;
+        }
+        _renewalType = renewalType;
+      });
     } else {
       _hasAds = false;
+
+      // If no ads, then check if that package can create ads or not
+      await checkAdEligibility(travelPackageId);
       print("No ads available for this travel package.");
     }
-
-    // Update the state with the final status
-    setState(() {
-      _status = status;
-    });
 
     return _hasAds;
   }
@@ -271,33 +314,41 @@ class _TravelPackagePurchasedCardState
                           ),
                           Text(viewNum != null ? '$viewNum' : '0'),
                           Spacer(),
-                          if (_hasAds && _status == 'running') ...[
-                            TextButton(
-                              onPressed: () {
-                                // Logic to view ads performance
-                              },
-                              style: TextButton.styleFrom(
-                                backgroundColor: Colors.green,
-                                foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(
-                                    vertical: 8, horizontal: 12),
+                          if (_hasAds) ...[
+                            if (!_isAdEnded) ...[
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            ViewAdsPerformancePage(adId: _adId),
+                                      ));
+                                },
+                                style: TextButton.styleFrom(
+                                  backgroundColor: Colors.green,
+                                  foregroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(
+                                      vertical: 8, horizontal: 12),
+                                ),
+                                child: const Text('View Ads Performance'),
                               ),
-                              child: const Text('View Ads Performance'),
-                            ),
-                          ] else if (_status == 'ended') ...[
-                            TextButton(
-                              onPressed: () {
-                                // Logic to renew the ad
-                              },
-                              style: TextButton.styleFrom(
-                                backgroundColor: Colors.orange,
-                                foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(
-                                    vertical: 8, horizontal: 12),
+                            ] else if (_isAdEnded &&
+                                _renewalType == 'manual') ...[
+                              TextButton(
+                                onPressed: () {
+                                  // Logic to renew the ad
+                                },
+                                style: TextButton.styleFrom(
+                                  backgroundColor: Colors.orange,
+                                  foregroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(
+                                      vertical: 8, horizontal: 12),
+                                ),
+                                child: const Text('Renew Ads'),
                               ),
-                              child: const Text('Renew Ads'),
-                            ),
-                          ] else ...[
+                            ]
+                          ] else if (_isEligible) ...[
                             TextButton(
                               onPressed: () async {
                                 String currentUserId =
@@ -356,8 +407,7 @@ class _TravelPackagePurchasedCardState
                                     MaterialPageRoute(
                                       builder: (context) => CreateAdsPage(
                                         travelPackageId: id,
-                                        adsCredit:
-                                            userDoc['ads_credit'] ?? 0,
+                                        adsCredit: userDoc['ads_credit'] ?? 0,
                                       ),
                                     ),
                                   );
@@ -370,7 +420,7 @@ class _TravelPackagePurchasedCardState
                                     vertical: 8, horizontal: 12),
                               ),
                               child: const Text('Create Ads'),
-                            ),
+                            )
                           ],
                           const SizedBox(width: 8),
 
