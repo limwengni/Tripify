@@ -44,21 +44,21 @@ class AdProvider with ChangeNotifier {
           },
         );
 
-        AdReport adReport = AdReport(
-          adId: adRef.id,
-          reportDate: DateTime.now(),
-          clickCount: 0,
-          engagementRate: 0.0,
-          successRate: 0.0,
-          reach: 0,
-          cpc: 0.0,
-          cpm: 0.0,
-          flatRate: adCost.toDouble(),
-          revenue: 0.0,
-          roas: 0.0,
-        );
+        // AdReport adReport = AdReport(
+        //   adId: adRef.id,
+        //   reportDate: DateTime.now(),
+        //   clickCount: 0,
+        //   engagementRate: 0.0,
+        //   successRate: 0.0,
+        //   reach: 0,
+        //   cpc: 0.0,
+        //   cpm: 0.0,
+        //   flatRate: adCost.toDouble(),
+        //   revenue: 0.0,
+        //   roas: 0.0,
+        // );
 
-        batch.set(_db.collection('AdReport').doc(), adReport.toMap());
+        // batch.set(_db.collection('AdReport').doc(), adReport.toMap());
 
         int newAdsCredit = currentAdsCredit - adCost;
 
