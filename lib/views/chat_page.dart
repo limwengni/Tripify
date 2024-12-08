@@ -389,6 +389,7 @@ class _ChatPageState extends State<ChatPage> {
                       ? _textFieldFocusNode
                       : null,
                   maxLines: 3,
+                  minLines: 1,
                   keyboardType: TextInputType.multiline,
                   textInputAction:
                       TextInputAction.newline, // Allows newline input
