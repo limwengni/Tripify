@@ -73,25 +73,29 @@ class DocumentRepositoryPage extends StatelessWidget {
                   subtitle: const Text("View your travel packages on shelves."),
                   trailing: const Icon(Icons.arrow_forward),
                   onTap: () async {
-                    String currentUserId = FirebaseAuth.instance.currentUser!.uid;
+                    String currentUserId =
+                        FirebaseAuth.instance.currentUser!.uid;
                     int adsCredit = 0;
 
-                      DocumentSnapshot userDoc = await FirebaseFirestore
-                          .instance
-                          .collection('User')
-                          .doc(currentUserId)
-                          .get();
+                    DocumentSnapshot userDoc = await FirebaseFirestore.instance
+                        .collection('User')
+                        .doc(currentUserId)
+                        .get();
 
-                      if (userDoc.exists) {
-                          adsCredit = userDoc['ads_credit'] ?? 0;
-                      } else {
-                          adsCredit = userDoc['ads_credit'] ?? 0;
-                      }
-                    
+                    if (userDoc.exists) {
+                      var data = userDoc.data() as Map<String, dynamic>?;
+                      adsCredit = data?['ads_credit'] ??
+                          0;
+                    } else {
+                      adsCredit =
+                          0; 
+                    }
+
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => TravelPackageOnShelvesRepoPage(adsCredit: adsCredit),
+                        builder: (context) => TravelPackageOnShelvesRepoPage(
+                            adsCredit: adsCredit),
                       ),
                     );
                   },

@@ -111,7 +111,6 @@ class _HomePageState extends State<HomePage> {
         }
 
         List<TravelPackageModel> ads = snapshot.data!;
-
         List<TravelPackageModel> shuffledAds = ads..shuffle();
         List<TravelPackageModel> displayedAds = shuffledAds.take(5).toList();
 
