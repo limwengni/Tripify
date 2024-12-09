@@ -12,6 +12,7 @@ import 'package:tripify/views/accommodation_requirement_create_page.dart';
 import 'package:tripify/views/car_rental_requirement_create_page.dart';
 import 'package:tripify/views/car_rental_requirement_page.dart';
 import 'package:tripify/views/conversations_page.dart';
+import 'package:tripify/views/location_page.dart';
 import 'package:tripify/views/new_travel_package_craete_page.dart';
 import 'package:tripify/views/refund_page.dart';
 import 'package:tripify/views/request_selection_page.dart';
@@ -204,7 +205,10 @@ class MainPageState extends State<MainPage> {
       'widget': const NewTravelPackageCreatePage()
     },
     {'title': 'Wallet', 'widget': WalletPage()},
+    {'title': 'User Location', 'widget': UserLocation()},
   ];
+
+  
   List<Map<String, dynamic>> accommodationWidgetItems = [
     {'title': 'Home', 'widget': HomePage()},
     {
@@ -212,9 +216,9 @@ class MainPageState extends State<MainPage> {
       'widget': const AccommodationRequirementPage()
     },
     {'title': 'Profile', 'widget': ProfilePage()},
-    
     {'title': 'Document Repository', 'widget': const DocumentRepositoryPage()},
     {'title': 'Settings', 'widget': SettingsPage()},
+    
   ];
 
   List<Map<String, dynamic>> carRentalWidgetItems = [
@@ -231,12 +235,14 @@ class MainPageState extends State<MainPage> {
   List<Map<String, dynamic>> travelPackageCompanyWidgetItems = [
     {'title': 'Home', 'widget': HomePage()},
     {'title': 'Marketplace', 'widget': MarketplacePage()},
-    {'title': 'On Shelves Travel Package', 'widget': NewTravelPackageCreatePage()},
+    {
+      'title': 'On Shelves Travel Package',
+      'widget': NewTravelPackageCreatePage()
+    },
     {'title': 'Profile', 'widget': ProfilePage()},
     {'title': 'Document Repository', 'widget': const DocumentRepositoryPage()},
     {'title': 'Settings', 'widget': SettingsPage()},
-    {'title': 'Refund Applications', 'widget':RefundPage()},
-    
+    {'title': 'Refund Applications', 'widget': RefundPage()},
   ];
   List<int> navigationStack = [];
 
