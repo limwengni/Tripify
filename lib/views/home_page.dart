@@ -66,7 +66,7 @@ class _HomePageState extends State<HomePage> {
         child: ListView(
           padding: const EdgeInsets.all(16.0),
           children: [
-            // _buildAdvertisementSection(),
+            _buildAdvertisementSection(),
             // Grid for displaying user posts
             _buildPostGrid(postProvider),
           ],
@@ -87,7 +87,7 @@ class _HomePageState extends State<HomePage> {
     if (packageIds.isEmpty) return [];
 
     final packageSnapshot = await FirebaseFirestore.instance
-        .collection('Travel_Packages')
+        .collection('New_Travel_Packages')
         .where(FieldPath.documentId, whereIn: packageIds)
         .get();
 

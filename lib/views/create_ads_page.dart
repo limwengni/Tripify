@@ -70,7 +70,7 @@ class _CreateAdsPageState extends State<CreateAdsPage> {
     final String currentUserId = FirebaseAuth.instance.currentUser!.uid;
 
     final DocumentSnapshot snapshot = await FirebaseFirestore.instance
-        .collection('Travel_Packages')
+        .collection('New_Travel_Packages')
         .doc(widget.travelPackageId) // Use the passed package ID
         .get();
 

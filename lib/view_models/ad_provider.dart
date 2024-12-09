@@ -105,7 +105,7 @@ class AdProvider with ChangeNotifier {
         String packageId = doc['package_id'];
 
         final packageDoc = await FirebaseFirestore.instance
-            .collection('Travel_Packages')
+            .collection('New_Travel_Packages')
             .doc(packageId)
             .get();
 
@@ -140,7 +140,7 @@ class AdProvider with ChangeNotifier {
   Future<bool> checkAdEligibility(String packageId) async {
     try {
       final packageSnapshot = await FirebaseFirestore.instance
-          .collection('Travel_Packages')
+          .collection('New_Travel_Packages')
           .where('id', isEqualTo: packageId)
           .get();
 

@@ -15,8 +15,9 @@ class TransactionProvider {
 
       String transactionType = 'topup';
 
-      DocumentReference docRef =
-          await FirebaseFirestore.instance.collection('AdsCredTransaction').add({
+      DocumentReference docRef = await FirebaseFirestore.instance
+          .collection('AdsCredTransaction')
+          .add({
         'user_id': userId,
         'amount': amount,
         'created_at': now,
@@ -39,7 +40,9 @@ class TransactionProvider {
 
       if (userSnapshot.exists) {
         int currentAdsCredit =
-            (userSnapshot.data() as Map<String, dynamic>)['ads_credit'] ?? 0;
+            (userSnapshot.data() as Map<String, dynamic>)['ads_credit']
+                    ?.toInt() ??
+                0;
 
         await userRef.update({
           'ads_credit': currentAdsCredit + amount,

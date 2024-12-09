@@ -56,23 +56,23 @@ class _TravelPackagePurchasedCardState
   bool _isEligible = false;
   Timer? _adStatusTimer;
 
-  // AdProvider adProvider = new AdProvider();
+  AdProvider adProvider = new AdProvider();
 
   @override
   void initState() {
     travelPackage = widget.travelPackageOnShelve;
     fetchTravelCompany();
     super.initState();
-    // _startAdStatusTimer();
-    // checkIfAds(travelPackage!.id);
+    _startAdStatusTimer();
+    checkIfAds(travelPackage!.id);
     _fetchWalletStatus();
   }
 
-  // void _startAdStatusTimer() {
-  //   _adStatusTimer = Timer.periodic(Duration(seconds: 5), (timer) {
-  //     checkIfAds(travelPackage!.id);
-  //   });
-  // }
+  void _startAdStatusTimer() {
+    _adStatusTimer = Timer.periodic(Duration(seconds: 5), (timer) {
+      checkIfAds(travelPackage!.id);
+    });
+  }
 
   void dispose() {
     // Always cancel the timer when the widget is disposed to avoid memory leaks
@@ -112,64 +112,64 @@ class _TravelPackagePurchasedCardState
     }
   }
 
-  // Future<void> checkAdEligibility(String packageId) async {
-  //   bool isEligible = await adProvider.checkAdEligibility(packageId);
+  Future<void> checkAdEligibility(String packageId) async {
+    bool isEligible = await adProvider.checkAdEligibility(packageId);
 
-  //   setState(() {
-  //     _isEligible = isEligible;
-  //   });
+    setState(() {
+      _isEligible = isEligible;
+    });
 
-  //   print("eligible: $_isEligible");
-  // }
+    print("eligible: $_isEligible");
+  }
 
-  // Future<bool> checkIfAds(String travelPackageId) async {
-  //   // Fetch the ad details using your provider
-  //   List<Map<String, dynamic>> adDetails =
-  //       await adProvider.getAdDetails(travelPackageId);
+  Future<bool> checkIfAds(String travelPackageId) async {
+    // Fetch the ad details using your provider
+    List<Map<String, dynamic>> adDetails =
+        await adProvider.getAdDetails(travelPackageId);
 
-  //   // Initialize the status variable
-  //   String adId = '';
-  //   String status = '';
-  //   String renewalType = '';
+    // Initialize the status variable
+    String adId = '';
+    String status = '';
+    String renewalType = '';
 
-  //   // Check if there are ads available
-  //   if (adDetails.isNotEmpty) {
-  //     _hasAds = true;
+    // Check if there are ads available
+    if (adDetails.isNotEmpty) {
+      _hasAds = true;
 
-  //     // Loop through the fetched ad details
-  //     for (var ad in adDetails) {
-  //       adId = ad['id']; // Get the ad ID
-  //       status = ad['status']; // Get the status of the ad
-  //       renewalType = ad['renewal_type']; // Get renewal type
-  //     }
+      // Loop through the fetched ad details
+      for (var ad in adDetails) {
+        adId = ad['id']; // Get the ad ID
+        status = ad['status']; // Get the status of the ad
+        renewalType = ad['renewal_type']; // Get renewal type
+      }
 
-  //     updateAdStatus();
+      updateAdStatus();
 
-  //     // Update the state with the final status
-  //     setState(() {
-  //       _adId = adId;
-  //       _status = status;
-  //       if (_hasAds && _status == 'ended') {
-  //         _isAdEnded = true;
-  //       } else {
-  //         _isAdEnded = false;
-  //       }
-  //       _renewalType = renewalType;
-  //     });
-  //   } else {
-  //     _hasAds = false;
+      // Update the state with the final status
+      setState(() {
+        _adId = adId;
+        _status = status;
+        if (_hasAds && _status == 'ended') {
+          _isAdEnded = true;
+        } else {
+          _isAdEnded = false;
+        }
+        _renewalType = renewalType;
+      });
+    } else {
+      _hasAds = false;
 
-  //     // If no ads, then check if that package can create ads or not
-  //     await checkAdEligibility(travelPackageId);
-  //     print("No ads available for this travel package.");
-  //   }
+      // If no ads, then check if that package can create ads or not
+      await checkAdEligibility(travelPackageId);
+      print("No ads available for this travel package.");
+    }
 
-  //   return _hasAds;
-  // }
+    return _hasAds;
+  }
 
-  // void updateAdStatus() async {
-  //   await adProvider.updateAdStatus();
-  // }
+  void updateAdStatus() async {
+    await adProvider.updateAdStatus();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -315,23 +315,23 @@ class _TravelPackagePurchasedCardState
                             Spacer(),
                             if (_hasAds) ...[
                               if (!_isAdEnded) ...[
-                                // TextButton(
-                                //   onPressed: () {
-                                //     Navigator.push(
-                                //         context,
-                                //         MaterialPageRoute(
-                                //           builder: (context) =>
-                                //               ViewAdsPerformancePage(adId: _adId),
-                                //         ));
-                                //   },
-                                //   style: TextButton.styleFrom(
-                                //     backgroundColor: Colors.green,
-                                //     foregroundColor: Colors.white,
-                                //     padding: const EdgeInsets.symmetric(
-                                //         vertical: 8, horizontal: 12),
-                                //   ),
-                                //   child: const Text('View Ads Performance'),
-                                // ),
+                                TextButton(
+                                  onPressed: () {
+                                    Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) =>
+                                              ViewAdsPerformancePage(adId: _adId),
+                                        ));
+                                  },
+                                  style: TextButton.styleFrom(
+                                    backgroundColor: Colors.green,
+                                    foregroundColor: Colors.white,
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 8, horizontal: 12),
+                                  ),
+                                  child: const Text('View Ads Performance'),
+                                ),
                               ] else if (_isAdEnded &&
                                   _renewalType == 'manual') ...[
                                 TextButton(
@@ -400,16 +400,16 @@ class _TravelPackagePurchasedCardState
                                       ),
                                     );
                                   } else {
-                                    // String id = widget.travelPackageOnShelve.id;
-                                    // Navigator.push(
-                                    //   context,
-                                    //   MaterialPageRoute(
-                                    //     builder: (context) => CreateAdsPage(
-                                    //       travelPackageId: id,
-                                    //       adsCredit: userDoc['ads_credit'] ?? 0,
-                                    //     ),
-                                    //   ),
-                                    // );
+                                    String id = widget.travelPackageOnShelve.id;
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => CreateAdsPage(
+                                          travelPackageId: id,
+                                          adsCredit: userDoc['ads_credit'] ?? 0,
+                                        ),
+                                      ),
+                                    );
                                   }
                                 },
                                 style: TextButton.styleFrom(
