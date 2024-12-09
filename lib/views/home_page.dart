@@ -66,7 +66,7 @@ class _HomePageState extends State<HomePage> {
         child: ListView(
           padding: const EdgeInsets.all(16.0),
           children: [
-            _buildAdvertisementSection(),
+            // _buildAdvertisementSection(),
             // Grid for displaying user posts
             _buildPostGrid(postProvider),
           ],
@@ -75,134 +75,134 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Future<List<TravelPackageModel>> fetchAdvertisementsWithPackages() async {
-    final adSnapshot = await FirebaseFirestore.instance
-        .collection('Advertisement')
-        .where('status', isEqualTo: 'ongoing')
-        .get();
+  // Future<List<TravelPackageModel>> fetchAdvertisementsWithPackages() async {
+  //   final adSnapshot = await FirebaseFirestore.instance
+  //       .collection('Advertisement')
+  //       .where('status', isEqualTo: 'ongoing')
+  //       .get();
 
-    List<String> packageIds =
-        adSnapshot.docs.map((doc) => doc['package_id'] as String).toList();
+  //   List<String> packageIds =
+  //       adSnapshot.docs.map((doc) => doc['package_id'] as String).toList();
 
-    if (packageIds.isEmpty) return [];
+  //   if (packageIds.isEmpty) return [];
 
-    final packageSnapshot = await FirebaseFirestore.instance
-        .collection('Travel_Packages')
-        .where(FieldPath.documentId, whereIn: packageIds)
-        .get();
+  //   final packageSnapshot = await FirebaseFirestore.instance
+  //       .collection('Travel_Packages')
+  //       .where(FieldPath.documentId, whereIn: packageIds)
+  //       .get();
 
-    return packageSnapshot.docs
-        .map((doc) => TravelPackageModel.fromMap(doc.data()))
-        .toList();
-  }
+  //   return packageSnapshot.docs
+  //       .map((doc) => TravelPackageModel.fromMap(doc.data()))
+  //       .toList();
+  // }
 
-  Widget _buildAdvertisementSection() {
-    return FutureBuilder<List<TravelPackageModel>>(
-      future: fetchAdvertisementsWithPackages(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          // Show a loading indicator while ads are being fetched
-          return Center(
-              child: CircularProgressIndicator(color: Color(0xFF9F76F9)));
-        }
+  // Widget _buildAdvertisementSection() {
+  //   return FutureBuilder<List<TravelPackageModel>>(
+  //     future: fetchAdvertisementsWithPackages(),
+  //     builder: (context, snapshot) {
+  //       if (snapshot.connectionState == ConnectionState.waiting) {
+  //         // Show a loading indicator while ads are being fetched
+  //         return Center(
+  //             child: CircularProgressIndicator(color: Color(0xFF9F76F9)));
+  //       }
 
-        if (snapshot.hasError || !snapshot.hasData || snapshot.data!.isEmpty) {
-          return SizedBox.shrink();
-        }
+  //       if (snapshot.hasError || !snapshot.hasData || snapshot.data!.isEmpty) {
+  //         return SizedBox.shrink();
+  //       }
 
-        List<TravelPackageModel> ads = snapshot.data!;
-        List<TravelPackageModel> shuffledAds = ads..shuffle();
-        List<TravelPackageModel> displayedAds = shuffledAds.take(5).toList();
+  //       List<TravelPackageModel> ads = snapshot.data!;
+  //       List<TravelPackageModel> shuffledAds = ads..shuffle();
+  //       List<TravelPackageModel> displayedAds = shuffledAds.take(5).toList();
 
-        return Padding(
-          padding: const EdgeInsets.symmetric(vertical: 14.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Section Title
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                child: Text(
-                  "Sponsored Ads",
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 8.0),
-              // Ads Section
-              SizedBox(
-                height: 150,
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: displayedAds.length,
-                  itemBuilder: (context, index) {
-                    TravelPackageModel package = displayedAds[index];
+  //       return Padding(
+  //         padding: const EdgeInsets.symmetric(vertical: 14.0),
+  //         child: Column(
+  //           crossAxisAlignment: CrossAxisAlignment.start,
+  //           children: [
+  //             // Section Title
+  //             Padding(
+  //               padding: const EdgeInsets.symmetric(horizontal: 8.0),
+  //               child: Text(
+  //                 "Sponsored Ads",
+  //                 style: TextStyle(
+  //                   fontSize: 18,
+  //                   fontWeight: FontWeight.bold,
+  //                   color: Colors.black87,
+  //                 ),
+  //               ),
+  //             ),
+  //             const SizedBox(height: 8.0),
+  //             // Ads Section
+  //             SizedBox(
+  //               height: 150,
+  //               child: ListView.builder(
+  //                 scrollDirection: Axis.horizontal,
+  //                 itemCount: displayedAds.length,
+  //                 itemBuilder: (context, index) {
+  //                   TravelPackageModel package = displayedAds[index];
 
-                    return GestureDetector(
-                      onTap: () async {
-                        // Fetch the creator's user data
-                        final userSnapshot = await FirebaseFirestore.instance
-                            .collection('User')
-                            .doc(package.createdBy)
-                            .get();
+  //                   return GestureDetector(
+  //                     onTap: () async {
+  //                       // Fetch the creator's user data
+  //                       final userSnapshot = await FirebaseFirestore.instance
+  //                           .collection('User')
+  //                           .doc(package.createdBy)
+  //                           .get();
 
-                        if (userSnapshot.exists) {
-                          // Create a UserModel instance for the creator of the package
-                          UserModel travelPackageUser = UserModel.fromMap(
-                              userSnapshot.data()!, package.createdBy);
+  //                       if (userSnapshot.exists) {
+  //                         // Create a UserModel instance for the creator of the package
+  //                         UserModel travelPackageUser = UserModel.fromMap(
+  //                             userSnapshot.data()!, package.createdBy);
 
-                          // Fetch the advertisement related to the package, if ongoing
-                          final adSnapshot = await FirebaseFirestore.instance
-                              .collection('Advertisement')
-                              .where('package_id', isEqualTo: package.id)
-                              .where('status', isEqualTo: 'ongoing')
-                              .get();
+  //                         // Fetch the advertisement related to the package, if ongoing
+  //                         final adSnapshot = await FirebaseFirestore.instance
+  //                             .collection('Advertisement')
+  //                             .where('package_id', isEqualTo: package.id)
+  //                             .where('status', isEqualTo: 'ongoing')
+  //                             .get();
 
-                          // Check if the advertisement exists
-                          if (adSnapshot.docs.isNotEmpty) {
-                            final adId = adSnapshot.docs.first.id;
+  //                         // Check if the advertisement exists
+  //                         if (adSnapshot.docs.isNotEmpty) {
+  //                           final adId = adSnapshot.docs.first.id;
 
-                            final existingClickSnapshot =
-                                await FirebaseFirestore.instance
-                                    .collection('AdInteraction')
-                                    .where('ad_id', isEqualTo: adId)
-                                    .where('user_id',
-                                        isEqualTo: FirebaseAuth
-                                                .instance.currentUser?.uid ??
-                                            '')
-                                    .get();
+  //                           final existingClickSnapshot =
+  //                               await FirebaseFirestore.instance
+  //                                   .collection('AdInteraction')
+  //                                   .where('ad_id', isEqualTo: adId)
+  //                                   .where('user_id',
+  //                                       isEqualTo: FirebaseAuth
+  //                                               .instance.currentUser?.uid ??
+  //                                           '')
+  //                                   .get();
 
-                            // If no previous click exists, track the new click
-                            if (existingClickSnapshot.docs.isEmpty) {
-                              await FirebaseFirestore.instance
-                                  .collection('AdInteraction')
-                                  .add({
-                                'ad_id': adId,
-                                'user_id':
-                                    FirebaseAuth.instance.currentUser?.uid ??
-                                        '',
-                                'timestamp': FieldValue.serverTimestamp(),
-                              });
+  //                           // If no previous click exists, track the new click
+  //                           if (existingClickSnapshot.docs.isEmpty) {
+  //                             await FirebaseFirestore.instance
+  //                                 .collection('AdInteraction')
+  //                                 .add({
+  //                               'ad_id': adId,
+  //                               'user_id':
+  //                                   FirebaseAuth.instance.currentUser?.uid ??
+  //                                       '',
+  //                               'timestamp': FieldValue.serverTimestamp(),
+  //                             });
 
-                              final adReportSnapshot = await FirebaseFirestore
-                                  .instance
-                                  .collection('AdReport')
-                                  .where('ad_id', isEqualTo: adId)
-                                  .get();
+  //                             final adReportSnapshot = await FirebaseFirestore
+  //                                 .instance
+  //                                 .collection('AdReport')
+  //                                 .where('ad_id', isEqualTo: adId)
+  //                                 .get();
 
-                              if (adReportSnapshot.docs.isNotEmpty) {
-                                final adReportDoc = adReportSnapshot.docs.first;
-                                await FirebaseFirestore.instance
-                                    .collection('AdReport')
-                                    .doc(adReportDoc.id)
-                                    .update({
-                                  'click_count': FieldValue.increment(1),
-                                });
-                              }
-                            }
+  //                             if (adReportSnapshot.docs.isNotEmpty) {
+  //                               final adReportDoc = adReportSnapshot.docs.first;
+  //                               await FirebaseFirestore.instance
+  //                                   .collection('AdReport')
+  //                                   .doc(adReportDoc.id)
+  //                                   .update({
+  //                                 'click_count': FieldValue.increment(1),
+  //                               });
+  //                             }
+  //                           }
 
                             // Navigate to the Travel Package Details Page after checking the ad interaction
                             Navigator.push(

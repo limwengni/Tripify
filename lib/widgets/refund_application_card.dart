@@ -2,6 +2,7 @@ import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:shimmer/shimmer.dart'; // Import shimmer package
+import 'package:tripify/models/new_travel_package_model.dart';
 import 'package:tripify/models/refund_package_model.dart';
 import 'package:tripify/models/travel_package_model.dart';
 import 'package:tripify/models/travel_package_purchased_model.dart';
@@ -22,16 +23,16 @@ class RefundApplicationCard extends StatefulWidget {
 
 class _RefundApplicationCardState extends State<RefundApplicationCard> {
   FirestoreService _firestoreService = FirestoreService();
-  TravelPackageModel? travelPackage;
+  NewTravelPackageModel? travelPackage;
   TravelPackagePurchasedModel? travelPackagePurchased;
   bool travelPackageLoaded = false;
   String packageName = '';
   double? refundAmount;
   bool isAccept = false;
-  
+
   @override
   void initState() {
-  isAccept = widget.refundPackage.isAccept;
+    isAccept = widget.refundPackage.isAccept;
     super.initState();
     fetchTravelPackage();
   }
@@ -39,7 +40,7 @@ class _RefundApplicationCardState extends State<RefundApplicationCard> {
   void fetchTravelPackage() async {
     Map<String, dynamic>? travelPackageMap;
     travelPackageMap = await _firestoreService.getDataById(
-        'Travel_Packages', widget.refundPackage.travelPackageId);
+        'new_Travel_Packages', widget.refundPackage.travelPackageId);
 
     print('docID: ${widget.refundPackage.createdBy}');
     print('subDocId: ${widget.refundPackage.travelPackagePurchasedId}');
@@ -53,7 +54,7 @@ class _RefundApplicationCardState extends State<RefundApplicationCard> {
 
     setState(() {
       if (travelPackageMap != null) {
-        travelPackage = TravelPackageModel.fromMap(travelPackageMap);
+        travelPackage = NewTravelPackageModel.fromMap(travelPackageMap);
         if (travelPackage != null) {
           travelPackageLoaded = true;
           packageName = travelPackage!.name;
@@ -75,162 +76,197 @@ class _RefundApplicationCardState extends State<RefundApplicationCard> {
       padding: const EdgeInsets.all(8.0),
       child: Stack(children: [
         Card(
-            child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Refund ID: ${widget.refundPackage.id}',
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold, // Makes the text bold
-                  fontSize: 17, // Adjust size for a title
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Refund ID: ${widget.refundPackage.id}',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold, // Makes the text bold
+                    fontSize: 17, // Adjust size for a title
+                  ),
                 ),
-              ),
-              Text(
-                  'Travel Package ID: ${widget.refundPackage.travelPackageId}'),
-              if (travelPackage != null) Text('Travel Package: ${packageName}'),
-              Text('Refund Quantity: ${widget.refundPackage.refundQuantity}'),
-              Text('Refund Amount: RM ${refundAmount!.toStringAsFixed(2)}'),
-              SizedBox(
-                height: 5,
-              ),
-              Row(
-                children: [
-                  Spacer(),
-                  TextButton(
-                    onPressed: () async {
-                      await _firestoreService.updateSubCollectionField(
-                          collection: 'User',
-                          documentId: widget.refundPackage.createdBy,
-                          subCollection: 'Travel_Packages_Purchased',
-                          subDocumentId:
-                              widget.refundPackage.travelPackagePurchasedId,
-                          field: 'is_refunding',
-                          value: false);
-                      await _firestoreService.deleteData(
-                          'Refund_Packages', widget.refundPackage.id);
-                    },
-                    child: Text('Decline'),
-                    style: TextButton.styleFrom(
-                      backgroundColor: const Color.fromARGB(
-                          255, 159, 118, 249), // Blue background color
-                      foregroundColor: Colors
-                          .white, // Text color (white text on blue background)
-                      padding: const EdgeInsets.symmetric(
-                          vertical: 8,
-                          horizontal: 12), // Optional: adjust padding
+                Text(
+                    'Travel Package ID: ${widget.refundPackage.travelPackageId}'),
+                if (travelPackage != null)
+                  Text('Travel Package: ${packageName}'),
+                Text('Refund Quantity: ${widget.refundPackage.refundQuantity}'),
+                Text('Refund Amount: RM ${refundAmount!.toStringAsFixed(2)}'),
+                SizedBox(
+                  height: 5,
+                ),
+                Row(
+                  children: [
+                    Spacer(),
+                    TextButton(
+                      onPressed: () async {
+                        await _firestoreService.updateSubCollectionField(
+                            collection: 'User',
+                            documentId: widget.refundPackage.createdBy,
+                            subCollection: 'Travel_Packages_Purchased',
+                            subDocumentId:
+                                widget.refundPackage.travelPackagePurchasedId,
+                            field: 'is_refunding',
+                            value: false);
+                        await _firestoreService.deleteData(
+                            'Refund_Packages', widget.refundPackage.id);
+                      },
+                      child: Text('Decline'),
+                      style: TextButton.styleFrom(
+                        backgroundColor: const Color.fromARGB(
+                            255, 159, 118, 249), // Blue background color
+                        foregroundColor: Colors
+                            .white, // Text color (white text on blue background)
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 8,
+                            horizontal: 12), // Optional: adjust padding
+                      ),
                     ),
-                  ),
-                  SizedBox(
-                    width: 10,
-                  ),
-                  TextButton(
-                    onPressed: () async {
-                      double amount = widget.refundPackage.price;
-                      bool paymentSuccess = await StripeService.instance
-                          .makePayment(amount, 'myr');
+                    SizedBox(
+                      width: 10,
+                    ),
+                    TextButton(
+                      onPressed: () async {
+                        double amount = widget.refundPackage.price;
+                        bool paymentSuccess = await StripeService.instance
+                            .makePayment(amount, 'myr');
 
-                      if (paymentSuccess) {
-                        //update the refund state in the travel package purchased
-                        await _firestoreService.updateSubCollectionField(
-                            collection: 'User',
-                            documentId: widget.refundPackage.createdBy,
-                            subCollection: 'Travel_Packages_Purchased',
-                            subDocumentId:
-                                widget.refundPackage.travelPackagePurchasedId,
-                            field: 'is_refund',
-                            value: true);
-
-                        print(
-                            'process update refund state in the travel package purchased');
-
-                        //update the ticket id list in the travel package(original)
-                        for (int i = 0;
-                            i < travelPackagePurchased!.ticketIdList.length;
-                            i++) {
-                          await _firestoreService.updateMapField(
-                              'Travel_Packages',
-                              widget.refundPackage.travelPackageId,
-                              'ticket_id_map',
-                              travelPackagePurchased!.ticketIdList[i],
-                              '');
-                        }
-
-                        print(
-                            'process update the ticket id list in the travel package(original)');
-
-                        //update the ticket id list in the travel package purchased
-                        await _firestoreService.updateSubCollectionField(
-                            collection: 'User',
-                            documentId: widget.refundPackage.createdBy,
-                            subCollection: 'Travel_Packages_Purchased',
-                            subDocumentId:
-                                widget.refundPackage.travelPackagePurchasedId,
-                            field: 'ticket_id_list',
-                            value: null);
-
-                        print(
-                            'process update the ticket id list in the travel package purchased');
-
-                        //update wallet amount for the customer
-                        Map<String, dynamic>? refundCreatorMap =
-                            await _firestoreService.getDataById(
-                                'User', widget.refundPackage.createdBy);
-                        UserModel refundCreator;
-                        double updatedAmount = 0;
-
-                        if (refundCreatorMap != null) {
-                          refundCreator = UserModel.fromMap(
-                              refundCreatorMap, widget.refundPackage.createdBy);
-
-                          updatedAmount = refundCreator.walletCredit! + amount;
+                        if (paymentSuccess) {
+                          //update the refund state in the travel package purchased
+                          await _firestoreService.updateSubCollectionField(
+                              collection: 'User',
+                              documentId: widget.refundPackage.createdBy,
+                              subCollection: 'Travel_Packages_Purchased',
+                              subDocumentId:
+                                  widget.refundPackage.travelPackagePurchasedId,
+                              field: 'is_refund',
+                              value: true);
 
                           print(
-                              'updatedAmount = ${refundCreator.walletCredit} + ${amount}');
-                          print('updatedAmount = ${updatedAmount}');
+                              'process update refund state in the travel package purchased');
+
+                          //update the ticket id list in the travel package(original)
+                          for (int i = 0;
+                              i < travelPackagePurchased!.ticketIdList.length;
+                              i++) {
+                            await _firestoreService.updateMapField(
+                                'New_Travel_Packages',
+                                widget.refundPackage.travelPackageId,
+                                'ticket_id_map',
+                                travelPackagePurchased!.ticketIdList[i],
+                                '');
+                          }
+
+                          print(
+                              'process update the ticket id list in the travel package(original)');
+
+                          //update the ticket id list in the travel package purchased
+                          await _firestoreService.updateSubCollectionField(
+                              collection: 'User',
+                              documentId: widget.refundPackage.createdBy,
+                              subCollection: 'Travel_Packages_Purchased',
+                              subDocumentId:
+                                  widget.refundPackage.travelPackagePurchasedId,
+                              field: 'ticket_id_list',
+                              value: null);
+
+                          print(
+                              'process update the ticket id list in the travel package purchased');
+
+                          //update wallet amount for the customer
+                          Map<String, dynamic>? refundCreatorMap =
+                              await _firestoreService.getDataById(
+                                  'User', widget.refundPackage.createdBy);
+                          UserModel refundCreator;
+                          double updatedAmount = 0;
+
+                          if (refundCreatorMap != null) {
+                            refundCreator = UserModel.fromMap(refundCreatorMap,
+                                widget.refundPackage.createdBy);
+
+                            updatedAmount =
+                                refundCreator.walletCredit! + amount;
+
+                            print(
+                                'updatedAmount = ${refundCreator.walletCredit} + ${amount}');
+                            print('updatedAmount = ${updatedAmount}');
+                          }
+
+                          await _firestoreService.updateField(
+                              'User',
+                              widget.refundPackage.createdBy,
+                              'wallet_credit',
+                              updatedAmount);
+
+                          print('process update wallet credit');
+
+                          //update travel package quantity(original)
+                          await _firestoreService.updateField(
+                              'New_Travel_Packages',
+                              widget.refundPackage.travelPackageId,
+                              'is_available',
+                              true);
+                          print('process update available state');
+
+                          await _firestoreService.incrementField(
+                              'New_Travel_Packages',
+                              widget.refundPackage.travelPackageId,
+                              widget.refundPackage.refundQuantity,
+                              'quantity_available');
+
+                          //check and update the groupchat member
+                          Map<String, dynamic>? travelPackageMap =
+                              await _firestoreService.getDataById(
+                                  'New_Travel_Packages',
+                                  widget.refundPackage.travelPackageId);
+                          if (travelPackageMap != null) {
+                            NewTravelPackageModel newTravelPackageModel =
+                                NewTravelPackageModel.fromMap(travelPackageMap);
+                            if (!newTravelPackageModel.ticketIdNumMap!
+                                .containsValue(
+                                    widget.refundPackage.createdBy)) {
+    
+                              await _firestoreService.removeMapKey('Conversations', newTravelPackageModel.groupChatId!, 'unread_message', widget.refundPackage.createdBy);
+                              await _firestoreService.removeItemFromFirestoreList(collectionPath: 'Conversations', documentId:newTravelPackageModel.groupChatId!, fieldName: 'participants', itemToRemove: widget.refundPackage.createdBy);
+                              print('remove user from group chat');
+                            }
+                          }
+
+                          //update the refund application to is accept == true
+                          await _firestoreService.updateField('Refund_Packages',
+                              widget.refundPackage.id, 'is_accept', true);
+
+                          print(
+                              'process update the refund application to is accept == true');
+
+                          setState(() {
+                            isAccept = true;
+                          });
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Refund Failed')));
                         }
-
-                        await _firestoreService.updateField(
-                            'User',
-                            widget.refundPackage.createdBy,
-                            'wallet_credit',
-                            updatedAmount);
-
-                        print('process update wallet credit');
-
-                        //update the refund application to is accept == true
-                        await _firestoreService.updateField('Refund_Packages',
-                            widget.refundPackage.id, 'is_accept', true);
-
-                        print(
-                            'process update the refund application to is accept == true');
-
-                        setState(() {
-                          isAccept = true;
-                        });
-                      } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Refund Failed')));
-                      }
-                    },
-                    child: Text('Accept'),
-                    style: TextButton.styleFrom(
-                      backgroundColor: const Color.fromARGB(
-                          255, 159, 118, 249), // Blue background color
-                      foregroundColor: Colors
-                          .white, // Text color (white text on blue background)
-                      padding: const EdgeInsets.symmetric(
-                          vertical: 8,
-                          horizontal: 12), // Optional: adjust padding
-                    ),
-                  )
-                ],
-              )
-            ],
+                      },
+                      child: Text('Accept'),
+                      style: TextButton.styleFrom(
+                        backgroundColor: const Color.fromARGB(
+                            255, 159, 118, 249), // Blue background color
+                        foregroundColor: Colors
+                            .white, // Text color (white text on blue background)
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 8,
+                            horizontal: 12), // Optional: adjust padding
+                      ),
+                    )
+                  ],
+                )
+              ],
+            ),
           ),
-        ),),
-         if (isAccept)
+        ),
+        if (isAccept)
           Positioned.fill(
             child: Padding(
               padding: const EdgeInsets.all(4.0),

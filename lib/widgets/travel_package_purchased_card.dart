@@ -5,11 +5,13 @@ import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:intl/intl.dart';
 import 'package:shimmer/shimmer.dart'; // Import shimmer package
+import 'package:tripify/models/new_travel_package_model.dart';
 import 'package:tripify/models/refund_package_model.dart';
 import 'package:tripify/models/travel_package_model.dart';
 import 'package:tripify/models/travel_package_purchased_model.dart';
 import 'package:tripify/models/user_model.dart';
 import 'package:tripify/view_models/firestore_service.dart';
+import 'package:tripify/views/new_travel_package_details_page.dart';
 import 'package:tripify/views/travel_package_details_page.dart';
 
 class TravelPackagePurchasedCard extends StatefulWidget {
@@ -31,12 +33,12 @@ class _TravelPackagePurchasedCardState
   FirestoreService _firestoreService = FirestoreService();
   UserModel? travelCompanyUser;
   bool userLoaded = false;
-  TravelPackageModel? travelPackage;
+  NewTravelPackageModel? travelPackage;
   int quantity = 1;
   int resaleQuantity = 0;
   int resaleAvailable = 0;
   int sold = 0;
-  TravelPackageModel? travelPackageResale;
+  NewTravelPackageModel? travelPackageResale;
   bool isRefunding = false;
   bool isRefund = false;
   @override
@@ -57,12 +59,12 @@ class _TravelPackagePurchasedCardState
   void fetchTravelPackageAndTravelCompany() async {
     Map<String, dynamic>? travelPackageMap;
     travelPackageMap = await _firestoreService.getDataById(
-        'Travel_Packages', widget.travelPackagePurchased.travelPackageId);
+        'New_Travel_Packages', widget.travelPackagePurchased.travelPackageId);
     List<Map<String, dynamic>>? travelPackageResaleMapList;
 
     if (travelPackageMap != null) {
       travelPackageResaleMapList = await _firestoreService.getDataByTwoFields(
-          'Travel_Packages',
+          'New_Travel_Packages',
           'reseller_id',
           widget.currentUserId,
           'travel_package_id_for_resale',
@@ -71,11 +73,11 @@ class _TravelPackagePurchasedCardState
       if (travelPackageResaleMapList.isEmpty) {
         for (int i = 0; i < travelPackageResaleMapList.length; i++) {
           travelPackageResale =
-              TravelPackageModel.fromMap(travelPackageResaleMapList[i]);
+              NewTravelPackageModel.fromMap(travelPackageResaleMapList[i]);
         }
       }
       setState(() {
-        travelPackage = TravelPackageModel.fromMap(travelPackageMap!);
+        travelPackage = NewTravelPackageModel.fromMap(travelPackageMap!);
       });
     } else {
       // Handle the case where travelPackageMap is null
@@ -110,7 +112,7 @@ class _TravelPackagePurchasedCardState
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => TravelPackageDetailsPage(
+                      builder: (context) => NewTravelPackageDetailsPage(
                         travelPackage: travelPackage!,
                         currentUserId: widget.currentUserId,
                         travelPackageUser: travelCompanyUser!,
@@ -390,7 +392,7 @@ class _TravelPackagePurchasedCardState
           ),
         ),
         if (widget.travelPackagePurchased.quantity ==
-            widget.travelPackagePurchased.soldQuantity)
+            widget.travelPackagePurchased.soldQuantity || widget.travelPackagePurchased.isRefund==true)
           Positioned.fill(
             child: Padding(
               padding: const EdgeInsets.all(4.0),
@@ -401,14 +403,23 @@ class _TravelPackagePurchasedCardState
                   borderRadius: BorderRadius.circular(12.0),
                 ),
                 child: Center(
-                  child: Text(
+                  child: 
+                  widget.travelPackagePurchased.isRefund?
+                  Text(
+                    'Refunded',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ):Text(
                     'Not Available',
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
                     ),
-                  ),
+                  ) ,
                 ),
               ),
             ),
@@ -558,7 +569,7 @@ class _TravelPackagePurchasedCardState
                   price = double.parse(
                       price.toStringAsFixed(2)); // Round to 2 decimal places
 
-                  TravelPackageModel travelPackageResale = TravelPackageModel(
+                  NewTravelPackageModel travelPackageResale = NewTravelPackageModel(
                       id: '',
                       name: travelPackage!.name,
                       itinerary: travelPackage!.itinerary,
@@ -579,7 +590,7 @@ class _TravelPackagePurchasedCardState
                           widget.travelPackagePurchased.id);
                   try {
                     await _firestoreService.insertDataWithAutoID(
-                        'Travel_Packages', travelPackageResale.toMap());
+                        'New_Travel_Packages', travelPackageResale.toMap());
 
                     int newResaleQuantity = resaleQuantity + quantity;
                     await _firestoreService.updateSubCollectionField(

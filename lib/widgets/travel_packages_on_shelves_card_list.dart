@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:tripify/models/accommodation_requirement_model.dart';
+import 'package:tripify/models/new_travel_package_model.dart';
 import 'package:tripify/models/travel_package_model.dart';
 import 'package:tripify/models/travel_package_purchased_model.dart';
 import 'package:tripify/widgets/accommodation_requirement_card.dart';
@@ -8,7 +9,7 @@ import 'package:tripify/widgets/travel_package_on_shelves_card.dart';
 import 'package:tripify/widgets/travel_package_purchased_card.dart';
 
 class TravelPackageOnShelvesCardList extends StatefulWidget {
-  final List<TravelPackageModel> travelPackagesOnShelvesList;
+  final List<NewTravelPackageModel> travelPackagesOnShelvesList;
   final String currentUserId;
   const TravelPackageOnShelvesCardList(
       {super.key,

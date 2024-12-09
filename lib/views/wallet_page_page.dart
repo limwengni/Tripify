@@ -15,6 +15,7 @@ class _WalletPageState extends State<WalletPage> {
   FirestoreService _firestoreService = FirestoreService();
   String currentUserId = FirebaseAuth.instance.currentUser!.uid;
   UserModel? user;
+  double? cashoutAmount = 0;
   @override
   void initState() {
     super.initState();
@@ -27,44 +28,67 @@ class _WalletPageState extends State<WalletPage> {
     if (userMap != null) {
       setState(() {
         user = UserModel.fromMap(userMap, currentUserId);
-        
+
         walletAmount = user?.walletCredit;
       });
     }
   }
-
-  @override
-  Widget build(BuildContext context) {
-    return  Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              walletAmount!=null?
-              'RM ${walletAmount!.toStringAsFixed(2)}':'RM 0' ,
-              style: const TextStyle(
-                fontSize: 40,
-                fontWeight: FontWeight.bold,
-                color: Colors.black,
-              ),
+@override
+Widget build(BuildContext context) {
+  return Center(
+    child: Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Text(
+          walletAmount != null
+              ? 'RM ${walletAmount!.toStringAsFixed(2)}'
+              : 'RM 0',
+          style: const TextStyle(
+            fontSize: 40,
+            fontWeight: FontWeight.bold,
+            color: Colors.black,
+          ),
+        ),
+        const SizedBox(height: 20),
+        ElevatedButton(
+          onPressed: () {},
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color.fromARGB(255, 159, 118, 249),
+            padding: const EdgeInsets.symmetric(
+              vertical: 15,
+              horizontal: 50,
             ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: (){},
-              style: ElevatedButton.styleFrom(
-                backgroundColor:          const Color.fromARGB(255, 159, 118, 249),
-
-                padding: const EdgeInsets.symmetric(
-                  vertical: 15,
-                  horizontal: 50,
-                ),
-                textStyle: const TextStyle(fontSize: 16),
+            textStyle: const TextStyle(fontSize: 16),
+          ),
+          child: const Text(
+            'Cash Out',
+            style: TextStyle(color: Colors.white),
+          ),
+        ),
+        const SizedBox(height: 20),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center, // Center align the row
+          children: [
+            const Icon(
+              Icons.lock,
+              color: Colors.grey,
+              size: 30,
+            ),
+            const SizedBox(width: 10), // Add spacing between the icon and text
+            Text(
+              cashoutAmount != null
+                  ? 'RM ${cashoutAmount!.toStringAsFixed(2)}'
+                  : 'RM 0',
+              style: const TextStyle(
+                fontSize: 30,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey,
               ),
-              child: const Text('Cash Out', style: TextStyle(color: Colors.white),),
             ),
           ],
         ),
-    
-    );
-  }
+      ],
+    ),
+  );
+}
 }

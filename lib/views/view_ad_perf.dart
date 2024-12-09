@@ -1,19 +1,19 @@
-import 'package:intl/intl.dart';
-import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:tripify/views/ad_wallet_page.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:tripify/models/ad_report_model.dart';
+// import 'package:intl/intl.dart';
+// import 'package:flutter/material.dart';
+// import 'package:cloud_firestore/cloud_firestore.dart';
+// import 'package:tripify/views/ad_wallet_page.dart';
+// import 'package:firebase_auth/firebase_auth.dart';
+// import 'package:tripify/models/ad_report_model.dart';
 
-class ViewAdsPerformancePage extends StatefulWidget {
-  final String adId; // The ID of the ad to fetch the report for
+// // class ViewAdsPerformancePage extends StatefulWidget {
+// //   final String adId; // The ID of the ad to fetch the report for
 
-  const ViewAdsPerformancePage({Key? key, required this.adId})
-      : super(key: key);
+//   const ViewAdsPerformancePage({Key? key, required this.adId})
+//       : super(key: key);
 
-  @override
-  _ViewAdsPerformancePageState createState() => _ViewAdsPerformancePageState();
-}
+// //   @override
+// //   _ViewAdsPerformancePageState createState() => _ViewAdsPerformancePageState();
+// // }
 
 class OverallPerformance {
   int totalClicks;
@@ -45,48 +45,48 @@ class _ViewAdsPerformancePageState extends State<ViewAdsPerformancePage> {
   List<AdReport> adReports = [];
   String adType = '';
 
-  @override
-  void initState() {
-    super.initState();
-    fetchAdReports();
-  }
+//   @override
+//   void initState() {
+//     super.initState();
+//     fetchAdReports();
+//   }
 
   Future<void> fetchAdReports() async {
     final userId = FirebaseAuth.instance.currentUser!.uid;
 
-    try {
-      // Step 1: Fetch travel package purchases
-      final travelPackagesSnapshot = await FirebaseFirestore.instance
-          .collectionGroup('Travel_Packages_Purchased')
-          .where('ad_id', isEqualTo: widget.adId) // Filter by the specific adId
-          .get();
+//     try {
+//       // Step 1: Fetch travel package purchases
+//       final travelPackagesSnapshot = await FirebaseFirestore.instance
+//           .collectionGroup('Travel_Packages_Purchased')
+//           .where('ad_id', isEqualTo: widget.adId) // Filter by the specific adId
+//           .get();
 
-      if (travelPackagesSnapshot.docs.isEmpty) {
-        debugPrint('No travel packages found for adId: ${widget.adId}');
-      } else {
-        for (var doc in travelPackagesSnapshot.docs) {
-          final data = doc.data() as Map<String, dynamic>; // Get data as a map
-          debugPrint('Document ID: ${doc.id}');
-          debugPrint(
-              'Travel Package Data: $data'); // Data of the travel package
-          final adId = data['ad_id'];
-          final price = data['price'];
-          final quantity = data['quantity'];
-        }
-      }
+//       if (travelPackagesSnapshot.docs.isEmpty) {
+//         debugPrint('No travel packages found for adId: ${widget.adId}');
+//       } else {
+//         for (var doc in travelPackagesSnapshot.docs) {
+//           final data = doc.data() as Map<String, dynamic>; // Get data as a map
+//           debugPrint('Document ID: ${doc.id}');
+//           debugPrint(
+//               'Travel Package Data: $data'); // Data of the travel package
+//           final adId = data['ad_id'];
+//           final price = data['price'];
+//           final quantity = data['quantity'];
+//         }
+//       }
 
-      final reports = <AdReport>[];
+//       final reports = <AdReport>[];
 
-      for (var doc in travelPackagesSnapshot.docs) {
-        final purchaseData = doc.data();
-        final adId = purchaseData['ad_id'] as String?;
+//       for (var doc in travelPackagesSnapshot.docs) {
+//         final purchaseData = doc.data();
+//         final adId = purchaseData['ad_id'] as String?;
 
-        if (adId != null && adId.isNotEmpty) {
-          // Step 2: Fetch Ad details using ad_id
-          final adSnapshot = await FirebaseFirestore.instance
-              .collection('Advertisement')
-              .doc(adId)
-              .get();
+//         if (adId != null && adId.isNotEmpty) {
+//           // Step 2: Fetch Ad details using ad_id
+//           final adSnapshot = await FirebaseFirestore.instance
+//               .collection('Advertisement')
+//               .doc(adId)
+//               .get();
 
           if (adSnapshot.exists) {
             final adData = adSnapshot.data()!;
@@ -97,37 +97,37 @@ class _ViewAdsPerformancePageState extends State<ViewAdsPerformancePage> {
             final cpmRate = adData['cpm_rate'] as num? ?? 0;
             final flatRate = adData['flat_rate'] as num? ?? 0;
 
-            final today = DateTime.now();
-            final startOfDay = DateTime(today.year, today.month, today.day);
-            final endOfDay =
-                DateTime(today.year, today.month, today.day, 23, 59, 59);
+//             final today = DateTime.now();
+//             final startOfDay = DateTime(today.year, today.month, today.day);
+//             final endOfDay =
+//                 DateTime(today.year, today.month, today.day, 23, 59, 59);
 
-            final adInteractionsSnapshot = await FirebaseFirestore.instance
-                .collection('AdInteraction')
-                .where('ad_id', isEqualTo: adId)
-                .where('timestamp', isGreaterThanOrEqualTo: startOfDay)
-                .where('timestamp', isLessThanOrEqualTo: endOfDay)
-                .get();
+//             final adInteractionsSnapshot = await FirebaseFirestore.instance
+//                 .collection('AdInteraction')
+//                 .where('ad_id', isEqualTo: adId)
+//                 .where('timestamp', isGreaterThanOrEqualTo: startOfDay)
+//                 .where('timestamp', isLessThanOrEqualTo: endOfDay)
+//                 .get();
 
-            final totalImpressions = adInteractionsSnapshot.docs.length;
-            final uniqueUsers = adInteractionsSnapshot.docs
-                .map((doc) => doc['user_id'])
-                .toSet()
-                .length;
+//             final totalImpressions = adInteractionsSnapshot.docs.length;
+//             final uniqueUsers = adInteractionsSnapshot.docs
+//                 .map((doc) => doc['user_id'])
+//                 .toSet()
+//                 .length;
 
             final clickCount = adInteractionsSnapshot.docs.length;
 
             final revenue = (clickCount / 1000) * cpmRate;
 
-            final engagementRate = totalImpressions > 0
-                ? (clickCount / totalImpressions) * 100
-                : 0;
+//             final engagementRate = totalImpressions > 0
+//                 ? (clickCount / totalImpressions) * 100
+//                 : 0;
 
-            final successRate =
-                totalImpressions > 0 ? (quantity / totalImpressions) * 100 : 0;
+//             final successRate =
+//                 totalImpressions > 0 ? (quantity / totalImpressions) * 100 : 0;
 
-            final frequency =
-                uniqueUsers > 0 ? totalImpressions / uniqueUsers : 0;
+//             final frequency =
+//                 uniqueUsers > 0 ? totalImpressions / uniqueUsers : 0;
 
             final reach = (frequency > 0) ? totalImpressions / frequency : 0;
 
@@ -139,54 +139,54 @@ class _ViewAdsPerformancePageState extends State<ViewAdsPerformancePage> {
 
             final roas = flatRate > 0 ? revenue / flatRate : 0;
 
-            // Step 3: Check if there's already an existing report for the ad on the same day
-            final adReportSnapshot = await FirebaseFirestore.instance
-                .collection('AdReport')
-                .where('ad_id', isEqualTo: adId)
-                .where('report_date', isGreaterThanOrEqualTo: startOfDay)
-                .where('report_date', isLessThanOrEqualTo: endOfDay)
-                .get();
+//             // Step 3: Check if there's already an existing report for the ad on the same day
+//             final adReportSnapshot = await FirebaseFirestore.instance
+//                 .collection('AdReport')
+//                 .where('ad_id', isEqualTo: adId)
+//                 .where('report_date', isGreaterThanOrEqualTo: startOfDay)
+//                 .where('report_date', isLessThanOrEqualTo: endOfDay)
+//                 .get();
 
-            AdReport adReport;
+//             AdReport adReport;
 
-            if (adReportSnapshot.docs.isNotEmpty) {
-              // Update the existing report
-              final existingData = adReportSnapshot.docs.first.data();
-              adReport = AdReport.fromMap(existingData);
+//             if (adReportSnapshot.docs.isNotEmpty) {
+//               // Update the existing report
+//               final existingData = adReportSnapshot.docs.first.data();
+//               adReport = AdReport.fromMap(existingData);
 
-              adReport.clickCount = clickCount;
-              adReport.revenue = revenue.toDouble();
-              adReport.engagementRate = engagementRate.toDouble();
-              adReport.successRate = successRate.toDouble();
-              adReport.reach = reach.toInt();
-              adReport.cpc = cpc.toDouble();
-              adReport.cpm = cpm.toDouble();
-              adReport.roas = roas.toDouble();
+//               adReport.clickCount = clickCount;
+//               adReport.revenue = revenue.toDouble();
+//               adReport.engagementRate = engagementRate.toDouble();
+//               adReport.successRate = successRate.toDouble();
+//               adReport.reach = reach.toInt();
+//               adReport.cpc = cpc.toDouble();
+//               adReport.cpm = cpm.toDouble();
+//               adReport.roas = roas.toDouble();
 
-              await FirebaseFirestore.instance
-                  .collection('AdReport')
-                  .doc(adReportSnapshot.docs.first.id)
-                  .set(adReport.toMap(), SetOptions(merge: true));
-            } else {
-              // Create a new report
-              adReport = AdReport(
-                adId: adId,
-                reportDate: DateTime.now(),
-                clickCount: clickCount,
-                engagementRate: engagementRate.toDouble(),
-                successRate: successRate.toDouble(),
-                reach: reach.toInt(),
-                cpc: cpc.toDouble(),
-                cpm: cpm.toDouble(),
-                flatRate: flatRate.toDouble(),
-                revenue: revenue.toDouble(),
-                roas: roas.toDouble(),
-              );
+//               await FirebaseFirestore.instance
+//                   .collection('AdReport')
+//                   .doc(adReportSnapshot.docs.first.id)
+//                   .set(adReport.toMap(), SetOptions(merge: true));
+//             } else {
+//               // Create a new report
+//               adReport = AdReport(
+//                 adId: adId,
+//                 reportDate: DateTime.now(),
+//                 clickCount: clickCount,
+//                 engagementRate: engagementRate.toDouble(),
+//                 successRate: successRate.toDouble(),
+//                 reach: reach.toInt(),
+//                 cpc: cpc.toDouble(),
+//                 cpm: cpm.toDouble(),
+//                 flatRate: flatRate.toDouble(),
+//                 revenue: revenue.toDouble(),
+//                 roas: roas.toDouble(),
+//               );
 
-              await FirebaseFirestore.instance
-                  .collection('AdReport')
-                  .add(adReport.toMap());
-            }
+//               await FirebaseFirestore.instance
+//                   .collection('AdReport')
+//                   .add(adReport.toMap());
+//             }
 
             final allReportsSnapshot = await FirebaseFirestore.instance
                 .collection('AdReport')
@@ -203,14 +203,14 @@ class _ViewAdsPerformancePageState extends State<ViewAdsPerformancePage> {
         }
       }
 
-      // Update state with reports
-      setState(() {
-        adReports = reports;
-      });
-    } catch (error) {
-      debugPrint('Error fetching ad reports: $error');
-    }
-  }
+//       // Update state with reports
+//       setState(() {
+//         adReports = reports;
+//       });
+//     } catch (error) {
+//       debugPrint('Error fetching ad reports: $error');
+//     }
+//   }
 
   @override
   Widget build(BuildContext context) {
@@ -218,8 +218,8 @@ class _ViewAdsPerformancePageState extends State<ViewAdsPerformancePage> {
     final dateFormat = DateFormat('dd MMM yyyy');
     int reportCount = adReports.length;
 
-    // Calculate overall performance (for example, summing up all reports)
-    final overallPerformance = _calculateOverallPerformance();
+//     // Calculate overall performance (for example, summing up all reports)
+//     final overallPerformance = _calculateOverallPerformance();
 
     return Scaffold(
       appBar: AppBar(
