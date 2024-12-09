@@ -6,11 +6,13 @@ import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:intl/intl.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:tripify/models/new_travel_package_model.dart';
 import 'package:tripify/models/travel_package_model.dart';
 import 'package:tripify/models/travel_package_purchased_model.dart';
 import 'package:tripify/models/user_model.dart';
 import 'package:tripify/view_models/ad_provider.dart';
 import 'package:tripify/view_models/firestore_service.dart';
+import 'package:tripify/views/new_travel_package_details_page.dart';
 import 'package:tripify/views/travel_package_details_page.dart';
 import 'package:tripify/views/create_ads_page.dart';
 import 'package:tripify/views/ad_wallet_page.dart';
@@ -19,7 +21,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:tripify/views/view_ad_perf.dart';
 
 class TravelPackageOnShelvesCard extends StatefulWidget {
-  final TravelPackageModel travelPackageOnShelve;
+  final NewTravelPackageModel travelPackageOnShelve;
   final String currentUserId;
 
   const TravelPackageOnShelvesCard(
@@ -35,7 +37,7 @@ class TravelPackageOnShelvesCard extends StatefulWidget {
 class _TravelPackagePurchasedCardState
     extends State<TravelPackageOnShelvesCard> {
   FirestoreService _firestoreService = FirestoreService();
-  TravelPackageModel? travelPackage;
+  NewTravelPackageModel? travelPackage;
   bool showMore = false; // State to control visibility of the last row
   int? viewNum;
   int? clickNum;
@@ -54,23 +56,23 @@ class _TravelPackagePurchasedCardState
   bool _isEligible = false;
   Timer? _adStatusTimer;
 
-  AdProvider adProvider = new AdProvider();
+  // AdProvider adProvider = new AdProvider();
 
   @override
   void initState() {
     travelPackage = widget.travelPackageOnShelve;
     fetchTravelCompany();
     super.initState();
-    _startAdStatusTimer();
-    checkIfAds(travelPackage!.id);
+    // _startAdStatusTimer();
+    // checkIfAds(travelPackage!.id);
     _fetchWalletStatus();
   }
 
-  void _startAdStatusTimer() {
-    _adStatusTimer = Timer.periodic(Duration(seconds: 5), (timer) {
-      checkIfAds(travelPackage!.id);
-    });
-  }
+  // void _startAdStatusTimer() {
+  //   _adStatusTimer = Timer.periodic(Duration(seconds: 5), (timer) {
+  //     checkIfAds(travelPackage!.id);
+  //   });
+  // }
 
   void dispose() {
     // Always cancel the timer when the widget is disposed to avoid memory leaks
@@ -110,64 +112,64 @@ class _TravelPackagePurchasedCardState
     }
   }
 
-  Future<void> checkAdEligibility(String packageId) async {
-    bool isEligible = await adProvider.checkAdEligibility(packageId);
+  // Future<void> checkAdEligibility(String packageId) async {
+  //   bool isEligible = await adProvider.checkAdEligibility(packageId);
 
-    setState(() {
-      _isEligible = isEligible;
-    });
+  //   setState(() {
+  //     _isEligible = isEligible;
+  //   });
 
-    print("eligible: $_isEligible");
-  }
+  //   print("eligible: $_isEligible");
+  // }
 
-  Future<bool> checkIfAds(String travelPackageId) async {
-    // Fetch the ad details using your provider
-    List<Map<String, dynamic>> adDetails =
-        await adProvider.getAdDetails(travelPackageId);
+  // Future<bool> checkIfAds(String travelPackageId) async {
+  //   // Fetch the ad details using your provider
+  //   List<Map<String, dynamic>> adDetails =
+  //       await adProvider.getAdDetails(travelPackageId);
 
-    // Initialize the status variable
-    String adId = '';
-    String status = '';
-    String renewalType = '';
+  //   // Initialize the status variable
+  //   String adId = '';
+  //   String status = '';
+  //   String renewalType = '';
 
-    // Check if there are ads available
-    if (adDetails.isNotEmpty) {
-      _hasAds = true;
+  //   // Check if there are ads available
+  //   if (adDetails.isNotEmpty) {
+  //     _hasAds = true;
 
-      // Loop through the fetched ad details
-      for (var ad in adDetails) {
-        adId = ad['id']; // Get the ad ID
-        status = ad['status']; // Get the status of the ad
-        renewalType = ad['renewal_type']; // Get renewal type
-      }
+  //     // Loop through the fetched ad details
+  //     for (var ad in adDetails) {
+  //       adId = ad['id']; // Get the ad ID
+  //       status = ad['status']; // Get the status of the ad
+  //       renewalType = ad['renewal_type']; // Get renewal type
+  //     }
 
-      updateAdStatus();
+  //     updateAdStatus();
 
-      // Update the state with the final status
-      setState(() {
-        _adId = adId;
-        _status = status;
-        if (_hasAds && _status == 'ended') {
-          _isAdEnded = true;
-        } else {
-          _isAdEnded = false;
-        }
-        _renewalType = renewalType;
-      });
-    } else {
-      _hasAds = false;
+  //     // Update the state with the final status
+  //     setState(() {
+  //       _adId = adId;
+  //       _status = status;
+  //       if (_hasAds && _status == 'ended') {
+  //         _isAdEnded = true;
+  //       } else {
+  //         _isAdEnded = false;
+  //       }
+  //       _renewalType = renewalType;
+  //     });
+  //   } else {
+  //     _hasAds = false;
 
-      // If no ads, then check if that package can create ads or not
-      await checkAdEligibility(travelPackageId);
-      print("No ads available for this travel package.");
-    }
+  //     // If no ads, then check if that package can create ads or not
+  //     await checkAdEligibility(travelPackageId);
+  //     print("No ads available for this travel package.");
+  //   }
 
-    return _hasAds;
-  }
+  //   return _hasAds;
+  // }
 
-  void updateAdStatus() async {
-    await adProvider.updateAdStatus();
-  }
+  // void updateAdStatus() async {
+  //   await adProvider.updateAdStatus();
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -185,515 +187,513 @@ class _TravelPackagePurchasedCardState
           clickNum!;
       purchaseRate = double.parse(purchaseRate!.toStringAsFixed(2));
     }
-    return GestureDetector(
-        onTap: () {
-          print('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%');
-          print('1: ' + travelPackage!.id);
-          print('2' + widget.currentUserId);
-          print('3' + travelCompanyUser!.role);
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => TravelPackageDetailsPage(
-                travelPackage: travelPackage!,
-                currentUserId: widget.currentUserId,
-                travelPackageUser: travelCompanyUser!,
+    return Stack(children: [
+      GestureDetector(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => NewTravelPackageDetailsPage(
+                  travelPackage: travelPackage!,
+                  currentUserId: widget.currentUserId,
+                  travelPackageUser: travelCompanyUser!,
+                ),
               ),
-            ),
-          );
-        },
-        child: Card(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12.0),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                ClipRRect(
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(12.0),
-                    topRight: Radius.circular(12.0),
-                  ),
-                  child: Container(
-                    height: 150,
-                    width: double.infinity,
-                    child: CarouselSlider.builder(
-                      itemCount: travelPackage!.images!.length,
-                      options: CarouselOptions(
-                        viewportFraction: 1,
-                        autoPlay: true,
-                        enableInfiniteScroll: false,
-                      ),
-                      itemBuilder: (ctx, index, realIdx) {
-                        return Stack(
-                          children: [
-                            Positioned.fill(
-                              child: Shimmer.fromColors(
-                                baseColor: Colors.grey[300]!,
-                                highlightColor: Colors.grey[100]!,
-                                child: Container(
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ),
-                            Image.network(
-                              travelPackage?.images?[index] ?? '',
-                              width: double.infinity,
-                              fit: BoxFit.cover,
-                              loadingBuilder:
-                                  (context, child, loadingProgress) {
-                                if (loadingProgress == null) {
-                                  return child;
-                                }
-                                return Shimmer.fromColors(
+            );
+          },
+          child: Card(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12.0),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ClipRRect(
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(12.0),
+                      topRight: Radius.circular(12.0),
+                    ),
+                    child: Container(
+                      height: 150,
+                      width: double.infinity,
+                      child: CarouselSlider.builder(
+                        itemCount: travelPackage!.images!.length,
+                        options: CarouselOptions(
+                          viewportFraction: 1,
+                          autoPlay: true,
+                          enableInfiniteScroll: false,
+                        ),
+                        itemBuilder: (ctx, index, realIdx) {
+                          return Stack(
+                            children: [
+                              Positioned.fill(
+                                child: Shimmer.fromColors(
                                   baseColor: Colors.grey[300]!,
                                   highlightColor: Colors.grey[100]!,
                                   child: Container(
                                     color: Colors.white,
-                                    height: 150,
-                                    width: double.infinity,
                                   ),
-                                );
-                              },
-                              errorBuilder: (context, error, stackTrace) =>
-                                  Icon(
-                                Icons.broken_image,
-                                size: 50,
-                                color: Colors.grey,
+                                ),
+                              ),
+                              Image.network(
+                                travelPackage?.images?[index] ?? '',
+                                width: double.infinity,
+                                fit: BoxFit.cover,
+                                loadingBuilder:
+                                    (context, child, loadingProgress) {
+                                  if (loadingProgress == null) {
+                                    return child;
+                                  }
+                                  return Shimmer.fromColors(
+                                    baseColor: Colors.grey[300]!,
+                                    highlightColor: Colors.grey[100]!,
+                                    child: Container(
+                                      color: Colors.white,
+                                      height: 150,
+                                      width: double.infinity,
+                                    ),
+                                  );
+                                },
+                                errorBuilder: (context, error, stackTrace) =>
+                                    Icon(
+                                  Icons.broken_image,
+                                  size: 50,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Column(
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    travelPackage?.name ?? 'Loading...',
+                                    style:
+                                        Theme.of(context).textTheme.titleMedium,
+                                  ),
+                                  Text(
+                                      '${DateFormat('yyyy-MM-dd').format(travelPackage!.startDate)} - ${DateFormat('yyyy-MM-dd').format(travelPackage!.endDate)}'),
+                                  const SizedBox(height: 5),
+                                ],
+                              ),
+                            ),
+                            Text(
+                              'RM ' + travelPackage!.price.toString(),
+                              style: Theme.of(context).textTheme.bodyLarge,
+                            ),
+                          ],
+                        ),
+                        Row(
+                          children: [
+                            Text(
+                              'Resell Quantity: ${widget.travelPackageOnShelve.quantity}',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.normal,
+                                color: Colors.black,
                               ),
                             ),
                           ],
-                        );
-                      },
-                    ),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Column(
-                    children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  travelPackage?.name ?? 'Loading...',
-                                  style:
-                                      Theme.of(context).textTheme.titleMedium,
+                        ),
+                        Row(
+                          children: [
+                            Icon(Icons.remove_red_eye),
+                            SizedBox(
+                              width: 5,
+                            ),
+                            Text(viewNum != null ? '$viewNum' : '0'),
+                            Spacer(),
+                            if (_hasAds) ...[
+                              if (!_isAdEnded) ...[
+                                // TextButton(
+                                //   onPressed: () {
+                                //     Navigator.push(
+                                //         context,
+                                //         MaterialPageRoute(
+                                //           builder: (context) =>
+                                //               ViewAdsPerformancePage(adId: _adId),
+                                //         ));
+                                //   },
+                                //   style: TextButton.styleFrom(
+                                //     backgroundColor: Colors.green,
+                                //     foregroundColor: Colors.white,
+                                //     padding: const EdgeInsets.symmetric(
+                                //         vertical: 8, horizontal: 12),
+                                //   ),
+                                //   child: const Text('View Ads Performance'),
+                                // ),
+                              ] else if (_isAdEnded &&
+                                  _renewalType == 'manual') ...[
+                                TextButton(
+                                  onPressed: () {
+                                    // Logic to renew the ad
+                                  },
+                                  style: TextButton.styleFrom(
+                                    backgroundColor: Colors.orange,
+                                    foregroundColor: Colors.white,
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 8, horizontal: 12),
+                                  ),
+                                  child: const Text('Renew Ads'),
                                 ),
-                                Text(
-                                    '${DateFormat('yyyy-MM-dd').format(travelPackage!.startDate)} - ${DateFormat('yyyy-MM-dd').format(travelPackage!.endDate)}'),
-                                const SizedBox(height: 5),
-                              ],
-                            ),
-                          ),
-                          Text(
-                            'RM ' + travelPackage!.price.toString(),
-                            style: Theme.of(context).textTheme.bodyLarge,
-                          ),
-                        ],
-                      ),
-                      Row(
-                        children: [
-                          Text(
-                            'Resell Quantity: ${widget.travelPackageOnShelve.quantity}',
-                            style: const TextStyle(
-                              fontWeight: FontWeight.normal,
-                              color: Colors.black,
-                            ),
-                          ),
-                        ],
-                      ),
-                      Row(
-                        children: [
-                          Icon(Icons.remove_red_eye),
-                          SizedBox(
-                            width: 5,
-                          ),
-                          Text(viewNum != null ? '$viewNum' : '0'),
-                          Spacer(),
-                          if (_hasAds) ...[
-                            if (!_isAdEnded) ...[
+                              ]
+                            ] else if (_isEligible) ...[
                               TextButton(
-                                onPressed: () {
-                                  Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) =>
-                                            ViewAdsPerformancePage(adId: _adId),
-                                      ));
+                                onPressed: () async {
+                                  String currentUserId =
+                                      FirebaseAuth.instance.currentUser!.uid;
+
+                                  // Check the wallet status before proceeding
+                                  DocumentSnapshot userDoc =
+                                      await FirebaseFirestore.instance
+                                          .collection('User')
+                                          .doc(currentUserId)
+                                          .get();
+
+                                  if (!walletActivated) {
+                                    showDialog(
+                                      context: context,
+                                      builder: (context) => AlertDialog(
+                                        title: Text('Activate Wallet'),
+                                        content: Text(
+                                            'You need to activate your wallet to use ads credits and buy ads.'),
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () {
+                                              Navigator.pop(context);
+                                            },
+                                            child: Text('Cancel'),
+                                          ),
+                                          TextButton(
+                                            onPressed: () async {
+                                              Navigator.pop(context);
+
+                                              final bool? result =
+                                                  await Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                  builder: (context) =>
+                                                      WalletPage(
+                                                          walletBalance: 0),
+                                                ),
+                                              );
+
+                                              if (result != null && result) {
+                                                setState(() {
+                                                  walletActivated = true;
+                                                });
+                                              }
+                                            },
+                                            child: Text('Activate Wallet'),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  } else {
+                                    // String id = widget.travelPackageOnShelve.id;
+                                    // Navigator.push(
+                                    //   context,
+                                    //   MaterialPageRoute(
+                                    //     builder: (context) => CreateAdsPage(
+                                    //       travelPackageId: id,
+                                    //       adsCredit: userDoc['ads_credit'] ?? 0,
+                                    //     ),
+                                    //   ),
+                                    // );
+                                  }
                                 },
                                 style: TextButton.styleFrom(
-                                  backgroundColor: Colors.green,
+                                  backgroundColor: Colors.blue,
                                   foregroundColor: Colors.white,
                                   padding: const EdgeInsets.symmetric(
                                       vertical: 8, horizontal: 12),
                                 ),
-                                child: const Text('View Ads Performance'),
-                              ),
-                            ] else if (_isAdEnded &&
-                                _renewalType == 'manual') ...[
-                              TextButton(
-                                onPressed: () {
-                                  // Logic to renew the ad
-                                },
-                                style: TextButton.styleFrom(
-                                  backgroundColor: Colors.orange,
-                                  foregroundColor: Colors.white,
-                                  padding: const EdgeInsets.symmetric(
-                                      vertical: 8, horizontal: 12),
-                                ),
-                                child: const Text('Renew Ads'),
-                              ),
-                            ]
-                          ] else if (_isEligible) ...[
+                                child: const Text('Create Ads'),
+                              )
+                            ],
+                            const SizedBox(width: 8),
+
+                            // Delete button
                             TextButton(
-                              onPressed: () async {
-                                String currentUserId =
-                                    FirebaseAuth.instance.currentUser!.uid;
-
-                                // Check the wallet status before proceeding
-                                DocumentSnapshot userDoc =
-                                    await FirebaseFirestore.instance
-                                        .collection('User')
-                                        .doc(currentUserId)
-                                        .get();
-
-                                if (!walletActivated) {
+                              onPressed: () {
+                                if (widget.travelPackageOnShelve.quantity !=
+                                    widget.travelPackageOnShelve
+                                        .quantityAvailable) {
                                   showDialog(
                                     context: context,
-                                    builder: (context) => AlertDialog(
-                                      title: Text('Activate Wallet'),
-                                      content: Text(
-                                          'You need to activate your wallet to use ads credits and buy ads.'),
-                                      actions: [
-                                        TextButton(
-                                          onPressed: () {
-                                            Navigator.pop(context);
-                                          },
-                                          child: Text('Cancel'),
-                                        ),
-                                        TextButton(
-                                          onPressed: () async {
-                                            Navigator.pop(context);
-
-                                            final bool? result =
-                                                await Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder: (context) =>
-                                                    WalletPage(
-                                                        walletBalance: 0),
-                                              ),
-                                            );
-
-                                            if (result != null && result) {
-                                              setState(() {
-                                                walletActivated = true;
-                                              });
-                                            }
-                                          },
-                                          child: Text('Activate Wallet'),
-                                        ),
-                                      ],
-                                    ),
+                                    builder: (BuildContext context) {
+                                      return AlertDialog(
+                                        title: const Text('Error'),
+                                        content: const Text(
+                                            'You delete the travel package that already have user purchased!'),
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () {
+                                              Navigator.of(context)
+                                                  .pop(); // Close the dialog
+                                            },
+                                            child: const Text('OK'),
+                                          ),
+                                        ],
+                                      );
+                                    },
                                   );
                                 } else {
-                                  String id = widget.travelPackageOnShelve.id;
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => CreateAdsPage(
-                                        travelPackageId: id,
-                                        adsCredit: userDoc['ads_credit'] ?? 0,
-                                      ),
-                                    ),
-                                  );
+                                  _showDeleteDialog(context);
                                 }
                               },
                               style: TextButton.styleFrom(
-                                backgroundColor: Colors.blue,
+                                backgroundColor: Colors.red,
                                 foregroundColor: Colors.white,
                                 padding: const EdgeInsets.symmetric(
                                     vertical: 8, horizontal: 12),
                               ),
-                              child: const Text('Create Ads'),
+                              child: Text('Delete'),
                             )
                           ],
-                          const SizedBox(width: 8),
-
-                          // Delete button
-                          TextButton(
-                            onPressed: () {
-                              if (widget.travelPackageOnShelve.quantity !=
-                                  widget.travelPackageOnShelve
-                                      .quantityAvailable) {
-                                showDialog(
-                                  context: context,
-                                  builder: (BuildContext context) {
-                                    return AlertDialog(
-                                      title: const Text('Error'),
-                                      content: const Text(
-                                          'You delete the travel package that already have user purchased!'),
-                                      actions: [
-                                        TextButton(
-                                          onPressed: () {
-                                            Navigator.of(context)
-                                                .pop(); // Close the dialog
-                                          },
-                                          child: const Text('OK'),
+                        ),
+                        Visibility(
+                            visible:
+                                showMore, // Show row only if `showMore` is true
+                            child: Table(
+                              columnWidths: const {
+                                0: FlexColumnWidth(
+                                    1), // Own column takes 1/3 of the width
+                                1: FlexColumnWidth(
+                                    1), // Available column takes 1/3 of the width
+                                2: FlexColumnWidth(
+                                    1), // Sold column takes 1/3 of the width
+                              },
+                              border: TableBorder(
+                                top: BorderSide(color: Colors.grey, width: 0.5),
+                                left: BorderSide.none,
+                                right: BorderSide.none,
+                                horizontalInside: BorderSide
+                                    .none, // For no borders between rows
+                                verticalInside: BorderSide
+                                    .none, // For no borders between columns
+                              ),
+                              children: [
+                                TableRow(
+                                  children: [
+                                    Padding(
+                                      padding: const EdgeInsets.all(8.0),
+                                      child: RichText(
+                                        textAlign: TextAlign.center,
+                                        text: TextSpan(
+                                          children: [
+                                            const TextSpan(
+                                              text: 'Own: ',
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight
+                                                    .bold, // Bold for "Sold:"
+                                                color: Colors.grey,
+                                              ),
+                                            ),
+                                            TextSpan(
+                                              text:
+                                                  '${widget.travelPackageOnShelve.quantity}',
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight
+                                                    .normal, // Normal for the number
+                                                color: Colors.grey,
+                                              ),
+                                            ),
+                                          ],
                                         ),
-                                      ],
-                                    );
-                                  },
-                                );
-                              } else {
-                                _showDeleteDialog(context);
-                              }
-                            },
-                            style: TextButton.styleFrom(
-                              backgroundColor: Colors.red,
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(
-                                  vertical: 8, horizontal: 12),
-                            ),
-                            child: Text('Delete'),
-                          )
-                        ],
-                      ),
-                      Visibility(
-                          visible:
-                              showMore, // Show row only if `showMore` is true
-                          child: Table(
-                            columnWidths: const {
-                              0: FlexColumnWidth(
-                                  1), // Own column takes 1/3 of the width
-                              1: FlexColumnWidth(
-                                  1), // Available column takes 1/3 of the width
-                              2: FlexColumnWidth(
-                                  1), // Sold column takes 1/3 of the width
-                            },
-                            border: TableBorder(
-                              top: BorderSide(color: Colors.grey, width: 0.5),
-                              left: BorderSide.none,
-                              right: BorderSide.none,
-                              horizontalInside: BorderSide
-                                  .none, // For no borders between rows
-                              verticalInside: BorderSide
-                                  .none, // For no borders between columns
-                            ),
-                            children: [
-                              TableRow(
-                                children: [
-                                  Padding(
-                                    padding: const EdgeInsets.all(8.0),
-                                    child: RichText(
-                                      textAlign: TextAlign.center,
-                                      text: TextSpan(
-                                        children: [
-                                          const TextSpan(
-                                            text: 'Own: ',
-                                            style: const TextStyle(
-                                              fontWeight: FontWeight
-                                                  .bold, // Bold for "Sold:"
-                                              color: Colors.grey,
-                                            ),
-                                          ),
-                                          TextSpan(
-                                            text:
-                                                '${widget.travelPackageOnShelve.quantity}',
-                                            style: const TextStyle(
-                                              fontWeight: FontWeight
-                                                  .normal, // Normal for the number
-                                              color: Colors.grey,
-                                            ),
-                                          ),
-                                        ],
                                       ),
                                     ),
-                                  ),
-                                  Padding(
-                                    padding: const EdgeInsets.all(8.0),
-                                    child: RichText(
-                                      textAlign: TextAlign.center,
-                                      text: TextSpan(
-                                        children: [
-                                          const TextSpan(
-                                            text: 'Available: ',
-                                            style: const TextStyle(
-                                              fontWeight: FontWeight
-                                                  .bold, // Bold for "Sold:"
-                                              color: Colors.grey,
+                                    Padding(
+                                      padding: const EdgeInsets.all(8.0),
+                                      child: RichText(
+                                        textAlign: TextAlign.center,
+                                        text: TextSpan(
+                                          children: [
+                                            const TextSpan(
+                                              text: 'Available: ',
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight
+                                                    .bold, // Bold for "Sold:"
+                                                color: Colors.grey,
+                                              ),
                                             ),
-                                          ),
-                                          TextSpan(
-                                            text:
-                                                '${widget.travelPackageOnShelve.quantityAvailable}',
-                                            style: const TextStyle(
-                                              fontWeight: FontWeight
-                                                  .normal, // Normal for the number
-                                              color: Colors.grey,
+                                            TextSpan(
+                                              text:
+                                                  '${widget.travelPackageOnShelve.quantityAvailable}',
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight
+                                                    .normal, // Normal for the number
+                                                color: Colors.grey,
+                                              ),
                                             ),
-                                          ),
-                                        ],
+                                          ],
+                                        ),
                                       ),
                                     ),
-                                  ),
-                                  Padding(
-                                    padding: const EdgeInsets.all(8.0),
-                                    child: RichText(
-                                      textAlign: TextAlign.center,
-                                      text: TextSpan(
-                                        children: [
-                                          TextSpan(
-                                            text: 'Sold: ',
-                                            style: const TextStyle(
-                                              fontWeight: FontWeight
-                                                  .bold, // Bold for "Sold:"
-                                              color: Colors.grey,
+                                    Padding(
+                                      padding: const EdgeInsets.all(8.0),
+                                      child: RichText(
+                                        textAlign: TextAlign.center,
+                                        text: TextSpan(
+                                          children: [
+                                            TextSpan(
+                                              text: 'Sold: ',
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight
+                                                    .bold, // Bold for "Sold:"
+                                                color: Colors.grey,
+                                              ),
                                             ),
-                                          ),
-                                          TextSpan(
-                                            text:
-                                                '${widget.travelPackageOnShelve.quantity - widget.travelPackageOnShelve.quantityAvailable}',
-                                            style: const TextStyle(
-                                              fontWeight: FontWeight
-                                                  .normal, // Normal for the number
-                                              color: Colors.grey,
+                                            TextSpan(
+                                              text:
+                                                  '${widget.travelPackageOnShelve.quantity - widget.travelPackageOnShelve.quantityAvailable}',
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight
+                                                    .normal, // Normal for the number
+                                                color: Colors.grey,
+                                              ),
                                             ),
-                                          ),
-                                        ],
+                                          ],
+                                        ),
                                       ),
                                     ),
-                                  ),
-                                ],
-                              ),
-                              TableRow(
-                                children: [
-                                  Padding(
-                                    padding: const EdgeInsets.all(8.0),
-                                    child: RichText(
-                                      textAlign: TextAlign.center,
-                                      text: TextSpan(
-                                        children: [
-                                          TextSpan(
-                                            text: 'CTR: ',
-                                            style: const TextStyle(
-                                              fontWeight: FontWeight
-                                                  .bold, // Bold for "Sold:"
-                                              color: Colors.grey,
+                                  ],
+                                ),
+                                TableRow(
+                                  children: [
+                                    Padding(
+                                      padding: const EdgeInsets.all(8.0),
+                                      child: RichText(
+                                        textAlign: TextAlign.center,
+                                        text: TextSpan(
+                                          children: [
+                                            TextSpan(
+                                              text: 'CTR: ',
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight
+                                                    .bold, // Bold for "Sold:"
+                                                color: Colors.grey,
+                                              ),
                                             ),
-                                          ),
-                                          TextSpan(
-                                            text: '${ctr}%',
-                                            style: const TextStyle(
-                                              fontWeight: FontWeight
-                                                  .normal, // Normal for the number
-                                              color: Colors.grey,
+                                            TextSpan(
+                                              text: '${ctr}%',
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight
+                                                    .normal, // Normal for the number
+                                                color: Colors.grey,
+                                              ),
                                             ),
-                                          ),
-                                        ],
+                                          ],
+                                        ),
                                       ),
                                     ),
-                                  ),
-                                  Padding(
-                                    padding: const EdgeInsets.all(8.0),
-                                    child: RichText(
-                                      textAlign: TextAlign.center,
-                                      text: TextSpan(
-                                        children: [
-                                          TextSpan(
-                                            text: 'PR: ',
-                                            style: const TextStyle(
-                                              fontWeight: FontWeight
-                                                  .bold, // Bold for "Sold:"
-                                              color: Colors.grey,
+                                    Padding(
+                                      padding: const EdgeInsets.all(8.0),
+                                      child: RichText(
+                                        textAlign: TextAlign.center,
+                                        text: TextSpan(
+                                          children: [
+                                            TextSpan(
+                                              text: 'PR: ',
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight
+                                                    .bold, // Bold for "Sold:"
+                                                color: Colors.grey,
+                                              ),
                                             ),
-                                          ),
-                                          TextSpan(
-                                            text: purchaseRate != null
-                                                ? '${purchaseRate}%'
-                                                : '0%',
-                                            style: const TextStyle(
-                                              fontWeight: FontWeight
-                                                  .normal, // Normal for the number
-                                              color: Colors.grey,
+                                            TextSpan(
+                                              text: purchaseRate != null
+                                                  ? '${purchaseRate}%'
+                                                  : '0%',
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight
+                                                    .normal, // Normal for the number
+                                                color: Colors.grey,
+                                              ),
                                             ),
-                                          ),
-                                        ],
+                                          ],
+                                        ),
                                       ),
                                     ),
-                                  ),
-                                  Padding(
-                                    padding: const EdgeInsets.all(8.0),
-                                    child: RichText(
-                                      textAlign: TextAlign.center,
-                                      text: TextSpan(
-                                        children: [
-                                          TextSpan(
-                                            text: 'Save: ',
-                                            style: const TextStyle(
-                                              fontWeight: FontWeight
-                                                  .bold, // Bold for "Sold:"
-                                              color: Colors.grey,
+                                    Padding(
+                                      padding: const EdgeInsets.all(8.0),
+                                      child: RichText(
+                                        textAlign: TextAlign.center,
+                                        text: TextSpan(
+                                          children: [
+                                            TextSpan(
+                                              text: 'Save: ',
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight
+                                                    .bold, // Bold for "Sold:"
+                                                color: Colors.grey,
+                                              ),
                                             ),
-                                          ),
-                                          TextSpan(
-                                            text: saveNum != null
-                                                ? '${saveNum}'
-                                                : '0',
-                                            style: const TextStyle(
-                                              fontWeight: FontWeight
-                                                  .normal, // Normal for the number
-                                              color: Colors.grey,
+                                            TextSpan(
+                                              text: saveNum != null
+                                                  ? '${saveNum}'
+                                                  : '0',
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight
+                                                    .normal, // Normal for the number
+                                                color: Colors.grey,
+                                              ),
                                             ),
-                                          ),
-                                        ],
+                                          ],
+                                        ),
                                       ),
                                     ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          )),
-                      TextButton(
-                        onPressed: () {
-                          setState(() {
-                            showMore = !showMore; // Toggle `showMore` state
-                          });
-                        },
-                        child: Text(showMore ? 'Show Less' : 'Show More'),
-                      ),
-                    ],
-                  ),
-                ),
-                if (!widget.travelPackageOnShelve.isAvailable)
-                  Positioned.fill(
-                    child: Padding(
-                      padding: const EdgeInsets.all(4.0),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: Colors.black
-                              .withOpacity(0.5), // Grey transparent overlay
-                          borderRadius: BorderRadius.circular(12.0),
+                                  ],
+                                ),
+                              ],
+                            )),
+                        TextButton(
+                          onPressed: () {
+                            setState(() {
+                              showMore = !showMore; // Toggle `showMore` state
+                            });
+                          },
+                          child: Text(showMore ? 'Show Less' : 'Show More'),
                         ),
-                        child: Center(
-                          child: Text(
-                            'Not Available',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ),
+                      ],
                     ),
                   ),
-              ],
-            )));
+                ],
+              ))),
+      if (!widget.travelPackageOnShelve.isAvailable)
+        Positioned.fill(
+          child: Padding(
+            padding: const EdgeInsets.all(4.0),
+            child: Container(
+              decoration: BoxDecoration(
+                color:
+                    Colors.black.withOpacity(0.5), // Grey transparent overlay
+                borderRadius: BorderRadius.circular(12.0),
+              ),
+              child: Center(
+                child: Text(
+                  'Not Available',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+    ]);
   }
 
   void _showDeleteDialog(BuildContext context) {
@@ -745,7 +745,7 @@ class _TravelPackagePurchasedCardState
                 }
 
                 await _firestoreService.deleteData(
-                    'Travel_Packages', widget.travelPackageOnShelve.id);
+                    'New_Travel_Packages', widget.travelPackageOnShelve.id);
                 Navigator.of(context).pop();
               },
               child: const Text('Confirm'),

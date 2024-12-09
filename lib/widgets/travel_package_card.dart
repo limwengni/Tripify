@@ -2,13 +2,15 @@ import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:shimmer/shimmer.dart'; // Import shimmer package
+import 'package:tripify/models/new_travel_package_model.dart';
 import 'package:tripify/models/travel_package_model.dart';
 import 'package:tripify/models/user_model.dart';
 import 'package:tripify/view_models/firestore_service.dart';
+import 'package:tripify/views/new_travel_package_details_page.dart';
 import 'package:tripify/views/travel_package_details_page.dart';
 
 class TravelPackageCard extends StatefulWidget {
-  final TravelPackageModel travelPackage;
+  final NewTravelPackageModel travelPackage;
   final String currentUserId;
   const TravelPackageCard(
       {super.key, required this.travelPackage, required this.currentUserId});
@@ -45,11 +47,11 @@ class _TravelPackageCardState extends State<TravelPackageCard> {
     Map<String, bool>? clickNum = widget.travelPackage.clickNum;
     if (clickNum != null) {
       if (!clickNum.containsKey(widget.currentUserId)) {
-        await _firestoreService.updateMapField('Travel_Packages',
+        await _firestoreService.updateMapField('New_Travel_Packages',
             widget.travelPackage.id, 'view_num', widget.currentUserId, true);
       }
     } else {
-      await _firestoreService.updateMapField('Travel_Packages',
+      await _firestoreService.updateMapField('New_Travel_Packages',
           widget.travelPackage.id, 'view_num', widget.currentUserId, true);
     }
   }
@@ -80,7 +82,7 @@ class _TravelPackageCardState extends State<TravelPackageCard> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => TravelPackageDetailsPage(
+              builder: (context) => NewTravelPackageDetailsPage(
                 travelPackage: widget.travelPackage,
                 currentUserId: widget.currentUserId,
                 travelPackageUser: travelCompanyUser!,
@@ -249,10 +251,10 @@ class _TravelPackageCardState extends State<TravelPackageCard> {
 
   void changeSave() async {
     if (save == true) {
-      await _firestoreService.updateMapField('Travel_Packages',
+      await _firestoreService.updateMapField('New_Travel_Packages',
           widget.travelPackage.id, 'save_num', widget.currentUserId, false);
     } else {
-      await _firestoreService.updateMapField('Travel_Packages',
+      await _firestoreService.updateMapField('New_Travel_Packages',
           widget.travelPackage.id, 'save_num', widget.currentUserId, true);
     }
     setState(() {

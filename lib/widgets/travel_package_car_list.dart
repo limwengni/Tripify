@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:tripify/models/accommodation_requirement_model.dart';
+import 'package:tripify/models/new_travel_package_model.dart';
 import 'package:tripify/models/travel_package_model.dart';
 import 'package:tripify/widgets/accommodation_requirement_card.dart';
 import 'package:tripify/widgets/travel_package_card.dart';
 
 class TravelPackageCardList extends StatefulWidget {
-  final List<TravelPackageModel> travelPackagesList;
+  final List<NewTravelPackageModel> travelPackagesList;
   final String currentUserId;
   const TravelPackageCardList({super.key, required this.travelPackagesList, required this.currentUserId});
 

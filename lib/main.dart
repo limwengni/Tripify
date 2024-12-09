@@ -12,6 +12,7 @@ import 'package:tripify/views/accommodation_requirement_create_page.dart';
 import 'package:tripify/views/car_rental_requirement_create_page.dart';
 import 'package:tripify/views/car_rental_requirement_page.dart';
 import 'package:tripify/views/conversations_page.dart';
+import 'package:tripify/views/new_travel_package_craete_page.dart';
 import 'package:tripify/views/refund_page.dart';
 import 'package:tripify/views/request_selection_page.dart';
 import 'package:tripify/views/test_map.dart';
@@ -200,7 +201,7 @@ class MainPageState extends State<MainPage> {
     {'title': 'Settings', 'widget': SettingsPage()},
     {
       'title': 'On Shelves Travel Package',
-      'widget': const TravelPackageCreatePage()
+      'widget': const NewTravelPackageCreatePage()
     },
     {'title': 'Wallet', 'widget': WalletPage()},
   ];
@@ -230,7 +231,7 @@ class MainPageState extends State<MainPage> {
   List<Map<String, dynamic>> travelPackageCompanyWidgetItems = [
     {'title': 'Home', 'widget': HomePage()},
     {'title': 'Marketplace', 'widget': MarketplacePage()},
-    {'title': 'On Shelves Travel Package', 'widget': TravelPackageCreatePage()},
+    {'title': 'On Shelves Travel Package', 'widget': NewTravelPackageCreatePage()},
     {'title': 'Profile', 'widget': ProfilePage()},
     {'title': 'Document Repository', 'widget': const DocumentRepositoryPage()},
     {'title': 'Settings', 'widget': SettingsPage()},

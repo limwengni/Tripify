@@ -494,6 +494,26 @@ class FirestoreService {
     }
   }
 
+    Future<void> incrementField(
+      String collection,
+      String documentId,
+      int increaseNum,
+      String field) async {
+    try {
+      // Update the document by incrementing the numeric field
+      await FirebaseFirestore.instance
+          .collection(collection)
+          .doc(documentId)
+          .update({
+        field: FieldValue.increment(increaseNum),
+      });
+
+      print("Field incremented successfully!");
+    } catch (e) {
+      print("Error incrementing field: $e");
+    }
+  }
+
 // Select Data (Get by Field Value)
   Future<List<Map<String, dynamic>>> getDataByField(
       String collection, String field, dynamic value) async {

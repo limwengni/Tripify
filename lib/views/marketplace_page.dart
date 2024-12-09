@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:tripify/models/new_travel_package_model.dart';
 import 'package:tripify/models/travel_package_model.dart';
 import 'package:tripify/view_models/firestore_service.dart';
 import 'package:tripify/widgets/travel_package_car_list.dart';
@@ -12,7 +13,7 @@ class MarketplacePage extends StatefulWidget {
 
 class _MarketplacePageState extends State<MarketplacePage> {
   // List to hold travel packages
-  List<TravelPackageModel> travelPackagesList = [];
+  List<NewTravelPackageModel> travelPackagesList = [];
   FirestoreService firestoreService = FirestoreService();
   String currentUserId = FirebaseAuth.instance.currentUser!.uid;
 
@@ -24,13 +25,13 @@ class _MarketplacePageState extends State<MarketplacePage> {
 
   Future<void> fetchTravelPackages() async {
     List<Map<String, dynamic>> data =
-        await firestoreService.getData('Travel_Packages');
+        await firestoreService.getData('New_Travel_Packages');
 
     // Parse the data into your model
     if (mounted) {
       setState(() {
         travelPackagesList =
-            data.map((item) => TravelPackageModel.fromMap(item)).toList();
+            data.map((item) => NewTravelPackageModel.fromMap(item)).toList();
       });
     }
   }

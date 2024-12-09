@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:tripify/models/new_travel_package_model.dart';
 import 'package:tripify/models/travel_package_model.dart';
 import 'package:tripify/view_models/firestore_service.dart';
 import 'package:tripify/views/ad_wallet_page.dart';
@@ -92,7 +93,7 @@ class _TravelPackageOnShelvesRepoPageState
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: _firestoreService.getStreamDataByTwoField(
-          collection: 'Travel_Packages',
+          collection: 'New_Travel_Packages',
           field: 'created_by',
           value: currentUserId,
           field2: 'is_resale',
@@ -117,9 +118,9 @@ class _TravelPackageOnShelvesRepoPageState
             );
           }
 
-          List<TravelPackageModel> travelPackagesOnShelvesList = snapshot
+          List<NewTravelPackageModel> travelPackagesOnShelvesList = snapshot
               .data!.docs
-              .map((doc) => TravelPackageModel.fromMap(
+              .map((doc) => NewTravelPackageModel.fromMap(
                   doc.data() as Map<String, dynamic>))
               .toList();
 

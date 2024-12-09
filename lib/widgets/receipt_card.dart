@@ -2,6 +2,7 @@ import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:shimmer/shimmer.dart'; // Import shimmer package
+import 'package:tripify/models/new_travel_package_model.dart';
 import 'package:tripify/models/receipt_model.dart';
 import 'package:tripify/models/travel_package_model.dart';
 import 'package:tripify/models/user_model.dart';
@@ -23,7 +24,7 @@ class _ReceiptCardState extends State<ReceiptCard> {
   UserModel? travelCompanyUser;
   bool userLoaded = false;
   bool save = false;
-  TravelPackageModel? travelPackage;
+  NewTravelPackageModel? travelPackage;
 
   @override
   void initState() {
@@ -34,12 +35,12 @@ class _ReceiptCardState extends State<ReceiptCard> {
 
   void fetchTravelPackage() async {
     Map<String, dynamic>? travelPackageMap = await _firestoreService
-        .getDataById('Travel_Packages', widget.receipt.travelPackageId);
+        .getDataById('New_Travel_Packages', widget.receipt.travelPackageId);
 
     print(travelPackageMap);
     if (travelPackageMap != null) {
       setState(() {
-        travelPackage = TravelPackageModel.fromMap(travelPackageMap);
+        travelPackage = NewTravelPackageModel.fromMap(travelPackageMap);
       });
     }
   }
