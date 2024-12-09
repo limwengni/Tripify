@@ -229,57 +229,59 @@ class _HomePageState extends State<HomePage> {
                           // Optionally show an error message
                         }
                       },
-                      child: Card(
-                        margin: const EdgeInsets.symmetric(horizontal: 8.0),
-                        color: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(15),
-                        ),
-                        elevation: 5,
-                        child: SizedBox(
-                          width: 170,
-                          child: Column(
-                            children: [
-                              if (package.images != null &&
-                                  package.images!.isNotEmpty)
-                                ClipRRect(
-                                  borderRadius: BorderRadius.vertical(
-                                    top: Radius.circular(15),
+                      child: Padding(
+                        padding: EdgeInsets.only(bottom: 6),
+                        child: Card(
+                            margin: const EdgeInsets.symmetric(horizontal: 8.0),
+                            color: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(15),
+                            ),
+                            elevation: 5,
+                            child: SizedBox(
+                              width: 170,
+                              child: Column(
+                                children: [
+                                  if (package.images != null &&
+                                      package.images!.isNotEmpty)
+                                    ClipRRect(
+                                      borderRadius: BorderRadius.vertical(
+                                        top: Radius.circular(15),
+                                      ),
+                                      child: Image.network(
+                                        package.images!.first,
+                                        height: 100,
+                                        width: double.infinity,
+                                        fit: BoxFit.cover,
+                                      ),
+                                    ),
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 8.0, vertical: 2.0),
+                                    child: Text(
+                                      package.name,
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
                                   ),
-                                  child: Image.network(
-                                    package.images!.first,
-                                    height: 100,
-                                    width: double.infinity,
-                                    fit: BoxFit.cover,
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 8.0),
+                                    child: Text(
+                                      'Price: \RM${package.price.toStringAsFixed(2)}',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.grey[600],
+                                      ),
+                                    ),
                                   ),
-                                ),
-                              Padding(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 8.0, vertical: 5.0),
-                                child: Text(
-                                  package.name,
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
+                                ],
                               ),
-                              Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(horizontal: 8.0),
-                                child: Text(
-                                  'Price: \RM${package.price.toStringAsFixed(2)}',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.grey[600],
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
+                            )),
                       ),
                     );
                   },

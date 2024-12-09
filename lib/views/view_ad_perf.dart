@@ -16,11 +16,16 @@ class ViewAdsPerformancePage extends StatefulWidget {
 }
 
 class OverallPerformance {
-  final int totalClicks;
-  final int totalImpressions;
-  final double totalRevenue;
-  final double engagementRate;
-  final double successRate;
+  int totalClicks;
+  int totalImpressions;
+  double totalRevenue;
+  double engagementRate;
+  double successRate;
+  int totalReach;
+  double totalFlatRate;
+  double overallCPC;
+  double overallCPM;
+  double overallROAS;
 
   OverallPerformance({
     required this.totalClicks,
@@ -28,11 +33,17 @@ class OverallPerformance {
     required this.totalRevenue,
     required this.engagementRate,
     required this.successRate,
+    required this.totalReach,
+    required this.totalFlatRate,
+    required this.overallCPC,
+    required this.overallCPM,
+    required this.overallROAS,
   });
 }
 
 class _ViewAdsPerformancePageState extends State<ViewAdsPerformancePage> {
   List<AdReport> adReports = [];
+  String adType = '';
 
   @override
   void initState() {
@@ -42,7 +53,6 @@ class _ViewAdsPerformancePageState extends State<ViewAdsPerformancePage> {
 
   Future<void> fetchAdReports() async {
     final userId = FirebaseAuth.instance.currentUser!.uid;
-    String adType = '';
 
     try {
       // Step 1: Fetch travel package purchases
@@ -82,12 +92,10 @@ class _ViewAdsPerformancePageState extends State<ViewAdsPerformancePage> {
             final adData = adSnapshot.data()!;
             final price = purchaseData['price'] as num? ?? 0;
             final quantity = purchaseData['quantity'] as num? ?? 0;
-            adType = adData['ad_type'] ?? 'N/A';
+            adType = adData['ad_type'];
             final cpcRate = adData['cpc_rate'] as num? ?? 0;
             final cpmRate = adData['cpm_rate'] as num? ?? 0;
             final flatRate = adData['flat_rate'] as num? ?? 0;
-
-            final revenue = quantity * price;
 
             final today = DateTime.now();
             final startOfDay = DateTime(today.year, today.month, today.day);
@@ -109,6 +117,8 @@ class _ViewAdsPerformancePageState extends State<ViewAdsPerformancePage> {
 
             final clickCount = adInteractionsSnapshot.docs.length;
 
+            final revenue = (clickCount / 1000) * cpmRate;
+
             final engagementRate = totalImpressions > 0
                 ? (clickCount / totalImpressions) * 100
                 : 0;
@@ -119,10 +129,14 @@ class _ViewAdsPerformancePageState extends State<ViewAdsPerformancePage> {
             final frequency =
                 uniqueUsers > 0 ? totalImpressions / uniqueUsers : 0;
 
-            final reach = totalImpressions / frequency;
+            final reach = (frequency > 0) ? totalImpressions / frequency : 0;
 
-            final cpc = cpcRate > 0 ? revenue / clickCount : 0;
-            final cpm = cpmRate > 0 ? (revenue / totalImpressions) * 1000 : 0;
+            final cpc =
+                (cpcRate > 0 && clickCount > 0) ? revenue / clickCount : 0;
+            final cpm = (cpmRate > 0 && totalImpressions > 0)
+                ? (revenue / totalImpressions) * 1000
+                : 0;
+
             final roas = flatRate > 0 ? revenue / flatRate : 0;
 
             // Step 3: Check if there's already an existing report for the ad on the same day
@@ -174,7 +188,17 @@ class _ViewAdsPerformancePageState extends State<ViewAdsPerformancePage> {
                   .add(adReport.toMap());
             }
 
-            reports.add(adReport);
+            final allReportsSnapshot = await FirebaseFirestore.instance
+                .collection('AdReport')
+                .where('ad_id', isEqualTo: adId)
+                .get();
+
+            final allReports = allReportsSnapshot.docs.map((doc) {
+              final data = doc.data();
+              return AdReport.fromMap(data);
+            }).toList();
+
+            reports.addAll(allReports);
           }
         }
       }
@@ -192,6 +216,7 @@ class _ViewAdsPerformancePageState extends State<ViewAdsPerformancePage> {
   Widget build(BuildContext context) {
     // Format the report date
     final dateFormat = DateFormat('dd MMM yyyy');
+    int reportCount = adReports.length;
 
     // Calculate overall performance (for example, summing up all reports)
     final overallPerformance = _calculateOverallPerformance();
@@ -217,59 +242,96 @@ class _ViewAdsPerformancePageState extends State<ViewAdsPerformancePage> {
                           children: [
                             Text(
                               'Overall Performance',
+                              style: TextStyle(
+                                  fontSize: 18, fontWeight: FontWeight.bold),
                             ),
                             SizedBox(height: 10),
-                            Text(
-                                'Ad Type: ${adType ?? 'N/A'}'), // Use the actual ad type
-                            Text(
-                                'Total Clicks: ${overallPerformance.totalClicks}'),
-                            Text(
-                                'Total Impressions: ${overallPerformance.totalImpressions}'),
-                            Text(
-                                'Total Revenue: \RM${overallPerformance.totalRevenue}'),
-                            Text(
-                                'Overall Engagement Rate: ${overallPerformance.engagementRate}%'),
-                            Text(
-                                'Overall Success Rate: ${overallPerformance.successRate}%'),
+                            // Ad Type Box
+                            Card(
+                              elevation: 3,
+                              child: Container(
+                                width: double.infinity, // Expands to 100% width
+                                padding: const EdgeInsets.all(8.0),
+                                child: Text(
+                                  'Ad Type: ${adType ?? 'N/A'}',
+                                  style: TextStyle(fontSize: 16),
+                                ),
+                              ),
+                            ),
+                            SizedBox(height: 10),
+                            Column(
+                              children: [
+                                // First Row for Total Clicks, Total Cost, and ROAS
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    // Total Clicks Box
+                                    _buildPerformanceBox(
+                                      label: 'Total Clicks',
+                                      value: overallPerformance.totalClicks
+                                          .toString(),
+                                    ),
+                                    // Total Cost Box
+                                    _buildPerformanceBox(
+                                      label: 'Total Cost',
+                                      value:
+                                          'RM ${overallPerformance.totalFlatRate.toStringAsFixed(2)}',
+                                    ),
+                                    // ROAS Box
+                                    _buildPerformanceBox(
+                                      label: 'ROAS',
+                                      value: overallPerformance.overallROAS
+                                          .toStringAsFixed(2),
+                                    ),
+                                  ],
+                                ),
+                                SizedBox(height: 10),
+
+                                // Second Row for Total Revenue and Reach
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    // Total Revenue Box
+                                    _buildPerformanceBox(
+                                      label: 'Total Revenue',
+                                      value:
+                                          'RM ${overallPerformance.totalRevenue.toStringAsFixed(2)}',
+                                    ),
+                                    // Reach Box
+                                    _buildPerformanceBox(
+                                      label: 'Reach',
+                                      value: overallPerformance.totalReach
+                                          .toString(),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
                           ],
                         ),
                       ),
                     ),
                   ),
 
-                  // Daily Report Cards
-                  ListView.builder(
-                    shrinkWrap:
-                        true, // This makes the ListView behave like a child of SingleChildScrollView
-                    itemCount: adReports.length,
-                    itemBuilder: (context, index) {
-                      final report = adReports[index];
-
-                      return Card(
-                        margin: const EdgeInsets.symmetric(
-                            vertical: 8, horizontal: 16),
-                        child: ListTile(
-                          title: Text('Ad ID: ${report.adId}'), // Show Ad ID
-                          subtitle: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                  'Report Date: ${dateFormat.format(report.reportDate)}'),
-                              Text('Click Count: ${report.clickCount}'),
-                              Text(
-                                  'Engagement Rate: ${report.engagementRate}%'),
-                              Text('Success Rate: ${report.successRate}%'),
-                              Text('Reach: ${report.reach}'),
-                              Text('CPC: \RM${report.cpc}'),
-                              Text('CPM: \RM${report.cpm}'),
-                              Text('Flat Rate: \RM${report.flatRate}'),
-                              Text('Revenue: \RM${report.revenue}'),
-                              Text('ROAS: ${report.roas}'),
-                            ],
-                          ),
+                  // All Reports Section
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "All Reports ($reportCount)",
+                          style: TextStyle(
+                              fontSize: 18, fontWeight: FontWeight.bold),
                         ),
-                      );
-                    },
+                        SizedBox(height: 10),
+                        ...adReports.map((report) {
+                          return _buildReportCard(report, dateFormat);
+                        }).toList(),
+                      ],
+                    ),
                   ),
                 ],
               ),
@@ -277,10 +339,63 @@ class _ViewAdsPerformancePageState extends State<ViewAdsPerformancePage> {
     );
   }
 
+// Helper method for creating performance boxes
+  Widget _buildPerformanceBox({required String label, required String value}) {
+    return Flexible(
+      child: Card(
+        elevation: 3,
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Text(
+                label,
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+              ),
+              SizedBox(height: 5),
+              Text(
+                value,
+                style: TextStyle(fontSize: 16),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildReportCard(AdReport report, DateFormat dateFormat) {
+    return Card(
+      margin: const EdgeInsets.symmetric(vertical: 8),
+      child: ListTile(
+        title: Text('Ad ID: ${report.adId}'),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Report Date: ${dateFormat.format(report.reportDate)}'),
+            Text('Click Count: ${report.clickCount}'),
+            Text('Engagement Rate: ${report.engagementRate}%'),
+            Text('Success Rate: ${report.successRate}%'),
+            Text('Reach: ${report.reach}'),
+            Text('CPC: \RM${report.cpc}'),
+            Text('CPM: \RM${report.cpm}'),
+            Text('Flat Rate: \RM${report.flatRate}'),
+            Text('Revenue: \RM${report.revenue}'),
+            Text('ROAS: ${report.roas}'),
+          ],
+        ),
+      ),
+    );
+  }
+
   OverallPerformance _calculateOverallPerformance() {
     // Initialize variables for overall performance
     int totalClicks = 0;
     int totalImpressions = 0;
+    int totalReach = 0;
+    double totalFlatRate = 0;
     double totalRevenue = 0;
     double totalEngagementRate = 0;
     double totalSuccessRate = 0;
@@ -288,9 +403,9 @@ class _ViewAdsPerformancePageState extends State<ViewAdsPerformancePage> {
     // Sum up the data from all reports
     for (var report in adReports) {
       totalClicks += report.clickCount;
-      totalImpressions += report
-          .clickCount; // Or calculate differently if impressions are tracked separately
       totalRevenue += report.revenue;
+      totalReach += report.reach;
+      totalFlatRate = report.flatRate;
       totalEngagementRate +=
           report.engagementRate; // If averaging, divide by count later
       totalSuccessRate +=
@@ -302,6 +417,10 @@ class _ViewAdsPerformancePageState extends State<ViewAdsPerformancePage> {
         totalClicks > 0 ? totalEngagementRate / adReports.length : 0;
     double averageSuccessRate =
         totalClicks > 0 ? totalSuccessRate / adReports.length : 0;
+    double overallCPC = totalClicks > 0 ? totalFlatRate / totalClicks : 0;
+    double overallCPM =
+        totalReach > 0 ? totalFlatRate / (totalReach / 1000) : 0;
+    double overallROAS = totalFlatRate > 0 ? totalRevenue / totalFlatRate : 0;
 
     return OverallPerformance(
       totalClicks: totalClicks,
@@ -309,6 +428,11 @@ class _ViewAdsPerformancePageState extends State<ViewAdsPerformancePage> {
       totalRevenue: totalRevenue,
       engagementRate: averageEngagementRate,
       successRate: averageSuccessRate,
+      totalReach: totalReach,
+      totalFlatRate: totalFlatRate,
+      overallCPC: overallCPC,
+      overallCPM: overallCPM,
+      overallROAS: overallROAS,
     );
   }
 }
