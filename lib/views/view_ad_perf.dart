@@ -8,7 +8,9 @@ import 'package:tripify/models/ad_report_model.dart';
 
 class ViewAdsPerformancePage extends StatefulWidget {
   final String adId;
-  const ViewAdsPerformancePage({Key? key, required this.adId})
+  final bool paused;
+  const ViewAdsPerformancePage(
+      {Key? key, required this.adId, required this.paused})
       : super(key: key);
 
   @override
@@ -51,7 +53,11 @@ class _ViewAdsPerformancePageState extends State<ViewAdsPerformancePage> {
   @override
   void initState() {
     super.initState();
-    fetchAdReports();
+    if (widget.paused == false) {
+      fetchAdReports();
+    } else {
+      fetchHistoricalAdReports();
+    }
   }
 
   final dateFormat = DateFormat('dd MMM yyyy');
@@ -259,6 +265,39 @@ class _ViewAdsPerformancePageState extends State<ViewAdsPerformancePage> {
     }
   }
 
+  Future<void> fetchHistoricalAdReports() async {
+    try {
+      // Fetch historical reports directly using ad_id
+      final adReportSnapshot = await FirebaseFirestore.instance
+          .collection('AdReport')
+          .where('ad_id', isEqualTo: widget.adId)
+          .get();
+
+      if (adReportSnapshot.docs.isEmpty) {
+        debugPrint('No historical reports found for adId: ${widget.adId}');
+        setState(() {
+          adReports = [];
+        });
+      } else {
+        // Parse the reports into a list of AdReport objects
+        final reports = adReportSnapshot.docs.map((doc) {
+          final data = doc.data();
+          return AdReport.fromMap(data);
+        }).toList();
+
+        // Update state with fetched reports
+        setState(() {
+          adReports = reports;
+        });
+
+        debugPrint(
+            'Fetched ${reports.length} historical reports for adId: ${widget.adId}');
+      }
+    } catch (error) {
+      debugPrint('Error fetching historical ad reports: $error');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final dateFormat = DateFormat('dd MMM yyyy');
@@ -463,7 +502,7 @@ class _ViewAdsPerformancePageState extends State<ViewAdsPerformancePage> {
 
                         // Filter Section: Date Range Picker
                         Padding(
-                          padding: const EdgeInsets.all(8.0),
+                          padding: const EdgeInsets.all(4.0),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -475,9 +514,6 @@ class _ViewAdsPerformancePageState extends State<ViewAdsPerformancePage> {
                                   ),
                                 ],
                               ),
-                              SizedBox(
-                                  height:
-                                      10), // Adding space between the button and the date range text
 
                               // If the date range is selected, show it
                               if (startDate != null && endDate != null)
@@ -496,7 +532,9 @@ class _ViewAdsPerformancePageState extends State<ViewAdsPerformancePage> {
 
                         // Displaying the list of reports based on the filter
                         if (filteredReports.isEmpty)
-                          Center(child:Text("No reports found for the selected date range.")),
+                          Center(
+                              child: Text(
+                                  "No reports found for the selected date range.")),
                         ...filteredReports.map((report) {
                           return _buildReportCard(report, dateFormat);
                         }).toList(),

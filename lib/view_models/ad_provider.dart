@@ -90,6 +90,107 @@ class AdProvider with ChangeNotifier {
     }
   }
 
+  Future<void> renewAdvertisement(String adId, Advertisement updatedAd,
+      int renewalCost, BuildContext context) async {
+    try {
+      String currentUserId = FirebaseAuth.instance.currentUser!.uid;
+      DocumentSnapshot userDoc =
+          await _db.collection('User').doc(currentUserId).get();
+
+      if (userDoc.exists) {
+        int currentAdsCredit = userDoc['ads_credit'] ?? 0;
+
+        if (currentAdsCredit < renewalCost) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text('Insufficient ads credit to renew the ad.'),
+            backgroundColor: Colors.red,
+          ));
+          return;
+        }
+
+        // Fetch the existing ad
+        DocumentReference adRef = _db.collection('Advertisement').doc(adId);
+        DocumentSnapshot adSnapshot = await adRef.get();
+
+        if (!adSnapshot.exists) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text('Advertisement not found for renewal.'),
+            backgroundColor: Colors.red,
+          ));
+          return;
+        }
+
+        WriteBatch batch = FirebaseFirestore.instance.batch();
+
+        // Assuming ad data contains fields like 'start_date', 'end_date', and 'ad_type'
+        var adData = adSnapshot.data() as Map<String, dynamic>;
+
+        DateTime now = DateTime.now();
+        String transactionType = 'adspurchase';
+
+        batch.set(
+          FirebaseFirestore.instance.collection('AdsCredTransaction').doc(),
+          {
+            'user_id': currentUserId,
+            'amount': renewalCost,
+            'created_at': now,
+            'type': 'adspurchase',
+          },
+        );
+
+        batch.update(adRef, {
+          'start_date': updatedAd.startDate,
+          'end_date': updatedAd.endDate,
+          'ad_type': updatedAd.adType,
+          'status': 'ongoing',
+        });
+
+        // Add new AdReport for the renewal period
+        AdReport adReport = AdReport(
+          adId: adId,
+          reportDate: DateTime.now(),
+          clickCount: 0,
+          engagementRate: 0.0,
+          successRate: 0.0,
+          reach: 0,
+          cpc: updatedAd.cpcRate,
+          cpm: updatedAd.cpmRate,
+          flatRate: updatedAd.flatRate,
+          revenue: 0.0,
+          roas: 0.0,
+        );
+
+        batch.set(_db.collection('AdReport').doc(), adReport.toMap());
+
+        // Update ads credit after renewal
+        int newAdsCredit = currentAdsCredit - renewalCost;
+        batch.update(_db.collection('User').doc(currentUserId), {
+          'ads_credit': newAdsCredit,
+        });
+
+        await batch.commit();
+
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('Advertisement renewed successfully!'),
+          backgroundColor: Color.fromARGB(255, 159, 118, 249),
+        ));
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('Failed to renew advertisement.'),
+          backgroundColor: Colors.red,
+        ));
+      }
+    } catch (e) {
+      print("Error renewing advertisement: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('An error occurred while renewing the advertisement.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
   Future<void> updateAdStatus() async {
     try {
       // Get the current date

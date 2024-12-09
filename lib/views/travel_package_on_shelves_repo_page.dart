@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -24,10 +25,25 @@ class _TravelPackageOnShelvesRepoPageState
   int adsCredit = 0;
   int walletBalance = 0;
 
+  Timer? _timer;
+
   @override
   void initState() {
     super.initState();
     walletBalance = widget.adsCredit;
+    _startWalletBalanceFetcher();
+  }
+
+  void _startWalletBalanceFetcher() {
+    _timer = Timer.periodic(Duration(seconds: 5), (timer) {
+      _fetchWalletBal();
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
   }
 
   Future<void> _fetchWalletBal() async {

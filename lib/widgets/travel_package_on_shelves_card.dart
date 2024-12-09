@@ -7,12 +7,14 @@ import 'package:image_cropper/image_cropper.dart';
 import 'package:intl/intl.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:tripify/models/new_travel_package_model.dart';
+import 'package:tripify/models/ad_model.dart';
 import 'package:tripify/models/travel_package_model.dart';
 import 'package:tripify/models/travel_package_purchased_model.dart';
 import 'package:tripify/models/user_model.dart';
 import 'package:tripify/view_models/ad_provider.dart';
 import 'package:tripify/view_models/firestore_service.dart';
 import 'package:tripify/views/new_travel_package_details_page.dart';
+import 'package:tripify/views/renew_ads_page.dart';
 import 'package:tripify/views/travel_package_details_page.dart';
 import 'package:tripify/views/create_ads_page.dart';
 import 'package:tripify/views/ad_wallet_page.dart';
@@ -47,6 +49,7 @@ class _TravelPackagePurchasedCardState
 
   bool _hasAds = false;
   bool _isAdEnded = false;
+  bool _isAdPaused = false;
   TextButton? actionButton;
   List<Map<String, dynamic>> _adDetails = [];
   String _adId = '';
@@ -56,7 +59,38 @@ class _TravelPackagePurchasedCardState
   bool _isEligible = false;
   Timer? _adStatusTimer;
 
+  String? _selectedAdType;
+  int _totalPrice = 0;
+  int adsCredit = 0;
+  DateTime? _startDate;
+  DateTime? _endDate;
+  bool _isRenewalInProgress = false;
+
   AdProvider adProvider = new AdProvider();
+
+  final Map<String, Map<String, dynamic>> _adPackages = {
+    "3 Days": {
+      "duration": 3,
+      "price": 50,
+      "estimatedClicks": 100,
+      "estimatedImpressions": 1000,
+      "flatRate": 50.0,
+    },
+    "7 Days": {
+      "duration": 7,
+      "price": 100,
+      "estimatedClicks": 200,
+      "estimatedImpressions": 2000,
+      "flatRate": 100.0,
+    },
+    "1 Month": {
+      "duration": 30,
+      "price": 300,
+      "estimatedClicks": 600,
+      "estimatedImpressions": 6000,
+      "flatRate": 300.0,
+    },
+  };
 
   @override
   void initState() {
@@ -68,9 +102,156 @@ class _TravelPackagePurchasedCardState
     _fetchWalletStatus();
   }
 
+  Future<void> _renewAdAutomatically() async {
+    try {
+      // Fetch the current advertisement details
+      var adDoc = await FirebaseFirestore.instance
+          .collection('Advertisement')
+          .doc(_adId)
+          .get();
+
+      if (adDoc.exists) {
+        // Get the old ad data
+        var adData = adDoc.data() as Map<String, dynamic>;
+        DateTime oldCreatedAt = adData['created_at'].toDate();
+        DateTime oldEndDate = adData['end_date'].toDate();
+        String oldAdType = adData['ad_type'];
+
+        // Calculate new start and end date
+        DateTime newStartDate =
+            DateTime.now(); // Start from now for the renewal
+        int durationDays = 0;
+
+        // Set duration days based on the ad type
+        if (oldAdType == '3 Days') {
+          durationDays = 3;
+        } else if (oldAdType == '7 Days') {
+          durationDays = 7;
+        } else if (oldAdType == '1 Month') {
+          durationDays = 30; // Adjust this as needed
+        }
+
+        DateTime newEndDate = newStartDate.add(Duration(days: durationDays));
+
+        // Get the current user's ads credit
+        String currentUserId = FirebaseAuth.instance.currentUser!.uid;
+        DocumentSnapshot userDoc = await FirebaseFirestore.instance
+            .collection('User')
+            .doc(currentUserId)
+            .get();
+
+        int adsCredit = userDoc['ads_credit'] ?? 0;
+
+        double _totalPrice = _calculateTotalPrice(adData);
+
+        // Check if the user's ads credit is enough
+        if (adsCredit >= _totalPrice) {
+          // Create a new Advertisement object with updated values
+          Advertisement updatedAd = Advertisement(
+            id: _adId,
+            packageId: widget.travelPackageOnShelve.id,
+            adType: oldAdType, // Keep the same ad type
+            startDate: newStartDate,
+            endDate: newEndDate,
+            status: 'ongoing',
+            renewalType: 'automatic', // Keep the renewal type as 'automatic'
+            createdAt: oldCreatedAt, // Keep the same created_at date
+            cpcRate: adData['cpc_rate'],
+            cpmRate: adData['cpm_rate'],
+            flatRate: adData['flat_rate'],
+          );
+
+          // Proceed with the renewal process
+          await AdProvider().renewAdvertisement(
+            _adId,
+            updatedAd,
+            _totalPrice.toInt(),
+            context,
+          );
+
+          // Update the user's ads credit after the renewal
+          await FirebaseFirestore.instance
+              .collection('User')
+              .doc(currentUserId)
+              .update({
+            'ads_credit':
+                adsCredit - _totalPrice, // Deduct the price from their credit
+          });
+
+          // Notify the user about the successful renewal
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Advertisement renewed successfully!'),
+              backgroundColor: Color.fromARGB(255, 159, 118, 249),
+            ),
+          );
+
+          Navigator.pop(context);
+          Navigator.pop(context, true);
+        } else {
+          // If the user doesn't have enough credit, show an alert
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content:
+                  Text('You don\'t have enough ads credit to renew the ad.'),
+              backgroundColor: Colors.red,
+            ),
+          );
+          setState(() {
+            _isRenewalInProgress = false;
+          });
+        }
+      } else {
+        // Handle the case where the advertisement doesn't exist
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Advertisement not found for renewal.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        setState(() {
+          _isRenewalInProgress = false;
+        });
+      }
+    } catch (e) {
+      // Handle any errors
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('An error occurred during automatic renewal.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      setState(() {
+        _isRenewalInProgress = false;
+      });
+    }
+  }
+
+  double _calculateTotalPrice(Map<String, dynamic> adData) {
+    double price = 0.0;
+    String adType = adData['ad_type'];
+
+    if (adType == '3 Days') {
+      price = 50.0;
+    } else if (adType == '7 Days') {
+      price = 100.0;
+    } else if (adType == '1 Month') {
+      price = 300.0;
+    }
+
+    return price;
+  }
+
   void _startAdStatusTimer() {
     _adStatusTimer = Timer.periodic(Duration(seconds: 5), (timer) {
       checkIfAds(travelPackage!.id);
+
+      print("Ad Status - isAdEnded: $_isAdEnded, Renewal Type: $_renewalType");
+
+      // if (_isAdEnded && _renewalType == 'automatic' && !_isRenewalInProgress) {
+      //   _isRenewalInProgress = true;
+      //   _renewAdAutomatically();
+      // }
     });
   }
 
@@ -151,8 +332,12 @@ class _TravelPackagePurchasedCardState
         _status = status;
         if (_hasAds && _status == 'ended') {
           _isAdEnded = true;
+        } else if (_hasAds && _status == 'paused') {
+          _isAdEnded = false;
+          _isAdPaused = true;
         } else {
           _isAdEnded = false;
+          _isAdPaused = false;
         }
         _renewalType = renewalType;
       });
@@ -169,6 +354,40 @@ class _TravelPackagePurchasedCardState
 
   void updateAdStatus() async {
     await adProvider.updateAdStatus();
+  }
+
+  void _showPausedAdDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Ad Paused'),
+          content: Text(
+              'This ad is paused due to stock running out. You can still view its performance data.'),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('Close'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        ViewAdsPerformancePage(adId: _adId, paused: true),
+                  ),
+                );
+              },
+              child: Text('View Performance'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -317,12 +536,18 @@ class _TravelPackagePurchasedCardState
                               if (!_isAdEnded) ...[
                                 TextButton(
                                   onPressed: () {
-                                    Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) =>
-                                              ViewAdsPerformancePage(adId: _adId),
-                                        ));
+                                    if (_isAdPaused) {
+                                      // Show alert dialog if the ad is paused
+                                      _showPausedAdDialog(context);
+                                    } else {
+                                      Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) =>
+                                                ViewAdsPerformancePage(
+                                                    adId: _adId, paused: false),
+                                          ));
+                                    }
                                   },
                                   style: TextButton.styleFrom(
                                     backgroundColor: Colors.green,
@@ -335,8 +560,31 @@ class _TravelPackagePurchasedCardState
                               ] else if (_isAdEnded &&
                                   _renewalType == 'manual') ...[
                                 TextButton(
-                                  onPressed: () {
+                                  onPressed: () async {
                                     // Logic to renew the ad
+
+                                    String currentUserId =
+                                        FirebaseAuth.instance.currentUser!.uid;
+
+                                    // Check the wallet status before proceeding
+                                    DocumentSnapshot userDoc =
+                                        await FirebaseFirestore.instance
+                                            .collection('User')
+                                            .doc(currentUserId)
+                                            .get();
+
+                                    adsCredit = userDoc['ads_credit'] ?? 0;
+
+                                    Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => RenewAdsPage(
+                                            adId: _adId,
+                                            travelPackageId:
+                                                widget.travelPackageOnShelve.id,
+                                            adsCredit: adsCredit,
+                                          ),
+                                        ));
                                   },
                                   style: TextButton.styleFrom(
                                     backgroundColor: Colors.orange,
@@ -361,6 +609,8 @@ class _TravelPackagePurchasedCardState
                                           .get();
 
                                   if (!walletActivated) {
+                                    adsCredit = userDoc['ads_credit'] ?? 0;
+
                                     showDialog(
                                       context: context,
                                       builder: (context) => AlertDialog(
