@@ -47,7 +47,7 @@ class _WalletPageState extends State<WalletPage> {
       if (userDoc.exists) {
         setState(() {
           walletActivated = userDoc['wallet_activated'] ?? false;
-          walletBalance = userDoc['ads_credit'] ?? 0;
+          walletBalance = (userDoc['ads_credit'] ?? 0).toInt();
           isLoading = false;
         });
       } else {

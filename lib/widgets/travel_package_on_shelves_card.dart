@@ -97,7 +97,7 @@ class _TravelPackagePurchasedCardState
     travelPackage = widget.travelPackageOnShelve;
     fetchTravelCompany();
     super.initState();
-    _startAdStatusTimer();
+    // _startAdStatusTimer();
     checkIfAds(travelPackage!.id);
     _fetchWalletStatus();
   }
@@ -116,6 +116,7 @@ class _TravelPackagePurchasedCardState
         DateTime oldCreatedAt = adData['created_at'].toDate();
         DateTime oldEndDate = adData['end_date'].toDate();
         String oldAdType = adData['ad_type'];
+        String packageId = adData['package_id'];
 
         // Calculate new start and end date
         DateTime newStartDate =
@@ -144,87 +145,117 @@ class _TravelPackagePurchasedCardState
 
         double _totalPrice = _calculateTotalPrice(adData);
 
-        // Check if the user's ads credit is enough
         if (adsCredit >= _totalPrice) {
-          // Create a new Advertisement object with updated values
-          Advertisement updatedAd = Advertisement(
-            id: _adId,
-            packageId: widget.travelPackageOnShelve.id,
-            adType: oldAdType, // Keep the same ad type
-            startDate: newStartDate,
-            endDate: newEndDate,
-            status: 'ongoing',
-            renewalType: 'automatic', // Keep the renewal type as 'automatic'
-            createdAt: oldCreatedAt, // Keep the same created_at date
-            cpcRate: adData['cpc_rate'],
-            cpmRate: adData['cpm_rate'],
-            flatRate: adData['flat_rate'],
-          );
+          var packageDoc = await FirebaseFirestore.instance
+              .collection('New_Travel_Packages')
+              .where('id', isEqualTo: packageId)
+              .limit(1)
+              .get();
 
-          // Proceed with the renewal process
-          await AdProvider().renewAdvertisement(
-            _adId,
-            updatedAd,
-            _totalPrice.toInt(),
-            context,
-          );
+          if (packageDoc.docs.isNotEmpty) {
+            var packageData = packageDoc.docs.first.data();
 
-          // Update the user's ads credit after the renewal
-          await FirebaseFirestore.instance
-              .collection('User')
-              .doc(currentUserId)
-              .update({
-            'ads_credit':
-                adsCredit - _totalPrice, // Deduct the price from their credit
-          });
+            // Create a new Advertisement object with updated values
+            Advertisement updatedAd = Advertisement(
+              id: _adId,
+              packageId: widget.travelPackageOnShelve.id,
+              adType: oldAdType,
+              startDate: newStartDate,
+              endDate: newEndDate,
+              status: 'ongoing',
+              renewalType: 'automatic',
+              createdAt: oldCreatedAt,
+              cpcRate: adData['cpc_rate'],
+              cpmRate: adData['cpm_rate'],
+              flatRate: adData['flat_rate'],
+            );
 
-          // Notify the user about the successful renewal
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Advertisement renewed successfully!'),
-              backgroundColor: Color.fromARGB(255, 159, 118, 249),
-            ),
-          );
+            await AdProvider().renewAdvertisement(
+              _adId,
+              updatedAd,
+              _totalPrice.toInt(),
+              context,
+            );
 
-          Navigator.pop(context);
-          Navigator.pop(context, true);
+            // Update the user's ads credit after the renewal
+            await FirebaseFirestore.instance
+                .collection('User')
+                .doc(currentUserId)
+                .update({
+              'ads_credit': adsCredit - _totalPrice,
+            });
+
+            _showAlertDialog(
+              context,
+              'Success',
+              'Your advertisement for ${packageData['packageName']} has been renewed successfully!',
+            );
+          } else {
+            _showAlertDialog(
+              context,
+              'Error',
+              'Failed to fetch travel package details for renewal.',
+            );
+          }
         } else {
           // If the user doesn't have enough credit, show an alert
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content:
-                  Text('You don\'t have enough ads credit to renew the ad.'),
-              backgroundColor: Colors.red,
-            ),
+          _showAlertDialog(
+            context,
+            'Insufficient Credit',
+            'You do not have enough ads credit to renew the ad.',
           );
-          setState(() {
-            _isRenewalInProgress = false;
-          });
         }
       } else {
-        // Handle the case where the advertisement doesn't exist
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Advertisement not found for renewal.'),
-            backgroundColor: Colors.red,
-          ),
+        _showAlertDialog(
+          context,
+          'Ad Not Found',
+          'Advertisement not found for renewal.',
         );
-        setState(() {
-          _isRenewalInProgress = false;
-        });
       }
     } catch (e) {
       // Handle any errors
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('An error occurred during automatic renewal.'),
-          backgroundColor: Colors.red,
-        ),
+      _showAlertDialog(
+        context,
+        'Error',
+        'An error occurred during automatic renewal.',
       );
-      setState(() {
-        _isRenewalInProgress = false;
-      });
     }
+  }
+
+  void _showAlertDialog(BuildContext context, String title, String message) {
+    final bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDarkMode ? Colors.white : Colors.black;
+    final dialogBackgroundColor =
+        isDarkMode ? const Color(0xFF333333) : Colors.white;
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: dialogBackgroundColor,
+          title: Text(
+            title,
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: textColor,
+            ),
+          ),
+          content: Text(
+            message,
+            style: TextStyle(color: textColor),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(
+                'OK',
+                style: TextStyle(color: textColor),
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   double _calculateTotalPrice(Map<String, dynamic> adData) {
@@ -242,24 +273,24 @@ class _TravelPackagePurchasedCardState
     return price;
   }
 
-  void _startAdStatusTimer() {
-    _adStatusTimer = Timer.periodic(Duration(seconds: 5), (timer) {
-      checkIfAds(travelPackage!.id);
+  // void _startAdStatusTimer() {
+  //   _adStatusTimer = Timer.periodic(Duration(seconds: 5), (timer) {
+  //     checkIfAds(travelPackage!.id);
 
-      print("Ad Status - isAdEnded: $_isAdEnded, Renewal Type: $_renewalType");
+  //     print("Ad Status - isAdEnded: $_isAdEnded, Renewal Type: $_renewalType");
 
-      // if (_isAdEnded && _renewalType == 'automatic' && !_isRenewalInProgress) {
-      //   _isRenewalInProgress = true;
-      //   _renewAdAutomatically();
-      // }
-    });
-  }
+  //     // if (_isAdEnded && _renewalType == 'automatic' && !_isRenewalInProgress) {
+  //     //   _isRenewalInProgress = true;
+  //     //   _renewAdAutomatically();
+  //     // }
+  //   });
+  // }
 
-  void dispose() {
-    // Always cancel the timer when the widget is disposed to avoid memory leaks
-    _adStatusTimer?.cancel();
-    super.dispose();
-  }
+  // void dispose() {
+  //   // Always cancel the timer when the widget is disposed to avoid memory leaks
+  //   _adStatusTimer?.cancel();
+  //   super.dispose();
+  // }
 
   void fetchTravelCompany() async {
     Map<String, dynamic>? userMap;
@@ -341,6 +372,10 @@ class _TravelPackagePurchasedCardState
         }
         _renewalType = renewalType;
       });
+
+      if (_isAdEnded && _renewalType == 'automatic') {
+        _renewAdAutomatically();
+      }
     } else {
       _hasAds = false;
 

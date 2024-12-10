@@ -31,20 +31,26 @@ class _TravelPackageOnShelvesRepoPageState
   void initState() {
     super.initState();
     walletBalance = widget.adsCredit;
-    _startWalletBalanceFetcher();
+    // _startWalletBalanceFetcher();
   }
 
-  void _startWalletBalanceFetcher() {
-    _timer = Timer.periodic(Duration(seconds: 5), (timer) {
-      _fetchWalletBal();
-    });
+  Future<void> _refreshData() async {
+    await _fetchWalletBal();
+
+    setState(() {});
   }
 
-  @override
-  void dispose() {
-    _timer?.cancel();
-    super.dispose();
-  }
+  // void _startWalletBalanceFetcher() {
+  //   _timer = Timer.periodic(Duration(seconds: 5), (timer) {
+  //     _fetchWalletBal();
+  //   });
+  // }
+
+  // @override
+  // void dispose() {
+  //   _timer?.cancel();
+  //   super.dispose();
+  // }
 
   Future<void> _fetchWalletBal() async {
     try {
@@ -57,7 +63,7 @@ class _TravelPackageOnShelvesRepoPageState
 
       if (userDoc.exists) {
         setState(() {
-          walletBalance = userDoc['ads_credit'] ?? 0;
+          walletBalance = (userDoc['ads_credit'] ?? 0).toInt();
         });
       } else {
         setState(() {
@@ -75,77 +81,81 @@ class _TravelPackageOnShelvesRepoPageState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              "Travel Packages On Shelves",
-              style: TextStyle(fontSize: 16),
+        appBar: AppBar(
+          title: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                "Travel Packages On Shelves",
+                style: TextStyle(fontSize: 16),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton.icon(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        WalletPage(walletBalance: widget.adsCredit),
+                  ),
+                ).then((result) {
+                  if (result != null && result) {
+                    _fetchWalletBal();
+                  }
+                });
+              },
+              icon: Icon(Icons.account_balance_wallet),
+              label: Text(
+                'RM${walletBalance.toStringAsFixed(2)}',
+              ),
             ),
           ],
         ),
-        actions: [
-          TextButton.icon(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) =>
-                      WalletPage(walletBalance: widget.adsCredit),
-                ),
-              ).then((result) {
-                if (result != null && result) {
-                  _fetchWalletBal();
-                }
-              });
-            },
-            icon: Icon(Icons.account_balance_wallet),
-            label: Text(
-              'RM${walletBalance.toStringAsFixed(2)}',
+        body: RefreshIndicator(
+          onRefresh: _refreshData,
+          color: Colors.white,
+          backgroundColor: const Color.fromARGB(255, 159, 118, 249),
+          child: StreamBuilder<QuerySnapshot>(
+            stream: _firestoreService.getStreamDataByTwoField(
+              collection: 'New_Travel_Packages',
+              field: 'created_by',
+              value: currentUserId,
+              field2: 'is_resale',
+              value2: false,
+              orderBy: 'created_at', // Assuming you have a `created_at` field
+              descending: true,
             ),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return Center(child: CircularProgressIndicator());
+              }
+
+              if (snapshot.hasError) {
+                return Center(
+                  child: Text('Error: ${snapshot.error}'),
+                );
+              }
+
+              if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                return Center(
+                  child: Text("No travel packages found on shelves."),
+                );
+              }
+
+              List<NewTravelPackageModel> travelPackagesOnShelvesList = snapshot
+                  .data!.docs
+                  .map((doc) => NewTravelPackageModel.fromMap(
+                      doc.data() as Map<String, dynamic>))
+                  .toList();
+
+              return TravelPackageOnShelvesCardList(
+                travelPackagesOnShelvesList: travelPackagesOnShelvesList,
+                currentUserId: currentUserId,
+              );
+            },
           ),
-        ],
-      ),
-      body: StreamBuilder<QuerySnapshot>(
-        stream: _firestoreService.getStreamDataByTwoField(
-          collection: 'New_Travel_Packages',
-          field: 'created_by',
-          value: currentUserId,
-          field2: 'is_resale',
-          value2: false,
-          orderBy: 'created_at', // Assuming you have a `created_at` field
-          descending: true,
-        ),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
-          }
-
-          if (snapshot.hasError) {
-            return Center(
-              child: Text('Error: ${snapshot.error}'),
-            );
-          }
-
-          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-            return Center(
-              child: Text("No travel packages found on shelves."),
-            );
-          }
-
-          List<NewTravelPackageModel> travelPackagesOnShelvesList = snapshot
-              .data!.docs
-              .map((doc) => NewTravelPackageModel.fromMap(
-                  doc.data() as Map<String, dynamic>))
-              .toList();
-
-          return TravelPackageOnShelvesCardList(
-            travelPackagesOnShelvesList: travelPackagesOnShelvesList,
-            currentUserId: currentUserId,
-          );
-        },
-      ),
-    );
+        ));
   }
 }

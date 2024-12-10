@@ -84,8 +84,8 @@ class DocumentRepositoryPage extends StatelessWidget {
 
                     if (userDoc.exists) {
                       var data = userDoc.data() as Map<String, dynamic>?;
-                      adsCredit = data?['ads_credit'] ??
-                          0;
+                      adsCredit = (data?['ads_credit'] ??
+                          0).toInt();
                     } else {
                       adsCredit =
                           0; 

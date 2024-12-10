@@ -173,10 +173,33 @@ class _HomePageState extends State<HomePage> {
                                         isEqualTo: FirebaseAuth
                                                 .instance.currentUser?.uid ??
                                             '')
+                                    .orderBy('timestamp', descending: true)
+                                    .limit(1)
                                     .get();
 
+                            bool hasClickedToday = false;
+
+                            if (existingClickSnapshot.docs.isNotEmpty) {
+                              var lastInteractionTimestamp =
+                                  (existingClickSnapshot.docs.first
+                                          .data()['timestamp'] as Timestamp)
+                                      .toDate();
+                              var lastInteractionDate = DateTime(
+                                  lastInteractionTimestamp.year,
+                                  lastInteractionTimestamp.month,
+                                  lastInteractionTimestamp.day);
+
+                              var today = DateTime.now();
+                              var todayDate =
+                                  DateTime(today.year, today.month, today.day);
+
+                              if (lastInteractionDate == todayDate) {
+                                hasClickedToday = true;
+                              }
+                            }
+
                             // If no previous click exists, track the new click
-                            if (existingClickSnapshot.docs.isEmpty) {
+                            if (!hasClickedToday) {
                               await FirebaseFirestore.instance
                                   .collection('AdInteraction')
                                   .add({
@@ -208,7 +231,8 @@ class _HomePageState extends State<HomePage> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => NewTravelPackageDetailsPage(
+                                builder: (context) =>
+                                    NewTravelPackageDetailsPage(
                                   travelPackage: package,
                                   currentUserId:
                                       FirebaseAuth.instance.currentUser?.uid ??
