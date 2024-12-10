@@ -454,8 +454,8 @@ class _PostDetailPageState extends State<PostDetailPage>
                                 radius: 18,
                                 backgroundColor: Colors.grey,
                                 backgroundImage:
-                                    NetworkImage(userProvider.profilePicUrl),
-                                child: username == ''
+                                    NetworkImage(userProvider.otherUserModel!.profilePic),
+                                child: username != ''
                                     ? null
                                     : Text(
                                         username.substring(0, 1).toUpperCase(),
