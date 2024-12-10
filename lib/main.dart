@@ -12,7 +12,6 @@ import 'package:tripify/views/accommodation_requirement_create_page.dart';
 import 'package:tripify/views/car_rental_requirement_create_page.dart';
 import 'package:tripify/views/car_rental_requirement_page.dart';
 import 'package:tripify/views/conversations_page.dart';
-import 'package:tripify/views/location_page.dart';
 import 'package:tripify/views/new_travel_package_craete_page.dart';
 import 'package:tripify/views/refund_page.dart';
 import 'package:tripify/views/request_selection_page.dart';
@@ -192,7 +191,7 @@ class MainPageState extends State<MainPage> {
     },
     {'title': 'Profile', 'widget': ProfilePage()},
     {'title': 'AI Chat', 'widget': TravelAssistantPage()},
-    {'title': 'Emergency Call', 'widget': const EmergencyCallPage()},
+    {'title': 'Emergency Call', 'widget':  EmergencyCallPage()},
     {'title': 'Document Repository', 'widget': const DocumentRepositoryPage()},
     {'title': 'Language Translator', 'widget': const LanguageTranslatorPage()},
     {
@@ -204,8 +203,7 @@ class MainPageState extends State<MainPage> {
       'title': 'On Shelves Travel Package',
       'widget': const NewTravelPackageCreatePage()
     },
-    {'title': 'Wallet', 'widget': WalletPage()},
-    {'title': 'User Location', 'widget': UserLocation()},
+    {'title': 'Wallet', 'widget': const WalletPage()}
   ];
 
   
