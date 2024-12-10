@@ -16,7 +16,7 @@ class AdProvider with ChangeNotifier {
           await _db.collection('User').doc(currentUserId).get();
 
       if (userDoc.exists) {
-        int currentAdsCredit = userDoc['ads_credit'] ?? 0;
+        int currentAdsCredit = (userDoc['ads_credit'] ?? 0).toInt();
 
         if (currentAdsCredit < adCost) {
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -98,7 +98,7 @@ class AdProvider with ChangeNotifier {
           await _db.collection('User').doc(currentUserId).get();
 
       if (userDoc.exists) {
-        int currentAdsCredit = userDoc['ads_credit'] ?? 0;
+        int currentAdsCredit = (userDoc['ads_credit'] ?? 0).toInt();
 
         if (currentAdsCredit < renewalCost) {
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(

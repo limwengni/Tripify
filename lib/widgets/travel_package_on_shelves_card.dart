@@ -141,7 +141,7 @@ class _TravelPackagePurchasedCardState
             .doc(currentUserId)
             .get();
 
-        int adsCredit = userDoc['ads_credit'] ?? 0;
+        int adsCredit = (userDoc['ads_credit'] ?? 0).toInt();
 
         double _totalPrice = _calculateTotalPrice(adData);
 
@@ -188,7 +188,7 @@ class _TravelPackagePurchasedCardState
             _showAlertDialog(
               context,
               'Success',
-              'Your advertisement for ${packageData['packageName']} has been renewed successfully!',
+              'Your advertisement for ${packageData['name']} has been renewed successfully!',
             );
           } else {
             _showAlertDialog(
@@ -608,7 +608,7 @@ class _TravelPackagePurchasedCardState
                                             .doc(currentUserId)
                                             .get();
 
-                                    adsCredit = userDoc['ads_credit'] ?? 0;
+                                    adsCredit = (userDoc['ads_credit'] ?? 0).toInt();
 
                                     Navigator.push(
                                         context,
@@ -644,7 +644,7 @@ class _TravelPackagePurchasedCardState
                                           .get();
 
                                   if (!walletActivated) {
-                                    adsCredit = userDoc['ads_credit'] ?? 0;
+                                    adsCredit = (userDoc['ads_credit'] ?? 0).toInt();
 
                                     showDialog(
                                       context: context,
@@ -691,7 +691,7 @@ class _TravelPackagePurchasedCardState
                                       MaterialPageRoute(
                                         builder: (context) => CreateAdsPage(
                                           travelPackageId: id,
-                                          adsCredit: userDoc['ads_credit'] ?? 0,
+                                          adsCredit: (userDoc['ads_credit'] ?? 0).toInt(),
                                         ),
                                       ),
                                     );

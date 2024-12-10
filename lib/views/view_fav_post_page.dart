@@ -4,6 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:tripify/models/new_travel_package_model.dart';
+import 'package:tripify/view_models/firestore_service.dart';
+import 'package:tripify/widgets/travel_package_car_list.dart';
+import 'package:tripify/widgets/travel_package_card.dart';
 import 'package:tripify/view_models/post_provider.dart';
 import 'package:tripify/view_models/user_provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -67,7 +73,7 @@ class _FavouriteTravelPostsState extends State<FavouriteTravelPosts> {
     super.initState();
     _fetchUserData();
   }
-  
+
   @override
   Widget build(BuildContext context) {
     final postProvider = Provider.of<PostProvider>(context);
@@ -422,62 +428,82 @@ class FavouriteTravelPackages extends StatefulWidget {
 
 class _FavouriteTravelPackagesState extends State<FavouriteTravelPackages> {
   bool _isLoading = true;
-
-  // Example data for Travel Packages
-  final List<Map<String, String>> travelPackages = [
-    {
-      "title": "Luxury Maldives Getaway",
-      "subtitle": "5 nights at a top resort.",
-      "image": "assets/maldives_getaway.jpg",
-    },
-    {
-      "title": "Adventure in New Zealand",
-      "subtitle": "10 days of adventure sports and sightseeing.",
-      "image": "assets/new_zealand.jpg",
-    },
-  ];
+  List<NewTravelPackageModel> travelPackagesList = [];
+  final String currentUserId = FirebaseAuth.instance.currentUser!.uid;
 
   @override
   void initState() {
     super.initState();
-    // Simulate loading delay before showing the list
-    Future.delayed(const Duration(seconds: 2), () {
-      setState(() {
-        _isLoading = false;
-      });
+    _fetchSavedPackages();
+  }
+
+  Future<void> _fetchSavedPackages() async {
+    await fetchSavedTravelPackages(currentUserId);
+    setState(() {
+      _isLoading = false;
     });
+  }
+
+  Future<void> fetchSavedTravelPackages(String currentUserId) async {
+    try {
+      // Query Firestore to get documents where `save_num` contains the current user ID
+      QuerySnapshot snapshot = await FirebaseFirestore.instance
+          .collection('New_Travel_Packages')
+          .where('save_num.$currentUserId', isEqualTo: true)
+          .get();
+
+      // Parse the data into your model
+      List<Map<String, dynamic>> data = snapshot.docs
+          .map((doc) => doc.data() as Map<String, dynamic>)
+          .toList();
+
+      if (mounted) {
+        setState(() {
+          travelPackagesList =
+              data.map((item) => NewTravelPackageModel.fromMap(item)).toList();
+        });
+      }
+    } catch (e) {
+      print('Error fetching saved travel packages: $e');
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(
-        child: _isLoading
-            ? CircularProgressIndicator() // Show loading indicator
-            : _buildListView(
-                travelPackages), // Show travel packages after loading
-      ),
+    return Center(
+      child: travelPackagesList != null
+          ? Column(
+              children: [
+                Expanded(
+                  child: TravelPackageCardList(
+                    travelPackagesList: travelPackagesList,
+                    currentUserId: currentUserId,
+                  ),
+                ),
+              ],
+            )
+          : Text('No Travel Package Found!'),
     );
   }
 
   // Build ListView for Travel Packages
-  Widget _buildListView(List<Map<String, String>> travelPackages) {
-    return ListView.builder(
-      itemCount: travelPackages.length,
-      itemBuilder: (context, index) {
-        final package = travelPackages[index];
-        return Card(
-          margin: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 15.0),
-          child: ListTile(
-            contentPadding: const EdgeInsets.all(10.0),
-            leading: Image.asset(package["image"]!,
-                width: 60, height: 60, fit: BoxFit.cover),
-            title: Text(package["title"]!),
-            subtitle: Text(package["subtitle"]!),
-            trailing: Icon(Icons.arrow_forward_ios),
-          ),
-        );
-      },
-    );
-  }
+  // Widget _buildListView(List<NewTravelPackageModel> travelPackages) {
+  //   return ListView.builder(
+  //     itemCount: travelPackages.length,
+  //     itemBuilder: (context, index) {
+  //       final package = travelPackages[index];
+  //       return Card(
+  //         margin: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 15.0),
+  //         child: ListTile(
+  //           contentPadding: const EdgeInsets.all(10.0),
+  //           leading: Image.network(package.images,
+  //               width: 60, height: 60, fit: BoxFit.cover),
+  //           title: Text(package.title),
+  //           subtitle: Text(package.subtitle),
+  //           trailing: Icon(Icons.arrow_forward_ios),
+  //         ),
+  //       );
+  //     },
+  //   );
+  // }
 }
