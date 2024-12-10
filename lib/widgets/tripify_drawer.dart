@@ -82,12 +82,7 @@ class TripifyDrawer extends StatelessWidget {
               onItemTapped(14);
               Navigator.pop(context);
             },
-          ),        ListTile(
-            title: const Text('User Location'),
-            onTap: () {
-              onItemTapped(15);
-              Navigator.pop(context);
-            },
+          
           ),
         ],
       ),
