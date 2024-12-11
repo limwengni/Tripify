@@ -24,11 +24,40 @@ class _ItineraryPageState extends State<ItineraryPage> {
   bool isLoading = true;
   bool _isOwner = false;
   String currentUserId = FirebaseAuth.instance.currentUser!.uid;
+  int pendingInvitesCount = 0;
 
   @override
   void initState() {
     super.initState();
     fetchUserItineraries(currentUserId);
+    _fetchPendingInvitesCount(currentUserId).then((count) {
+      setState(() {
+        pendingInvitesCount = count;
+      });
+    });
+  }
+
+  Future<void> _refreshData() async {
+    fetchUserItineraries(currentUserId);
+    int count = await _fetchPendingInvitesCount(currentUserId);
+    setState(() {
+      pendingInvitesCount = count;
+    });
+  }
+
+  Future<int> _fetchPendingInvitesCount(String userId) async {
+    try {
+      final invitesQuerySnapshot = await FirebaseFirestore.instance
+          .collection('ItineraryInvite')
+          .where('user_id', isEqualTo: userId)
+          .where('status', isEqualTo: 'pending')
+          .get();
+
+      return invitesQuerySnapshot.docs.length;
+    } catch (e) {
+      print("Error fetching pending invites count: $e");
+      return 0;
+    }
   }
 
   Future<void> fetchUserItineraries(String userId) async {
@@ -49,18 +78,7 @@ class _ItineraryPageState extends State<ItineraryPage> {
                 ? (data['start_date'] as Timestamp).toDate()
                 : DateTime.parse(data['start_date'] as String),
             numberOfDays: data['number_of_days'],
-            invites: (data['invites'] as List<dynamic>?)
-                    ?.map((invite) => ItineraryInvite(
-                          userId: invite['user_id'],
-                          role: invite['role'],
-                          inviteDate: DateTime.parse(invite['invite_date']),
-                          status: InviteStatus.values.firstWhere(
-                              (e) => e.toString() == invite['status']),
-                        ))
-                    .toList() ??
-                [],
-            members: [], // Members will be added after fetching from ItineraryMember collection
-            dailyItineraries: [], // Update if needed
+            dailyItineraryIds: [], // Update if needed
             createdAt: (data['created_at'] is Timestamp)
                 ? (data['created_at'] as Timestamp).toDate()
                 : DateTime.parse(data['created_at']),
@@ -135,180 +153,181 @@ class _ItineraryPageState extends State<ItineraryPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Column(
-        children: [
-          // Invitations button placed at the right side
-          Padding(
-            padding: const EdgeInsets.all(15),
-            child: Align(
-              alignment: Alignment.topRight,
-              child: GestureDetector(
-                onTap: () {
-                  // Navigate to the InvitationsPage
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => InvitationsPage()),
-                  );
-                },
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
-                  decoration: BoxDecoration(
-                    color: const Color.fromARGB(255, 159, 118, 249),
-                    borderRadius: BorderRadius.circular(25),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(
-                        Icons.mail,
-                        color: Colors.white,
+      body: RefreshIndicator(
+          onRefresh: _refreshData, // Trigger the refresh logic
+          color: Colors.white,
+          backgroundColor: const Color.fromARGB(255, 159, 118, 249),
+          child: Column(
+            children: [
+              // Invitations button placed at the right side
+              Padding(
+                padding: const EdgeInsets.all(15),
+                child: Align(
+                  alignment: Alignment.topRight,
+                  child: GestureDetector(
+                    onTap: () {
+                      // Navigate to the InvitationsPage
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => InvitationsPage()),
+                      );
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 10, horizontal: 15),
+                      decoration: BoxDecoration(
+                        color: const Color.fromARGB(255, 159, 118, 249),
+                        borderRadius: BorderRadius.circular(25),
                       ),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Invites (${getPendingInvites(
-                          itineraries
-                              .expand((itinerary) => itinerary.invites ?? [])
-                              .whereType<ItineraryInvite>()
-                              .toList(),
-                        )})',
-                        style: const TextStyle(color: Colors.white),
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.mail,
+                            color: Colors.white,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Invites ($pendingInvitesCount)',
+                            style: const TextStyle(color: Colors.white),
+                          ),
+                        ],
                       ),
-                    ],
+                    ),
                   ),
                 ),
               ),
-            ),
-          ),
 
-          // List of itineraries
-          isLoading
-              ? Expanded(
-                  child: Center(
-                    child: CircularProgressIndicator(
-                      color: const Color.fromARGB(255, 159, 118, 249),
-                    ),
-                  ),
-                )
-              : Expanded(
-                  child: ListView.builder(
-                    itemCount: itineraries.length,
-                    itemBuilder: (context, index) {
-                      final itinerary = itineraries[index];
-                      DateTime endDate = calculateEndDate(
-                          itinerary.startDate, itinerary.numberOfDays);
-
-                      return Card(
-                        margin: const EdgeInsets.all(10),
-                        elevation: 5,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
+              // List of itineraries
+              isLoading
+                  ? Expanded(
+                      child: Center(
+                        child: CircularProgressIndicator(
+                          color: const Color.fromARGB(255, 159, 118, 249),
                         ),
-                        child: ListTile(
-                          contentPadding: const EdgeInsets.only(
-                              left: 25, top: 10, bottom: 10),
-                          title: Row(
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  itinerary.name,
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 18,
-                                  ),
-                                ),
-                              ),
-                              Text(
-                                '(${getDuration(itinerary.startDate, endDate)})',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  color: Colors.grey[600],
-                                ),
-                              ),
-                            ],
-                          ),
-                          subtitle: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              // Show date range in format: "03 Jan - 09 Jan 2025"
-                              Text(
-                                '${formatDateRange(itinerary.startDate, endDate)}',
-                                style: const TextStyle(fontSize: 16),
-                              ),
-                            ],
-                          ),
-                          trailing: Padding(
-                              padding: const EdgeInsets.all(0),
-                              child: PopupMenuButton<String>(
-                                icon: Icon(Icons.more_vert),
-                                onSelected: (value) {
-                                  // Handle the selected option here
-                                  switch (value) {
-                                    case 'edit':
-                                      // Edit logic
-                                      break;
-                                    case 'delete':
-                                      // Delete logic
-                                      break;
-                                    case 'manage':
-                                      // Manage Members logic
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) =>
-                                              ManageMembersPage(
-                                                  itineraryId: itinerary.id),
-                                        ),
-                                      );
-                                      break;
-                                    case 'copy':
-                                      // Make a copy logic
-                                      break;
-                                    default:
-                                      // Handle any unexpected value if needed
-                                      break;
-                                  }
-                                },
-                                itemBuilder: (BuildContext context) {
-                                  return <PopupMenuEntry<String>>[
-                                    if (_isOwner)
-                                      PopupMenuItem<String>(
-                                        value: 'manage',
-                                        child: Text('Manage Members'),
+                      ),
+                    )
+                  : Expanded(
+                      child: ListView.builder(
+                        itemCount: itineraries.length,
+                        itemBuilder: (context, index) {
+                          final itinerary = itineraries[index];
+                          DateTime endDate = calculateEndDate(
+                              itinerary.startDate, itinerary.numberOfDays);
+
+                          return Card(
+                            margin: const EdgeInsets.all(10),
+                            elevation: 5,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: ListTile(
+                              contentPadding: const EdgeInsets.only(
+                                  left: 25, top: 10, bottom: 10),
+                              title: Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      itinerary.name,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 18,
                                       ),
-                                    if (_isOwner)
-                                      PopupMenuItem<String>(
-                                        value: 'edit',
-                                        child: Text('Edit'),
-                                      ),
-                                    PopupMenuItem<String>(
-                                      value: 'copy',
-                                      child: Text('Make a copy'),
                                     ),
-                                    if (_isOwner)
-                                      PopupMenuItem<String>(
-                                        value: 'delete',
-                                        child: Text('Delete'),
-                                      ),
-                                  ];
-                                },
-                              )),
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => ItineraryDetailPage(
-                                  itinerary: itinerary,
-                                ),
+                                  ),
+                                  Text(
+                                    '(${getDuration(itinerary.startDate, endDate)})',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      color: Colors.grey[600],
+                                    ),
+                                  ),
+                                ],
                               ),
-                            );
-                          },
-                        ),
-                      );
-                    },
-                  ),
-                ),
-        ],
-      ),
+                              subtitle: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  // Show date range in format: "03 Jan - 09 Jan 2025"
+                                  Text(
+                                    '${formatDateRange(itinerary.startDate, endDate)}',
+                                    style: const TextStyle(fontSize: 16),
+                                  ),
+                                ],
+                              ),
+                              trailing: Padding(
+                                  padding: const EdgeInsets.all(0),
+                                  child: PopupMenuButton<String>(
+                                    icon: Icon(Icons.more_vert),
+                                    onSelected: (value) {
+                                      // Handle the selected option here
+                                      switch (value) {
+                                        case 'edit':
+                                          // Edit logic
+                                          break;
+                                        case 'delete':
+                                          // Delete logic
+                                          break;
+                                        case 'manage':
+                                          // Manage Members logic
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) =>
+                                                  ManageMembersPage(
+                                                      itineraryId:
+                                                          itinerary.id),
+                                            ),
+                                          );
+                                          break;
+                                        case 'copy':
+                                          // Make a copy logic
+                                          break;
+                                        default:
+                                          // Handle any unexpected value if needed
+                                          break;
+                                      }
+                                    },
+                                    itemBuilder: (BuildContext context) {
+                                      return <PopupMenuEntry<String>>[
+                                        if (_isOwner)
+                                          PopupMenuItem<String>(
+                                            value: 'manage',
+                                            child: Text('Manage Members'),
+                                          ),
+                                        // if (_isOwner)
+                                        //   PopupMenuItem<String>(
+                                        //     value: 'edit',
+                                        //     child: Text('Edit'),
+                                        //   ),
+                                        PopupMenuItem<String>(
+                                          value: 'copy',
+                                          child: Text('Make a copy'),
+                                        ),
+                                        if (_isOwner)
+                                          PopupMenuItem<String>(
+                                            value: 'delete',
+                                            child: Text('Delete'),
+                                          ),
+                                      ];
+                                    },
+                                  )),
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => ItineraryDetailPage(
+                                      itinerary: itinerary,
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+            ],
+          )),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           Navigator.push(

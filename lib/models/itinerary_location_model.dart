@@ -1,9 +1,11 @@
 class ItineraryLocation {
+  final String id;
   final double latitude; // Latitude of the location
   final double longitude; // Longitude of the location
   final String name;
 
   ItineraryLocation({
+    required this.id,
     required this.latitude,
     required this.longitude,
     required this.name,
@@ -19,8 +21,9 @@ class ItineraryLocation {
   }
 
   // Factory method to create ItineraryLocation from Firestore data
-  factory ItineraryLocation.fromMap(Map<String, dynamic> data) {
+  factory ItineraryLocation.fromMap(Map<String, dynamic> data, String id) {
     return ItineraryLocation(
+      id: id,
       latitude: data['latitude'] ?? 0.0,
       longitude: data['longitude'] ?? 0.0,
       name: data['name'] ?? '',

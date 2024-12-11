@@ -33,6 +33,7 @@ class ItineraryProvider {
         'itinerary_id': itineraryRef.id,
         'user_id': member['user_id'],
         'role': member['role'],
+        'joined_date': DateTime.now(),
       };
 
       batch.set(memberRef, memberData);
@@ -195,5 +196,41 @@ class ItineraryProvider {
     } catch (e) {
       print('Error updating role: $e');
     }
+  }
+
+  // Fetch DayItinerary for a specific itinerary and day
+  Future<List<ItineraryLocation>> _fetchLocationsForDay(
+      String itineraryId, int dayNumber) async {
+    // Fetch DayItinerary for the specified day
+    var dayItinerarySnapshot = await FirebaseFirestore.instance
+        .collection('DayItinerary')
+        .where('itinerary_id', isEqualTo: itineraryId)
+        .where('day_number', isEqualTo: dayNumber)
+        .get();
+
+    if (dayItinerarySnapshot.docs.isEmpty) {
+      return [];
+    }
+
+    // Get the DayItinerary document
+    var dayItineraryData = dayItinerarySnapshot.docs.first.data();
+    List<String> locationIds =
+        List<String>.from(dayItineraryData['location_ids']);
+
+    // Fetch the locations based on locationIds
+    List<ItineraryLocation> locations = [];
+    for (String locationId in locationIds) {
+      var locationSnapshot = await FirebaseFirestore.instance
+          .collection('ItineraryLocation')
+          .doc(locationId)
+          .get();
+
+      if (locationSnapshot.exists) {
+        var locationData = locationSnapshot.data()!;
+        locations.add(ItineraryLocation.fromMap(locationData, locationSnapshot.id));
+      }
+    }
+
+    return locations;
   }
 }
