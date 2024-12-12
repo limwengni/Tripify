@@ -34,6 +34,7 @@ class _CarRentalRequirementCreatePageState
   FirestoreService firestoreService = FirestoreService();
   TextEditingController pickupLocationController = TextEditingController();
   TextEditingController returnLocationController = TextEditingController();
+  bool isLoading = false; // Track loading state
 
   @override
   Widget build(BuildContext context) {
@@ -43,7 +44,7 @@ class _CarRentalRequirementCreatePageState
         title: const Text('Car Rental Request Create'),
       ),
       body: Padding(
-        padding: const EdgeInsets.all(8.0),
+        padding: const EdgeInsets.fromLTRB(8,0,8,0),
         child: Column(
           children: [
             Expanded(
@@ -52,7 +53,6 @@ class _CarRentalRequirementCreatePageState
                   key: _formKey,
                   child: Column(
                     children: [
-                      const SizedBox(height: 15),
                       FormBuilderTextField(
                         name: 'title',
                         decoration: const InputDecoration(
@@ -66,10 +66,10 @@ class _CarRentalRequirementCreatePageState
                       ),
                       const SizedBox(height: 15),
                       placesAutoCompleteTextField(
-                          pickupLocationController, _pickupFocusNode),
+                          pickupLocationController, _pickupFocusNode, 'Pickup Location'),
                       const SizedBox(height: 15),
                       placesAutoCompleteTextField(
-                          returnLocationController, _returnFocusNode),
+                          returnLocationController, _returnFocusNode, 'Return Location'),
                       const SizedBox(height: 15),
                       FormBuilderDateTimePicker(
                         name: 'pickup_date',
@@ -191,9 +191,12 @@ class _CarRentalRequirementCreatePageState
             Container(
               width: double.infinity,
               padding: const EdgeInsets.symmetric(vertical: 10.0),
-              child: MaterialButton(
-                padding: const EdgeInsets.all(15),
-                color: Theme.of(context).colorScheme.secondary,
+              child:isLoading
+                  ? const Center(
+                      child: CircularProgressIndicator()) // Show loader
+                  : MaterialButton(
+                      padding: const EdgeInsets.all(15),
+                      color: const Color.fromARGB(255, 159, 118, 249),
                 onPressed: () async {
                   if (_formKey.currentState?.saveAndValidate() ?? false) {
                     final formValues = _formKey.currentState?.value;
@@ -233,7 +236,7 @@ class _CarRentalRequirementCreatePageState
                     }
                   }
                 },
-                child: const Text('Create'),
+                child: const Text('Create',style: TextStyle(color: Colors.white),),
               ),
             ),
           ],
@@ -243,15 +246,15 @@ class _CarRentalRequirementCreatePageState
   }
 
   placesAutoCompleteTextField(
-      TextEditingController textEditingController, FocusNode focusNode) {
+      TextEditingController textEditingController, FocusNode focusNode, String label) {
     return Container(
       child: GooglePlaceAutoCompleteTextField(
         containerVerticalPadding: 0,
         textEditingController: textEditingController,
         googleAPIKey: "AIzaSyBKL2cfygOtYMNsbA8lMz84HrNnAAHAkc8",
-        inputDecoration: const InputDecoration(
+        inputDecoration:  InputDecoration(
           hintText: "Search your location",
-          labelText: 'Location',
+          labelText: '${label}',
           border: OutlineInputBorder(),
         ),
 

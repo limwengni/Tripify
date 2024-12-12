@@ -15,7 +15,7 @@ class TripifyNavBar extends StatelessWidget {
     final selectedColor =
         const Color.fromARGB(255, 159, 118,249);
     final unselectedColor =
-        const Color.fromARGB(255, 159, 118,249);
+        const Color.fromARGB(255, 0, 0, 0);
  
     return BottomNavigationBar(
       iconSize: 24,

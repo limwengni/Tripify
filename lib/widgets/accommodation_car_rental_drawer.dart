@@ -16,7 +16,7 @@ class AccommodationCarRentalDrawer extends StatelessWidget {
         children: [
           const DrawerHeader(
             decoration: BoxDecoration(
-              color: Colors.blue,
+              color:         const Color.fromARGB(255, 159, 118,249),
             ),
             child: Text('Tripify'),
           ),

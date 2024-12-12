@@ -408,7 +408,7 @@ class _ChatPageState extends State<ChatPage> {
               const SizedBox(width: 5),
               Container(
                 decoration: const BoxDecoration(
-                  color: Colors.green,
+                  color:         const Color.fromARGB(255, 159, 118,249),
                   shape: BoxShape.circle,
                 ),
                 child: IconButton(

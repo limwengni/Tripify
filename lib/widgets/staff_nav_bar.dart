@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
-class AccommodationCarRentalNavBar extends StatelessWidget {
+class StaffNavBar extends StatelessWidget {
   final int currentIndex;
   final ValueChanged<int> onItemTapped;
 
-  const AccommodationCarRentalNavBar({
+  const StaffNavBar({
     super.key,
     required this.currentIndex,
     required this.onItemTapped,
@@ -13,7 +13,7 @@ class AccommodationCarRentalNavBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final selectedColor = const Color.fromARGB(255, 159, 118, 249);
-    final unselectedColor = const Color.fromARGB(0, 0, 0, 0);
+    final unselectedColor = const Color.fromARGB(255, 0, 0, 0);
 
     return BottomNavigationBar(
       iconSize: 24,
@@ -29,17 +29,10 @@ class AccommodationCarRentalNavBar extends StatelessWidget {
         ),
         BottomNavigationBarItem(
           icon: Icon(
-            currentIndex == 1 ? Icons.local_taxi : Icons.local_taxi_outlined,
+            currentIndex == 1 ? Icons.settings : Icons.settings_outlined,
             color: currentIndex == 1 ? selectedColor : unselectedColor,
           ),
-          label: 'Request',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(
-            currentIndex > 1 ? Icons.more_rounded : Icons.more_outlined,
-            color: currentIndex > 1 ? selectedColor : unselectedColor,
-          ),
-          label: 'More',
+          label: 'Setting',
         ),
       ],
       currentIndex: currentIndex,

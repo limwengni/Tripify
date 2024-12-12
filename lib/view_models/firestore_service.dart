@@ -324,6 +324,31 @@ class FirestoreService {
       return [];
     }
   }
+Stream<QuerySnapshot<Map<String, dynamic>>> getStreamData({
+  required String collection,
+  bool descending = false,
+  String? orderBy,
+}) {
+  try {
+    // Start with a reference to the collection
+    CollectionReference<Map<String, dynamic>> collectionRef =
+        _db.collection(collection);
+
+    // Apply optional ordering
+    Query<Map<String, dynamic>> query = collectionRef;
+    if (orderBy != null) {
+      query = query.orderBy(orderBy, descending: descending);
+    }
+
+    // Return the stream of snapshots
+    return query.snapshots();
+  } catch (e, stacktrace) {
+    // Log the error with context and stacktrace
+    print("Error fetching stream data for collection '$collection': $e");
+    print("Stacktrace: $stacktrace");
+    return const Stream.empty(); // Fallback for errors
+  }
+}
 
   Stream<QuerySnapshot> getStreamDataByField({
     required String collection,
