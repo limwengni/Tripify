@@ -104,6 +104,101 @@ class _ViewAdsPerformancePageState extends State<ViewAdsPerformancePage> {
     return adReports;
   }
 
+  Future<int> getQuantityByDate(
+      String adId, DateTime startOfDay, DateTime endOfDay) async {
+    // Step 1: Fetch travel package data by adId
+    final travelPackageSnapshot = await FirebaseFirestore.instance
+        .collectionGroup(
+            'Travel_Packages_Purchased') // This searches all 'Travel_Packages_Purchased' subcollections under any user
+        .where('ad_id', isEqualTo: adId)
+        .get();
+
+    debugPrint(
+        'Found ${travelPackageSnapshot.docs.length} packages for adId: $adId');
+
+    if (travelPackageSnapshot.docs.isEmpty) {
+      debugPrint('No travel packages found for adId: $adId');
+      return 0;
+    }
+
+    // Step 2: Extract package IDs from travel packages
+    List<String> packageIds = travelPackageSnapshot.docs
+        .map((doc) => doc['travel_package_id'] as String)
+        .toList();
+
+    print("package id: $packageIds");
+
+    // Step 3: Fetch receipts related to these packages
+    final userReceiptsSnapshot = await FirebaseFirestore.instance
+        .collectionGroup('Receipts')
+        .where('travel_package_id', isEqualTo: packageIds.first)
+        .where('created_at', isGreaterThanOrEqualTo: startOfDay)
+        .where('created_at', isLessThanOrEqualTo: endOfDay)
+        .get();
+
+    if (userReceiptsSnapshot.docs.isEmpty) {
+      debugPrint('No receipts found for these packages');
+      return 0;
+    }
+
+    // Step 4: Process the receipts and count sales by date
+    int totalQuantity = 0;
+
+    for (var doc in userReceiptsSnapshot.docs) {
+      final data = doc.data() as Map<String, dynamic>;
+
+      // Get the relevant fields from the receipt
+      final ticketIdList = List<String>.from(data['ticket_id_list'] ?? []);
+      final createdAt = (data['created_at'] as Timestamp).toDate();
+
+      debugPrint('Ticket ID List: $ticketIdList');
+      debugPrint('Created At: $createdAt');
+
+      if (createdAt.isAfter(startOfDay) && createdAt.isBefore(endOfDay)) {
+        totalQuantity += ticketIdList.length;
+      }
+    }
+
+    return totalQuantity;
+  }
+
+  // Function to check if the ad is renewed
+  bool isAdRenewed(List<AdReport> allReports, DateTime startDate) {
+    // Check if there are two reports on the same day
+    final reportsGroupedByDate = <DateTime, List<AdReport>>{};
+
+    // Group reports by date
+    for (var report in allReports) {
+      final reportDate = report.reportDate;
+      final dateOnly =
+          DateTime(reportDate.year, reportDate.month, reportDate.day);
+
+      if (reportsGroupedByDate.containsKey(dateOnly)) {
+        reportsGroupedByDate[dateOnly]!.add(report);
+      } else {
+        reportsGroupedByDate[dateOnly] = [report];
+      }
+    }
+
+    // Check for reports on the same day
+    for (var reportsOnSameDay in reportsGroupedByDate.values) {
+      if (reportsOnSameDay.length > 1) {
+        // More than 1 report on the same day, means renewed
+        return true;
+      }
+    }
+
+    // If no reports on the same day, check if any report is before the start date (old report)
+    for (var report in allReports) {
+      if (report.reportDate.isBefore(startDate)) {
+        // This report is before the start date, so it's an old report
+        return false;
+      }
+    }
+
+    return true;
+  }
+
   Future<void> fetchAdReports() async {
     final userId = FirebaseAuth.instance.currentUser!.uid;
 
@@ -124,7 +219,6 @@ class _ViewAdsPerformancePageState extends State<ViewAdsPerformancePage> {
               'Travel Package Data: $data'); // Data of the travel package
           final adId = data['ad_id'];
           final price = data['price'];
-          final quantity = data['quantity'];
         }
       }
 
@@ -142,18 +236,22 @@ class _ViewAdsPerformancePageState extends State<ViewAdsPerformancePage> {
               .get();
 
           if (adSnapshot.exists) {
+            final today = DateTime.now();
+            final startOfDay = DateTime(today.year, today.month, today.day);
+            final endOfDay =
+                DateTime(today.year, today.month, today.day, 23, 59, 59);
+
             final adData = adSnapshot.data()!;
             final price = purchaseData['price'] as num? ?? 0;
-            final quantity = purchaseData['quantity'] as num? ?? 0;
+            final quantity =
+                await getQuantityByDate(adId, startOfDay, endOfDay);
+            print("qty: $quantity");
             adType = adData['ad_type'];
             final cpcRate = adData['cpc_rate'] as num? ?? 0;
             final cpmRate = adData['cpm_rate'] as num? ?? 0;
             final flatRate = adData['flat_rate'] as num? ?? 0;
 
-            final today = DateTime.now();
-            final startOfDay = DateTime(today.year, today.month, today.day);
-            final endOfDay =
-                DateTime(today.year, today.month, today.day, 23, 59, 59);
+            final startDate = adData['start_date'].toDate();
 
             final adInteractionsSnapshot = await FirebaseFirestore.instance
                 .collection('AdInteraction')
@@ -204,22 +302,30 @@ class _ViewAdsPerformancePageState extends State<ViewAdsPerformancePage> {
 
             if (adReportSnapshot.docs.isNotEmpty) {
               // Update the existing report
-              final existingData = adReportSnapshot.docs.first.data();
-              adReport = AdReport.fromMap(existingData);
+              final reports = adReportSnapshot.docs
+                  .map((doc) => doc.data())
+                  .toList()
+                ..sort((a, b) => b['report_date'].compareTo(a['report_date']));
 
-              adReport.clickCount = clickCount;
-              adReport.revenue = revenue.toDouble();
-              adReport.engagementRate = engagementRate.toDouble();
-              adReport.successRate = successRate.toDouble();
-              adReport.reach = reach.toInt();
-              adReport.cpc = cpc.toDouble();
-              adReport.cpm = cpm.toDouble();
-              adReport.roas = roas.toDouble();
+              final latestReport = reports.isNotEmpty ? reports.first : null;
 
-              await FirebaseFirestore.instance
-                  .collection('AdReport')
-                  .doc(adReportSnapshot.docs.first.id)
-                  .set(adReport.toMap(), SetOptions(merge: true));
+              if (latestReport != null) {
+                adReport = AdReport.fromMap(latestReport);
+
+                adReport.clickCount = clickCount;
+                adReport.revenue = revenue.toDouble();
+                adReport.engagementRate = engagementRate.toDouble();
+                adReport.successRate = successRate.toDouble();
+                adReport.reach = reach.toInt();
+                adReport.cpc = cpc.toDouble();
+                adReport.cpm = cpm.toDouble();
+                adReport.roas = roas.toDouble();
+
+                await FirebaseFirestore.instance
+                    .collection('AdReport')
+                    .doc(adReportSnapshot.docs.first.id)
+                    .set(adReport.toMap(), SetOptions(merge: true));
+              }
             } else {
               // Create a new report
               adReport = AdReport(
@@ -251,7 +357,28 @@ class _ViewAdsPerformancePageState extends State<ViewAdsPerformancePage> {
               return AdReport.fromMap(data);
             }).toList();
 
-            reports.addAll(allReports);
+            final isRenewed = isAdRenewed(allReports, startDate);
+
+            if (isRenewed) {
+              final latestReport = allReports.where((report) {
+                // Check if the report was created after the start date or any other relevant condition
+                return isReportNew(report, startDate);
+              }).toList()
+                ..sort((a, b) => b.reportDate.compareTo(
+                    a.reportDate)); // Sort in descending order by created_at
+
+              if (latestReport.isNotEmpty) {
+                reports.add(
+                    latestReport.first); // Add the latest report to the list
+              } else {
+                debugPrint('No new reports found.');
+              }
+            } else {
+              debugPrint('Ad is not renewed, handling as a new ad.');
+              // You can choose to handle new ads (e.g., still showing reports for ongoing ads)
+              reports.addAll(
+                  allReports); // For new ongoing ads, add reports anyway
+            }
           }
         }
       }
@@ -263,6 +390,11 @@ class _ViewAdsPerformancePageState extends State<ViewAdsPerformancePage> {
     } catch (error) {
       debugPrint('Error fetching ad reports: $error');
     }
+  }
+
+  bool isReportNew(AdReport report, DateTime startDate) {
+    // Assuming the report has a created_at field (adjust as needed)
+    return report.reportDate.isAfter(startDate); // New if it’s after startDate
   }
 
   Future<void> fetchHistoricalAdReports() async {

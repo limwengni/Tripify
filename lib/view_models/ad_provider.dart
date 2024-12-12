@@ -145,23 +145,6 @@ class AdProvider with ChangeNotifier {
           'status': 'ongoing',
         });
 
-        // Add new AdReport for the renewal period
-        AdReport adReport = AdReport(
-          adId: adId,
-          reportDate: DateTime.now(),
-          clickCount: 0,
-          engagementRate: 0.0,
-          successRate: 0.0,
-          reach: 0,
-          cpc: updatedAd.cpcRate,
-          cpm: updatedAd.cpmRate,
-          flatRate: updatedAd.flatRate,
-          revenue: 0.0,
-          roas: 0.0,
-        );
-
-        batch.set(_db.collection('AdReport').doc(), adReport.toMap());
-
         // Update ads credit after renewal
         int newAdsCredit = currentAdsCredit - renewalCost;
         batch.update(_db.collection('User').doc(currentUserId), {

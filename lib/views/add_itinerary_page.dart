@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import 'package:tripify/models/user_model.dart';
 import 'package:tripify/view_models/firestore_service.dart';
+import 'package:tripify/view_models/itinerary_provider.dart';
 
 class AddItineraryPage extends StatefulWidget {
   @override
@@ -17,11 +19,13 @@ class _AddItineraryPageState extends State<AddItineraryPage> {
   final _itineraryNameFocusNode = FocusNode();
   final _numberOfDaysFocusNode = FocusNode();
   FirestoreService firestoreService = FirestoreService();
+  final ItineraryProvider itineraryProvider = ItineraryProvider();
 
   late String itineraryName = '';
   int numberOfDays = 1;
   DateTime? startDate;
   DateTime? endDate;
+  List<Map<String, String>> invites = [];
   List<Map<String, String>> members = [];
   String memberUsername = '';
   int step = 1;
@@ -239,11 +243,13 @@ class _AddItineraryPageState extends State<AddItineraryPage> {
             GestureDetector(
               onTap: () {
                 setState(() {
-                  if (!members.any(
-                      (member) => member['username'] == foundUser?.username)) {
-                    members.add({
+                  if (!invites.any(
+                      (invite) => invite['username'] == foundUser?.username)) {
+                    invites.add({
+                      'user_id': foundUser?.uid ?? '',
                       'username': foundUser?.username ?? '',
                       'profilePic': foundUser?.profilePic ?? '',
+                      'role': 'Member', // Default role
                     });
                   }
                   foundUser = null;
@@ -277,7 +283,7 @@ class _AddItineraryPageState extends State<AddItineraryPage> {
         Expanded(
           child: SingleChildScrollView(
             child: Column(
-              children: members.map((member) {
+              children: invites.map((invite) {
                 return Container(
                   padding: EdgeInsets.all(5),
                   margin:
@@ -290,12 +296,12 @@ class _AddItineraryPageState extends State<AddItineraryPage> {
                         children: [
                           CircleAvatar(
                             backgroundImage:
-                                NetworkImage(member['profilePic'] ?? ''),
+                                NetworkImage(invite['profilePic'] ?? ''),
                             radius: 26,
                           ),
                           SizedBox(width: 16),
                           Text(
-                            member['username'] ?? 'Unknown User',
+                            invite['username'] ?? 'Unknown User',
                             style: TextStyle(fontSize: 18),
                           ),
                         ],
@@ -306,7 +312,7 @@ class _AddItineraryPageState extends State<AddItineraryPage> {
                             icon: Icon(Icons.remove, color: Colors.red),
                             onPressed: () {
                               setState(() {
-                                members.remove(member);
+                                invites.remove(invite);
                               });
                             },
                           ),
@@ -429,14 +435,14 @@ class _AddItineraryPageState extends State<AddItineraryPage> {
         ),
         SizedBox(height: 18),
         Text(
-          'Members to Invite (${members.length}):',
+          'Members to Invite (${invites.length}):',
           style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
         ),
         SizedBox(height: 14),
         Expanded(
           child: SingleChildScrollView(
             child: Column(
-              children: members.map((member) {
+              children: invites.map((invite) {
                 return Container(
                   padding: EdgeInsets.all(5),
                   margin:
@@ -449,12 +455,12 @@ class _AddItineraryPageState extends State<AddItineraryPage> {
                         children: [
                           CircleAvatar(
                             backgroundImage:
-                                NetworkImage(member['profilePic'] ?? ''),
+                                NetworkImage(invite['profilePic'] ?? ''),
                             radius: 26,
                           ),
                           SizedBox(width: 16),
                           Text(
-                            member['username'] ?? 'Unknown User',
+                            invite['username'] ?? 'Unknown User',
                             style: TextStyle(fontSize: 18),
                           ),
                         ],
@@ -548,26 +554,50 @@ class _AddItineraryPageState extends State<AddItineraryPage> {
     });
   }
 
-  void _saveItinerary() {
-    final itinerary = {
-      'name': itineraryName,
-      'startDate': startDate,
-      'numberOfDays': numberOfDays,
-      'members': members,
-      'createdAt': DateTime.now(),
-    };
-    FirebaseFirestore.instance
-        .collection('itineraries')
-        .add(itinerary)
-        .then((_) {
+  void _saveItinerary() async {
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+
+    if (userId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Itinerary Created')),
+        SnackBar(
+          content: Text('User not logged in.'),
+          backgroundColor: Colors.red,
+        ),
       );
+      return;
+    }
+
+    List<Map<String, String>> members = [
+      {'user_id': userId, 'role': 'Owner'}
+    ];
+
+    bool isSuccess = await itineraryProvider.createItinerary(
+      itineraryName: itineraryName,
+      startDate: startDate!,
+      numberOfDays: numberOfDays,
+      invites: invites,
+      members: members, // Pass the owner
+    );
+
+    // Show appropriate Snackbar based on the result
+    if (isSuccess) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Itinerary Created'),
+          backgroundColor: Color(0xFF9F76F9),
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to create itinerary'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+
+    if (isSuccess) {
       Navigator.pop(context);
-    }).catchError((error) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to create itinerary')),
-      );
-    });
+    }
   }
 }

@@ -476,13 +476,15 @@ class _NewPostPageState extends State<NewPostPage> {
                                     .clear(); // Clear the controllers list
                               }
                               if (!isPollSectionVisible) {
-                                _pollOptions.add('Yes');
-                                _pollOptionControllers
-                                    .add(TextEditingController(text: 'Yes'));
+                                if (_pollOptions.isEmpty) {
+                                  _pollOptions.add('Yes');
+                                  _pollOptionControllers
+                                      .add(TextEditingController(text: 'Yes'));
 
-                                _pollOptions.add('No');
-                                _pollOptionControllers
-                                    .add(TextEditingController(text: 'No'));
+                                  _pollOptions.add('No');
+                                  _pollOptionControllers
+                                      .add(TextEditingController(text: 'No'));
+                                }
                               }
                               // Toggle the visibility state
                               isPollSectionVisible = !isPollSectionVisible;
@@ -742,7 +744,7 @@ class _NewPostPageState extends State<NewPostPage> {
                       ),
                     ),
                     const SizedBox(height: 16),
-                    
+
                     // Preview Button
                     Padding(
                         padding: EdgeInsets.symmetric(horizontal: 0),
