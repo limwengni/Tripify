@@ -16,7 +16,7 @@ class TripifyDrawer extends StatelessWidget {
         children: [
           const DrawerHeader(
             decoration: BoxDecoration(
-              color: Colors.blue,
+              color:         const Color.fromARGB(255, 159, 118,249),
             ),
             child: Text('Tripify'),
           ),
@@ -27,63 +27,58 @@ class TripifyDrawer extends StatelessWidget {
               Navigator.pop(context);
             },
           ),
-          ListTile(
-            title: const Text('AI Chat'),
+             ListTile(
+            title: const Text('Wallet'),
             onTap: () {
               onItemTapped(7);
               Navigator.pop(context);
             },
+          
           ),
           ListTile(
-            title: const Text('Emergency Call'),
+            title: const Text('AI Chat'),
             onTap: () {
               onItemTapped(8);
               Navigator.pop(context);
             },
           ),
           ListTile(
-            title: const Text('Document Repository'),
+            title: const Text('Emergency Call'),
             onTap: () {
               onItemTapped(9);
               Navigator.pop(context);
             },
           ),
           ListTile(
-            title: const Text('Language Translator'),
+            title: const Text('Document Repository'),
             onTap: () {
               onItemTapped(10);
               Navigator.pop(context);
             },
           ),
           ListTile(
-            title: const Text('Currency Exchange Calculator'),
+            title: const Text('Language Translator'),
             onTap: () {
               onItemTapped(11);
               Navigator.pop(context);
             },
           ),
           ListTile(
-            title: const Text('Settings'),
+            title: const Text('Currency Exchange Calculator'),
             onTap: () {
               onItemTapped(12);
               Navigator.pop(context);
             },
           ),
           ListTile(
-            title: const Text('On Shelves Travel Package'),
+            title: const Text('Settings'),
             onTap: () {
               onItemTapped(13);
               Navigator.pop(context);
             },
           ),
-                    ListTile(
-            title: const Text('Wallet'),
-            onTap: () {
-              onItemTapped(14);
-              Navigator.pop(context);
-            },
-          
-          ),
+       
+                 
         ],
       ),
     );

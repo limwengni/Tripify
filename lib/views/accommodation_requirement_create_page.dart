@@ -48,7 +48,6 @@ class _AccommodationRequirementCreatePageState
                   key: _formKey,
                   child: Column(
                     children: [
-                      const SizedBox(height: 15),
                       FormBuilderTextField(
                         name: 'title',
                         decoration: const InputDecoration(

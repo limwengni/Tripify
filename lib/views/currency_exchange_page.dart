@@ -73,6 +73,7 @@ class _CurrencyExchangePageState extends State<CurrencyExchangePage> {
                                 child: Column(
                                   children: [
                                     DropdownButton<String>(
+                                      isExpanded: true,
                                       value: selectedCurrencyFrom,
                                       items: currencies!.entries.map((entry) {
                                         return DropdownMenuItem<String>(
@@ -142,8 +143,8 @@ class _CurrencyExchangePageState extends State<CurrencyExchangePage> {
                                 decoration: BoxDecoration(
                                   shape: BoxShape
                                       .circle, // Make the container circular
-                                  color: Colors
-                                      .blue, // Set the color of the button
+                                  color:
+                                      const Color.fromARGB(255, 159, 118, 249),
                                   boxShadow: [
                                     BoxShadow(
                                       color: Colors.black.withOpacity(0.3),
@@ -206,6 +207,7 @@ class _CurrencyExchangePageState extends State<CurrencyExchangePage> {
                                 child: Column(
                                   children: [
                                     DropdownButton<String>(
+                                      isExpanded: true,
                                       value: selectedCurrencyTo,
                                       items: currencies!.entries.map((entry) {
                                         return DropdownMenuItem<String>(

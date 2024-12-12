@@ -201,7 +201,9 @@ class _ChatBubbleState extends State<ChatBubble> {
           },
           child: Container(
             decoration: BoxDecoration(
-              color: widget.isCurrentUser ? Colors.green : Colors.grey.shade500,
+              color: widget.isCurrentUser
+                  ? const Color.fromARGB(255, 159, 118, 249)
+                  : Colors.grey.shade500,
               borderRadius: BorderRadius.circular(15.0),
             ),
             padding: const EdgeInsets.all(16),
@@ -404,8 +406,9 @@ class _ChatBubbleState extends State<ChatBubble> {
                                                     decoration: BoxDecoration(
                                                       color: selectedKey ==
                                                               optionKey // Compare the current key to selectedKey
-                                                          ? Colors
-                                                              .green // Highlight color for the selected option
+                                                          ? const Color
+                                                              .fromARGB(255,
+                                                              159, 118, 249)
                                                           : Colors
                                                               .white, // Default color
                                                       shape: BoxShape.circle,

@@ -76,7 +76,7 @@ class _TravelPackageCardState extends State<TravelPackageCard> {
   Widget build(BuildContext context) {
     return widget.travelPackage.isAvailable==true? 
     Padding(
-      padding: const EdgeInsets.fromLTRB(8.0, 8, 8, 0),
+      padding: const EdgeInsets.fromLTRB(0, 0, 0, 0),
       child: GestureDetector(
         onTap: () {
           Navigator.push(
@@ -178,7 +178,7 @@ class _TravelPackageCardState extends State<TravelPackageCard> {
                                       '${DateFormat('yyyy-MM-dd').format(widget.travelPackage.startDate)} - ${DateFormat('yyyy-MM-dd').format(widget.travelPackage.endDate)}'),
                                   Spacer(),
                                   Text(
-                                    '${widget.travelPackage.price.toStringAsFixed(2)}',
+                                    'RM ${widget.travelPackage.price.toStringAsFixed(2)}',
                                     style:
                                         Theme.of(context).textTheme.bodyLarge,
                                   ),

@@ -585,7 +585,7 @@ class _TravelPackagePurchasedCardState
                                     }
                                   },
                                   style: TextButton.styleFrom(
-                                    backgroundColor: Colors.green,
+                                    backgroundColor:         const Color.fromARGB(255, 159, 118,249),
                                     foregroundColor: Colors.white,
                                     padding: const EdgeInsets.symmetric(
                                         vertical: 8, horizontal: 12),
