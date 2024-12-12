@@ -4,7 +4,7 @@ import 'package:http/http.dart' as http;
 class ChatModel {
   Future<String> sendMessageToApi(String message, String userId) async {
     final response = await http.post(
-      Uri.parse('http://192.168.43.233:5000/api/message'),
+      Uri.parse('http://192.168.42.148:5000/api/message'),
       headers: {'Content-Type': 'application/json'},
       body: json.encode({'message': message, 'user_id': userId}),
     );
