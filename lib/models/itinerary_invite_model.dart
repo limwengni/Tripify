@@ -11,13 +11,19 @@ class ItineraryInvite {
   final String userId;
   final String role;
   final DateTime inviteDate;
+  String? itineraryId;
   InviteStatus status;
+  String? docId;
+  String? itineraryName;
 
   ItineraryInvite({
     required this.userId,
     required this.role,
     required this.inviteDate,
+    this.itineraryId,
     this.status = InviteStatus.pending,
+    this.docId,
+    this.itineraryName = '',
   });
 
   // Convert ItineraryInvite to Map for Firestore
@@ -31,10 +37,11 @@ class ItineraryInvite {
   }
 
   // Factory method to create ItineraryInvite from Firestore data
-  factory ItineraryInvite.fromMap(Map<String, dynamic> data) {
+  factory ItineraryInvite.fromMap(Map<String, dynamic> data, String docId) {
     return ItineraryInvite(
       userId: data['user_id'],
       role: data['role'],
+      itineraryId: (data['itinerary_id']),
       inviteDate: (data['invite_date'] is Timestamp)
           ? (data['invite_date'] as Timestamp).toDate()
           : DateTime.parse(data['invite_date']),
@@ -42,6 +49,7 @@ class ItineraryInvite {
         (e) => e.toString().split('.').last == data['status'],
         orElse: () => InviteStatus.pending, // Default to pending if not found
       ),
+      docId: docId,
     );
   }
 }

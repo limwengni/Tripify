@@ -19,6 +19,7 @@ class ItineraryDetailPage extends StatefulWidget {
 
 class _ItineraryDetailPageState extends State<ItineraryDetailPage> {
   late GoogleMapController? _googleMapController;
+  TextEditingController _nameController = TextEditingController();
   late LatLng _mapCenter;
 
   List<Set<Marker>> dayMarkers = [];
@@ -26,9 +27,12 @@ class _ItineraryDetailPageState extends State<ItineraryDetailPage> {
   String? selectedLocationName;
   int selectedLocationIndex = 0;
   bool _isMapReady = false;
+  bool _hasZoomedToFirstLocation = false;
 
+  int _index = 0;
   double _totalDistance = 0;
-  
+  double dayDistance = 0;
+  Map<int, double> dayDistances = {};
 
   double? firstLocationLatitude;
   double? firstLocationLongitude;
@@ -53,86 +57,153 @@ class _ItineraryDetailPageState extends State<ItineraryDetailPage> {
 
   void _loadInitialMarkers() async {
     try {
-      // Fetch the locations for the itinerary from Firestore
-      List<ItineraryLocation> locations =
-          await _fetchLocationsForItinerary(widget.itinerary.id);
+      dayDistance = 0;
+      dayDistances.clear();
+      _totalDistance = 0;
 
-      if (locations.isEmpty) {
-        print("No locations found.");
+      var dayItinerarySnapshot = await FirebaseFirestore.instance
+          .collection('DayItinerary')
+          .where('itinerary_id', isEqualTo: widget.itinerary.id)
+          .get();
+
+      if (dayItinerarySnapshot.docs.isEmpty) {
+        print("No day itineraries found.");
         return;
       }
 
-      // Create markers for each location
-      Set<Marker> markersForItinerary = {};
+      List<Set<Marker>> markersForDays =
+          List.generate(widget.itinerary.numberOfDays, (index) => <Marker>{});
+      Map<int, List<ItineraryLocation>> locationsByDay = {};
+
       double totalDistance = 0;
 
-      for (int i = 0; i < locations.length; i++) {
-        var location = locations[i];
+      for (var dayDoc in dayItinerarySnapshot.docs) {
+        var dayData = dayDoc.data();
+        int dayNumber = dayData['day_number'];
+        List<String> locationIds =
+            List<String>.from(dayData['location_ids'] ?? []);
 
-        markersForItinerary.add(Marker(
-          markerId: MarkerId(location.name),
-          position: LatLng(location.latitude, location.longitude),
-          infoWindow: InfoWindow(title: location.name),
-          onTap: () {
-            setState(() {
-              selectedLocationName = location.name;
-              selectedLocationIndex = locations.indexOf(location);
-            });
-            _zoomToLocation(location.latitude, location.longitude);
-          },
-        ));
+        List<ItineraryLocation> locationsForDay =
+            await _fetchLocationsForIds(locationIds);
 
-        if (i < locations.length - 1) {
-          var nextLocation = locations[i + 1];
+        locationsByDay[dayNumber] = locationsForDay;
 
-          // Calculate distance between current and next location
-          double distance = calculateDistance(
-            location.latitude,
-            location.longitude,
-            nextLocation.latitude,
-            nextLocation.longitude,
-          );
+        Set<Marker> dayMarkers = {};
 
-          totalDistance += distance; // Add to total distance
+        for (int i = 0; i < locationsForDay.length; i++) {
+          var location = locationsForDay[i];
+
+          dayMarkers.add(Marker(
+            markerId: MarkerId(location.name),
+            position: LatLng(location.latitude, location.longitude),
+            infoWindow: InfoWindow(title: location.name),
+            onTap: () {
+              setState(() {
+                selectedLocationName = location.name;
+                selectedLocationIndex = locationsForDay.indexOf(location);
+              });
+              _zoomToLocation(location.latitude, location.longitude);
+            },
+          ));
+
+          if (i < locationsForDay.length - 1) {
+            var nextLocation = locationsForDay[i + 1];
+            double distance = calculateDistance(
+              location.latitude,
+              location.longitude,
+              nextLocation.latitude,
+              nextLocation.longitude,
+            );
+            dayDistance += distance;
+          }
         }
+
+        dayDistances[dayNumber] = dayDistance;
+        markersForDays[dayNumber - 1] = dayMarkers;
+        _totalDistance = dayDistance;
       }
 
       setState(() {
-        _totalDistance = totalDistance;
+        dayMarkers = markersForDays;
       });
 
-      for (int dayIndex = 0;
-          dayIndex < widget.itinerary.numberOfDays;
-          dayIndex++) {
-        // Check if there are locations for this day and assign the markers
-        dayMarkers[dayIndex] = markersForItinerary;
-      }
-
-      setState(() {});
-
-      // Set the map center to the average of all locations (if there are any)
-      if (locations.isNotEmpty) {
+      if (locationsByDay.isNotEmpty) {
+        List<ItineraryLocation> allLocations =
+            locationsByDay.values.expand((i) => i).toList();
         double avgLatitude =
-            locations.map((loc) => loc.latitude).reduce((a, b) => a + b) /
-                locations.length;
+            allLocations.map((loc) => loc.latitude).reduce((a, b) => a + b) /
+                allLocations.length;
         double avgLongitude =
-            locations.map((loc) => loc.longitude).reduce((a, b) => a + b) /
-                locations.length;
+            allLocations.map((loc) => loc.longitude).reduce((a, b) => a + b) /
+                allLocations.length;
         _mapCenter = LatLng(avgLatitude, avgLongitude);
-
-        firstLocationLatitude = locations[0].latitude;
-        firstLocationLongitude = locations[0].longitude;
+        firstLocationLatitude = allLocations[0].latitude;
+        firstLocationLongitude = allLocations[0].longitude;
       }
 
-      // Trigger a rebuild to reflect the changes in markers
       setState(() {});
 
       if (firstLocationLatitude != null && firstLocationLongitude != null) {
         _zoomToLocation(firstLocationLatitude!, firstLocationLongitude!);
       }
+
+      print("Day distances: $dayDistances");
     } catch (e) {
       print("Error fetching locations for itinerary: $e");
     }
+  }
+
+  void _showEditDialog() {
+    _nameController.text =
+        widget.itinerary.name; // Set the current name in the text controller
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text("Edit Itinerary Name"),
+          content: TextField(
+            controller: _nameController,
+            decoration: InputDecoration(labelText: 'New Itinerary Name'),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                // Close the dialog without doing anything
+                Navigator.pop(context);
+              },
+              child: Text("Cancel"),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                // Get the new name entered by the user
+                String newName = _nameController.text.trim();
+                if (newName.isNotEmpty) {
+                  // Update the itinerary in Firestore
+                  await FirebaseFirestore.instance
+                      .collection('Itinerary')
+                      .doc(widget.itinerary.id)
+                      .update({
+                    'name': newName,
+                  });
+                  // Close the dialog
+                  Navigator.pop(context);
+                  // Trigger UI update by calling setState
+                  setState(() {
+                    widget.itinerary.name = newName;
+                  });
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Color(0xFF9F76F9),
+                foregroundColor: Colors.white,
+              ),
+              child: Text("Confirm"),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   Future<List<ItineraryLocation>> _fetchLocationsForItinerary(
@@ -172,7 +243,7 @@ class _ItineraryDetailPageState extends State<ItineraryDetailPage> {
                 selectedLocationName = location.name;
                 selectedLocationIndex = locationsForDay.indexOf(location);
               });
-              _zoomToLocation(location.latitude, location.longitude);
+              // _zoomToLocation(location.latitude, location.longitude);
             },
           ));
         }
@@ -227,7 +298,21 @@ class _ItineraryDetailPageState extends State<ItineraryDetailPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.itinerary.name),
+        title: Row(
+          children: [
+            GestureDetector(
+              onTap: _showEditDialog,
+              child: Text(
+                widget.itinerary.name,
+                style: TextStyle(fontSize: 20),
+              ),
+            ),
+            IconButton(
+              icon: Icon(Icons.edit),
+              onPressed: _showEditDialog,
+            ),
+          ],
+        ),
       ),
       body: Column(
         children: [
@@ -262,31 +347,48 @@ class _ItineraryDetailPageState extends State<ItineraryDetailPage> {
                 mainAxisAlignment:
                     MainAxisAlignment.spaceBetween, // Ensure equal spacing
                 children: List.generate(widget.itinerary.numberOfDays, (index) {
+                  bool isSelected = selectedDayIndex == index;
+
                   return Padding(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 4.0), // Adjust spacing
-                    child: ElevatedButton(
-                      onPressed: () {
-                        setState(() {
-                          selectedDayIndex = index;
-                          selectedLocationIndex = 0;
-                          selectedLocationName = null;
-                        });
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 4.0), // Adjust spacing
+                      child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor:
+                                isSelected ? Color(0xFF9F76F9) : Colors.grey,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              side: isSelected
+                                  ? BorderSide(color: Color(0xFF9F76F9))
+                                  : BorderSide
+                                      .none, // Border for selected button
+                            ),
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              selectedDayIndex = index;
+                              selectedLocationIndex = 0;
+                              selectedLocationName = null;
+                              _index = index + 1;
+                            });
 
-                        _loadInitialMarkers();
+                            _loadInitialMarkers();
 
-                        print(
-                            "lat: $firstLocationLatitude, long: $firstLocationLongitude");
+                            print(
+                                "lat: $firstLocationLatitude, long: $firstLocationLongitude");
 
-                        if (firstLocationLatitude != null &&
-                            firstLocationLongitude != null) {
-                          _zoomToLocation(
-                              firstLocationLatitude!, firstLocationLongitude!);
-                        }
-                      },
-                      child: Text('Day ${index + 1}'),
-                    ),
-                  );
+                            // if (firstLocationLatitude != null &&
+                            //     firstLocationLongitude != null) {
+                            //   _zoomToLocation(firstLocationLatitude!,
+                            //       firstLocationLongitude!);
+                            // }
+                          },
+                          child: Text(
+                            'Day ${index + 1}',
+                            style: TextStyle(
+                              color: Colors.white,
+                            ),
+                          )));
                 }),
               ),
             ),
@@ -375,13 +477,11 @@ class _ItineraryDetailPageState extends State<ItineraryDetailPage> {
               },
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Text(
-              'Total Distance: ${_totalDistance.toStringAsFixed(2)} km',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
+          Text(
+            'Total Distance: ${dayDistances[selectedDayIndex + 1]?.toStringAsFixed(4) ?? '0.0000'} km',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
+          SizedBox(height: 8)
         ],
       ),
     );
@@ -439,12 +539,12 @@ class _ItineraryDetailPageState extends State<ItineraryDetailPage> {
         }
       }
 
-      if (locations.isNotEmpty) {
-        firstLocation = locations[0];
-        print('First Location Latitude: ${firstLocation.latitude}');
-        print('First Location Longitude: ${firstLocation.longitude}');
-        _zoomToLocation(firstLocation.latitude, firstLocation.longitude);
-      }
+      // if (locations.isNotEmpty) {
+      //   firstLocation = locations[0];
+      //   print('First Location Latitude: ${firstLocation.latitude}');
+      //   print('First Location Longitude: ${firstLocation.longitude}');
+      //   _zoomToLocation(firstLocation.latitude, firstLocation.longitude);
+      // }
 
       return locations;
     } catch (e) {
@@ -592,7 +692,7 @@ class _ItineraryDetailPageState extends State<ItineraryDetailPage> {
     return R * c; // Distance in kilometers
   }
 
-// Function to convert degrees to radians
+  // Function to convert degrees to radians
   double _toRadians(double degree) {
     return degree * pi / 180;
   }

@@ -93,6 +93,40 @@ class ItineraryProvider {
           .map((doc) => {'id': doc.id, ...doc.data() as Map<String, dynamic>})
           .toList();
 
+      for (var itinerary in itineraries) {
+        String itineraryId = itinerary['id'];
+
+        // Get the members of this itinerary
+        QuerySnapshot memberSnapshot = await FirebaseFirestore.instance
+            .collection('ItineraryMember')
+            .where('itinerary_id', isEqualTo: itineraryId)
+            .get();
+
+        bool isOwnerInThisItinerary = false;
+
+        // Loop through members to check if the current user is the "Owner"
+        for (var memberDoc in memberSnapshot.docs) {
+          var memberData = memberDoc.data();
+
+          // Ensure memberData is not null before accessing it
+          for (var memberDoc in memberSnapshot.docs) {
+            var memberData = memberDoc.data() as Map<String,
+                dynamic>?; // Cast to Map<String, dynamic> if it's not null
+
+            // Ensure memberData is not null before accessing it
+            if (memberData != null &&
+                memberData['user_id'] == userId &&
+                memberData['role'] == 'Owner') {
+              isOwnerInThisItinerary = true;
+              break;
+            }
+          }
+        }
+
+        // Set the isOwner flag for the itinerary
+        itinerary['isOwner'] = isOwnerInThisItinerary;
+      }
+
       return itineraries;
     } catch (error) {
       print('Error fetching user itineraries: $error');
@@ -227,7 +261,8 @@ class ItineraryProvider {
 
       if (locationSnapshot.exists) {
         var locationData = locationSnapshot.data()!;
-        locations.add(ItineraryLocation.fromMap(locationData, locationSnapshot.id));
+        locations
+            .add(ItineraryLocation.fromMap(locationData, locationSnapshot.id));
       }
     }
 

@@ -52,13 +52,14 @@ class DayItinerary {
 
 class Itinerary {
   final String id;
-  final String name;
+  String name;
   final DateTime startDate;
   final int numberOfDays;
-  final List<String>
+  final List<String>?
       dailyItineraryIds; // List of references to DailyItinerary documents
   final DateTime createdAt;
   DateTime? updatedAt;
+  bool isOwner;
 
   // Dynamically calculate endDate
   DateTime get endDate => startDate.add(Duration(days: numberOfDays - 1));
@@ -68,9 +69,10 @@ class Itinerary {
     required this.name,
     required this.startDate,
     required this.numberOfDays,
-    required this.dailyItineraryIds,
+    this.dailyItineraryIds,
     required this.createdAt,
     this.updatedAt,
+    this.isOwner = false,
   });
 
   // Method to convert Itinerary to Map for Firestore
@@ -80,8 +82,6 @@ class Itinerary {
       'start_date': Timestamp.fromDate(startDate),
       'number_of_days': numberOfDays,
       'created_at': Timestamp.fromDate(createdAt),
-      'updated_at': updatedAt != null ? Timestamp.fromDate(updatedAt!) : null,
-      'daily_itinerary_ids': dailyItineraryIds,
     };
   }
 
