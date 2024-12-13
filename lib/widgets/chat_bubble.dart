@@ -436,10 +436,11 @@ class _ChatBubbleState extends State<ChatBubble> {
                                                         BorderRadius.circular(
                                                             10), // Button shape
                                                     child: TextButton(
-                                                      onPressed: () async {
-                                                        Map<String, int>?
+                                                      onPressed: () async 
+                                                      {
+                                                        Map<String, int>
                                                             answerMap =
-                                                            poll!.answers;
+                                                            poll!.answers!;
 
                                                         answerMap?.addEntries([
                                                           MapEntry(
@@ -464,6 +465,8 @@ class _ChatBubbleState extends State<ChatBubble> {
                                                                     'answers',
                                                                 value:
                                                                     answerMap);
+
+                                                        print('answerMap: '+answerMap.toString());
                                                         setState(() {
                                                           pollAns = optionKey;
                                                           selectedKey =

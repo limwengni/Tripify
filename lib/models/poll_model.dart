@@ -40,16 +40,17 @@ class PollModel {
 
   /// Converts PollModel to a Map (e.g., for Firestore or JSON)
   Map<String, dynamic> toMap() {
-    return {
-      'id': id,
-      'created_by': createdBy,
-      'created_at': createdAt,
-      'end_at': endAt,
-      'options': options,
-      'question': question,
-      'answers': answers,
-    };
-  }
+  return {
+    'id': id,
+    'created_by': createdBy,
+    'created_at': createdAt,
+    'end_at': endAt,
+    'options': options,
+    'question': question,
+    'answers': answers is Map ? answers : {}, // Ensure `answers` is a map
+  };
+}
+
 
   /// Checks if the poll is still active
   bool isActive() {

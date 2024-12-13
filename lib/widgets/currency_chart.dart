@@ -27,7 +27,7 @@ class _CurrencyChartState extends State<CurrencyChart> {
 
   List<Color> gradientColors = [
     Colors.black,
-    Colors.blue,
+    Color.fromARGB(255, 159, 118, 249),
   ];
 
   bool showAvg = false;
@@ -120,7 +120,7 @@ class _CurrencyChartState extends State<CurrencyChart> {
             child: TextButton(
               style: ButtonStyle(
                 backgroundColor: MaterialStateProperty.all(
-                  Color.fromARGB(255, 0, 140, 255), // Blue color
+                  Color.fromARGB(255, 159, 118, 249), // Blue color
                 ),
               ),
               onPressed: () {

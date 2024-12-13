@@ -78,23 +78,27 @@ class _CreatePollPageState extends State<CreatePollPage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  ElevatedButton(
+                  MaterialButton(
+                    padding: const EdgeInsets.all(15),
+                    color: const Color.fromARGB(255, 159, 118, 249),
                     onPressed: () {
                       setState(() {
                         options.add('');
                       });
                     },
-                    child: const Text('Add Option'),
+                    child: const Text('Add Option', style: TextStyle(color: Colors.white),),
                   ),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: () async{
+                  const SizedBox(width: 16),
+                  MaterialButton(
+                    padding: const EdgeInsets.all(15),
+                    color: const Color.fromARGB(255, 159, 118, 249),
+                    onPressed: () async {
                       if (_formKey.currentState?.saveAndValidate() ?? false) {
                         final formValues = _formKey.currentState?.value;
                         // Generate a map of options from the list
-                        final List<String> optionList =[];
-                          for (int i = 0; i < options.length; i++){
-                           optionList.add(formValues!['option${i + 1}']);
+                        final List<String> optionList = [];
+                        for (int i = 0; i < options.length; i++) {
+                          optionList.add(formValues!['option${i + 1}']);
                         }
                         final poll = PollModel(
                             createdBy: widget.currentUserId,
@@ -108,11 +112,13 @@ class _CreatePollPageState extends State<CreatePollPage> {
 
                         await conversationViewModel.sendPollMessage(
                             poll: poll, conversation: widget.conversation);
-
-                            
+                        Navigator.pop(context);
                       }
                     },
-                    child: const Text('Create Poll'),
+                    child: const Text(
+                      'Create Poll',
+                      style: TextStyle(color: Colors.white),
+                    ),
                   ),
                 ],
               )

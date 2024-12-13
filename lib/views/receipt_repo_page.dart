@@ -26,7 +26,7 @@ class _ReceiptRepoPageState extends State<ReceiptRepoPage> {
 
   Future<void> fetchReceipt() async {
     List<Map<String, dynamic>>? data = await firestoreService
-        .getSubCollectionData('User', currentUserId, 'Receipts');
+        .getSubCollectionDataOrderBy('User', currentUserId, 'Receipts','created_at',true);
 
     // Parse the data into your model
     if (data != null) {

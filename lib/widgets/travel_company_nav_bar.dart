@@ -13,7 +13,7 @@ class TravelCompanyNavBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final selectedColor = const Color.fromARGB(255, 159, 118, 249);
-    final unselectedColor =         const Color.fromARGB(0, 0, 0, 0);
+    final unselectedColor =         const Color.fromARGB(255, 0, 0, 0);
 
 
     return BottomNavigationBar(

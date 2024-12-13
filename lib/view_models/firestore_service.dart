@@ -324,6 +324,48 @@ class FirestoreService {
       return [];
     }
   }
+
+ Future<List<Map<String, dynamic>>> getDataOrderBy(
+    String collection, String? orderBy, bool descending) async {
+  try {
+    Query query = _db.collection(collection);
+    if (orderBy != null && orderBy.isNotEmpty) {
+      query = query.orderBy(orderBy, descending: descending);
+    }
+    final querySnapshot = await query.get();
+    return querySnapshot.docs.map((doc) => doc.data() as Map<String, dynamic>).toList();
+  } catch (e) {
+    print("Error fetching data from $collection: $e");
+    return [];
+  }
+}
+Future<List<Map<String, dynamic>>> getSubCollectionDataOrderBy(
+    String collection,
+    String documentId,
+    String subCollection,
+    String? orderBy,
+    bool descending,
+  ) async {
+  try {
+    // Access the parent document
+    final parentDocRef = _db.collection(collection).doc(documentId);
+
+    // Build the subcollection query
+    Query subCollectionQuery = parentDocRef.collection(subCollection);
+    if (orderBy != null && orderBy.isNotEmpty) {
+      subCollectionQuery = subCollectionQuery.orderBy(orderBy, descending: descending);
+    }
+
+    // Fetch data
+    final querySnapshot = await subCollectionQuery.get();
+    return querySnapshot.docs.map((doc) => doc.data() as Map<String, dynamic>).toList();
+  } catch (e) {
+    print("Error fetching subcollection data: $e");
+    return [];
+  }
+}
+
+
 Stream<QuerySnapshot<Map<String, dynamic>>> getStreamData({
   required String collection,
   bool descending = false,

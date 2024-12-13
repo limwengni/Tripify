@@ -183,8 +183,8 @@ class _CurrencyExchangePageState extends State<CurrencyExchangePage> {
                                         // Call the API to perform conversion
                                         final convertedAmount =
                                             await apiService.convert(
-                                          selectedCurrencyTo!,
                                           selectedCurrencyFrom!,
+                                          selectedCurrencyTo!,
                                           amount,
                                         );
 

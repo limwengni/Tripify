@@ -25,7 +25,7 @@ class _MarketplacePageState extends State<MarketplacePage> {
 
   Future<void> fetchTravelPackages() async {
     List<Map<String, dynamic>> data =
-        await firestoreService.getData('New_Travel_Packages');
+        await firestoreService.getDataOrderBy('New_Travel_Packages','created_at',true);
 
     // Parse the data into your model
     if (mounted) {

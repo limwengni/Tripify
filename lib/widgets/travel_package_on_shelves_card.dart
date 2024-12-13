@@ -432,13 +432,13 @@ class _TravelPackagePurchasedCardState
     saveNum = widget.travelPackageOnShelve.saveNum?.length;
 
     double ctr = clickNum != null && viewNum != null && viewNum != 0
-        ? clickNum! / viewNum!
+        ? (clickNum! / viewNum!) *100
         : 0;
 
     if (clickNum != null) {
-      purchaseRate = (widget.travelPackageOnShelve.quantity -
+      purchaseRate = ((widget.travelPackageOnShelve.quantity -
               widget.travelPackageOnShelve.quantityAvailable) /
-          clickNum!;
+          clickNum!)*100;
       purchaseRate = double.parse(purchaseRate!.toStringAsFixed(2));
     }
     return Stack(children: [

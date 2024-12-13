@@ -185,6 +185,7 @@ class _NewTravelPackageCreatePageState
                         },
                         validator: FormBuilderValidators.compose([
                           FormBuilderValidators.required(),
+                          FormBuilderValidators.positiveNumber(),
                           FormBuilderValidators.integer()
                         ]),
                       ),
@@ -201,7 +202,8 @@ class _NewTravelPackageCreatePageState
                         },
                         validator: FormBuilderValidators.compose([
                           FormBuilderValidators.required(),
-                          FormBuilderValidators.numeric()
+                          FormBuilderValidators.numeric(),
+                          FormBuilderValidators.positiveNumber()
                         ]),
                       ),
                       const SizedBox(height: 10),
