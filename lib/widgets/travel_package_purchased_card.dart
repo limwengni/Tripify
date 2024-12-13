@@ -102,7 +102,7 @@ class _TravelPackagePurchasedCardState
   @override
   Widget build(BuildContext context) {
     if (!userLoaded || travelPackage == null) {
-      return Center(child: CircularProgressIndicator());
+      return Center(child: CircularProgressIndicator(color: Color(0xFF9F76F9)));
     }
     return Stack(
       children: [
@@ -392,7 +392,8 @@ class _TravelPackagePurchasedCardState
           ),
         ),
         if (widget.travelPackagePurchased.quantity ==
-            widget.travelPackagePurchased.soldQuantity || widget.travelPackagePurchased.isRefund==true)
+                widget.travelPackagePurchased.soldQuantity ||
+            widget.travelPackagePurchased.isRefund == true)
           Positioned.fill(
             child: Padding(
               padding: const EdgeInsets.all(4.0),
@@ -403,23 +404,23 @@ class _TravelPackagePurchasedCardState
                   borderRadius: BorderRadius.circular(12.0),
                 ),
                 child: Center(
-                  child: 
-                  widget.travelPackagePurchased.isRefund?
-                  Text(
-                    'Refunded',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ):Text(
-                    'Not Available',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ) ,
+                  child: widget.travelPackagePurchased.isRefund
+                      ? Text(
+                          'Refunded',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        )
+                      : Text(
+                          'Not Available',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                 ),
               ),
             ),
@@ -569,25 +570,26 @@ class _TravelPackagePurchasedCardState
                   price = double.parse(
                       price.toStringAsFixed(2)); // Round to 2 decimal places
 
-                  NewTravelPackageModel travelPackageResale = NewTravelPackageModel(
-                      id: '',
-                      name: travelPackage!.name,
-                      itinerary: travelPackage!.itinerary,
-                      price: price,
-                      startDate: travelPackage!.startDate,
-                      endDate: travelPackage!.endDate,
-                      quantity: quantity,
-                      images: travelPackage!.images,
-                      createdBy: travelPackage!.createdBy,
-                      groupChatId: travelPackage!.groupChatId,
-                      resellerId: widget.currentUserId,
-                      isResale: true,
-                      createdAt: DateTime.now(),
-                      quantityAvailable: quantity,
-                      ticketIdNumMap: travelPackage!.ticketIdNumMap,
-                      travelPackageIdForResale: travelPackage!.id,
-                      travelPackagePurchasedId:
-                          widget.travelPackagePurchased.id);
+                  NewTravelPackageModel travelPackageResale =
+                      NewTravelPackageModel(
+                          id: '',
+                          name: travelPackage!.name,
+                          itinerary: travelPackage!.itinerary,
+                          price: price,
+                          startDate: travelPackage!.startDate,
+                          endDate: travelPackage!.endDate,
+                          quantity: quantity,
+                          images: travelPackage!.images,
+                          createdBy: travelPackage!.createdBy,
+                          groupChatId: travelPackage!.groupChatId,
+                          resellerId: widget.currentUserId,
+                          isResale: true,
+                          createdAt: DateTime.now(),
+                          quantityAvailable: quantity,
+                          ticketIdNumMap: travelPackage!.ticketIdNumMap,
+                          travelPackageIdForResale: travelPackage!.id,
+                          travelPackagePurchasedId:
+                              widget.travelPackagePurchased.id);
                   try {
                     await _firestoreService.insertDataWithAutoID(
                         'New_Travel_Packages', travelPackageResale.toMap());

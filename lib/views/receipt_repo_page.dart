@@ -17,6 +17,7 @@ class _ReceiptRepoPageState extends State<ReceiptRepoPage> {
   List<ReceiptModel> receiptList = [];
   FirestoreService firestoreService = FirestoreService();
   String currentUserId = FirebaseAuth.instance.currentUser!.uid;
+  bool isLoading = true;
 
   @override
   void initState() {
@@ -25,16 +26,28 @@ class _ReceiptRepoPageState extends State<ReceiptRepoPage> {
   }
 
   Future<void> fetchReceipt() async {
-    List<Map<String, dynamic>>? data = await firestoreService
-        .getSubCollectionData('User', currentUserId, 'Receipts');
+    try {
+      List<Map<String, dynamic>>? data = await firestoreService
+          .getSubCollectionData('User', currentUserId, 'Receipts');
 
-    // Parse the data into your model
-    if (data != null) {
-      if (mounted) {
+      if (data != null) {
+        if (mounted) {
+          setState(() {
+            receiptList =
+                data.map((item) => ReceiptModel.fromMap(item)).toList();
+            isLoading = false;
+          });
+        }
+      } else {
         setState(() {
-          receiptList = data.map((item) => ReceiptModel.fromMap(item)).toList();
+          isLoading = false;
         });
       }
+    } catch (e) {
+      setState(() {
+        isLoading = false;
+      });
+      print("Error fetching receipts: $e");
     }
   }
 
@@ -46,18 +59,20 @@ class _ReceiptRepoPageState extends State<ReceiptRepoPage> {
         'Receipt Repository',
       )),
       body: Center(
-        child: receiptList != null
-            ? Column(
-                children: [
-                  Expanded(
-                    child: ReceiptCardList(
-                      receiptList: receiptList,
-                      currentUserId: currentUserId,
-                    ),
-                  ),
-                ],
-              )
-            : Text('No Travel Package Found!'),
+        child: isLoading
+            ? CircularProgressIndicator(color: Color(0xFF9F76F9))
+            : receiptList.isNotEmpty
+                ? Column(
+                    children: [
+                      Expanded(
+                        child: ReceiptCardList(
+                          receiptList: receiptList,
+                          currentUserId: currentUserId,
+                        ),
+                      ),
+                    ],
+                  )
+                : Text('No Travel Package Found!'),
       ),
     );
   }

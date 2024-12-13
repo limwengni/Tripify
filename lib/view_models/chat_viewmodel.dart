@@ -49,12 +49,12 @@ class ChatViewModel extends ChangeNotifier {
     try {
       final requestData =
           "Here is the itinerary data: ${selectedItineraryData.toString()}";
-      print("Sending itinerary data: $requestData");
+      // print("Sending itinerary data: $requestData");
 
       final itineraryResponse =
           await _chatModel.sendMessageToApi(requestData, userId);
 
-      print("API Response: $itineraryResponse");
+      // print("API Response: $itineraryResponse");
 
       // Handle response and update UI as needed
       if (itineraryResponse != null) {

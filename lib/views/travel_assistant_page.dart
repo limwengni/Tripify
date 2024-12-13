@@ -45,8 +45,6 @@ class _TravelAssistantPageState extends State<TravelAssistantPage> {
                     itemCount: viewModel.messages.length,
                     itemBuilder: (context, index) {
                       var message = viewModel.messages[index];
-                      print(
-                          "Messages list after adding AI response: ${message}");
                       return _buildChatBubble(
                         context,
                         viewModel.messages[index]['text']!,
@@ -55,23 +53,23 @@ class _TravelAssistantPageState extends State<TravelAssistantPage> {
                     },
                   ),
                 ),
-                if (itineraryButtonAdded)
-                  Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 10.0),
-                      child: Container(
-                        width: 300.0,
-                        child: ElevatedButton(
-                          onPressed: () async {
-                            print("User inquired about the itinerary.");
-                            await fetchUserItinerary();
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Color(0xFF9F76F9),
-                            foregroundColor: Colors.white,
-                          ),
-                          child: Text("Inquire about Itinerary"),
-                        ),
-                      )),
+                // if (itineraryButtonAdded)
+                //   Padding(
+                //       padding: const EdgeInsets.symmetric(horizontal: 10.0),
+                //       child: Container(
+                //         width: 300.0,
+                //         child: ElevatedButton(
+                //           onPressed: () async {
+                //             print("User inquired about the itinerary.");
+                //             await fetchUserItinerary(viewModel);
+                //           },
+                //           style: ElevatedButton.styleFrom(
+                //             backgroundColor: Color(0xFF9F76F9),
+                //             foregroundColor: Colors.white,
+                //           ),
+                //           child: Text("Inquire about Itinerary"),
+                //         ),
+                //       )),
                 _buildInputField(context, viewModel),
               ],
             );
@@ -81,22 +79,22 @@ class _TravelAssistantPageState extends State<TravelAssistantPage> {
     );
   }
 
-  void addItineraryButton(ChatViewModel viewModel) {
-    viewModel.addItineraryButton(
-      Padding(
-          padding: EdgeInsets.only(left: 20, right: 20),
-          child: ElevatedButton(
-            onPressed: () {
-              print("User inquired about the itinerary.");
-              // Handle the itinerary inquiry logic here
-            },
-            child: Text("Inquire about Itinerary"),
-          )),
-    );
-    itineraryButtonAdded = true;
-  }
+  // void addItineraryButton(ChatViewModel viewModel) {
+  //   viewModel.addItineraryButton(
+  //     Padding(
+  //         padding: EdgeInsets.only(left: 20, right: 20),
+  //         child: ElevatedButton(
+  //           onPressed: () {
+  //             print("User inquired about the itinerary.");
+  //             // Handle the itinerary inquiry logic here
+  //           },
+  //           child: Text("Inquire about Itinerary"),
+  //         )),
+  //   );
+  //   itineraryButtonAdded = true;
+  // }
 
-  Future<void> fetchUserItinerary() async {
+  Future<void> fetchUserItinerary(ChatViewModel viewModel) async {
     // Assuming you have a ViewModel or service to handle the data
     String userId = FirebaseAuth.instance.currentUser?.uid ?? '';
 
@@ -115,7 +113,7 @@ class _TravelAssistantPageState extends State<TravelAssistantPage> {
       } else {
         // Here you can show the itineraries to the user,
         // either by updating the UI or navigating to a new screen
-        showItineraryDialog(itineraries);
+        showItineraryDialog(itineraries, viewModel);
       }
     } catch (e) {
       print("Error fetching itinerary: $e");
@@ -175,7 +173,8 @@ class _TravelAssistantPageState extends State<TravelAssistantPage> {
   }
 
 // Example: Show itinerary dialog with fetched data
-  void showItineraryDialog(List<Map<String, dynamic>> itineraries) {
+  void showItineraryDialog(
+      List<Map<String, dynamic>> itineraries, ChatViewModel viewModel) {
     showDialog(
       context: context,
       builder: (context) {
@@ -238,12 +237,12 @@ class _TravelAssistantPageState extends State<TravelAssistantPage> {
                   } else {
                     // If no error, print the itinerary data
                     print("Itinerary Data: $itineraryJson");
-                    ChatViewModel viewModel = new ChatViewModel();
                     viewModel.sendItineraryToApi(
                         itineraryJson, FirebaseAuth.instance.currentUser!.uid);
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text('Itinerary uploaded successfully!', style: TextStyle(color: Colors.white)),
+                        content: Text('Itinerary uploaded successfully!',
+                            style: TextStyle(color: Colors.white)),
                         backgroundColor: Color(0xFF9F76F9),
                       ),
                     );
@@ -275,6 +274,16 @@ class _TravelAssistantPageState extends State<TravelAssistantPage> {
         ),
         child: Row(
           children: [
+            IconButton(
+              icon: Icon(Icons.map,
+                  color: Color(0xFF3B3B3B)), // Icon for itinerary
+              onPressed: () async {
+                if (!viewModel.isTyping) {
+                  print("User inquired about the itinerary.");
+                  await fetchUserItinerary(viewModel);
+                }
+              },
+            ),
             Expanded(
               child: TextField(
                 controller: _controller,

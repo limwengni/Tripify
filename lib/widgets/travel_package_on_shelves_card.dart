@@ -118,6 +118,10 @@ class _TravelPackagePurchasedCardState
         String oldAdType = adData['ad_type'];
         String packageId = adData['package_id'];
 
+        if (oldEndDate.isBefore(DateTime.now())) {
+          return;
+        }
+
         // Calculate new start and end date
         DateTime newStartDate =
             DateTime.now(); // Start from now for the renewal
@@ -197,13 +201,6 @@ class _TravelPackagePurchasedCardState
               'Failed to fetch travel package details for renewal.',
             );
           }
-        } else {
-          // If the user doesn't have enough credit, show an alert
-          _showAlertDialog(
-            context,
-            'Insufficient Credit',
-            'You do not have enough ads credit to renew the ad.',
-          );
         }
       } else {
         _showAlertDialog(
@@ -585,7 +582,8 @@ class _TravelPackagePurchasedCardState
                                     }
                                   },
                                   style: TextButton.styleFrom(
-                                    backgroundColor:         const Color.fromARGB(255, 159, 118,249),
+                                    backgroundColor: const Color.fromARGB(
+                                        255, 159, 118, 249),
                                     foregroundColor: Colors.white,
                                     padding: const EdgeInsets.symmetric(
                                         vertical: 8, horizontal: 12),
@@ -608,7 +606,8 @@ class _TravelPackagePurchasedCardState
                                             .doc(currentUserId)
                                             .get();
 
-                                    adsCredit = (userDoc['ads_credit'] ?? 0).toInt();
+                                    adsCredit =
+                                        (userDoc['ads_credit'] ?? 0).toInt();
 
                                     Navigator.push(
                                         context,
@@ -644,7 +643,8 @@ class _TravelPackagePurchasedCardState
                                           .get();
 
                                   if (!walletActivated) {
-                                    adsCredit = (userDoc['ads_credit'] ?? 0).toInt();
+                                    adsCredit =
+                                        (userDoc['ads_credit'] ?? 0).toInt();
 
                                     showDialog(
                                       context: context,
@@ -691,7 +691,9 @@ class _TravelPackagePurchasedCardState
                                       MaterialPageRoute(
                                         builder: (context) => CreateAdsPage(
                                           travelPackageId: id,
-                                          adsCredit: (userDoc['ads_credit'] ?? 0).toInt(),
+                                          adsCredit:
+                                              (userDoc['ads_credit'] ?? 0)
+                                                  .toInt(),
                                         ),
                                       ),
                                     );
