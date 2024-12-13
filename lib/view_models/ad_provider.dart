@@ -200,8 +200,10 @@ class AdProvider with ChangeNotifier {
 
         int quantityAvailable = packageDoc['quantity_available'];
         bool isAvailable = packageDoc['is_available'];
+        DateTime packageEndDate = packageDoc['end_date'].toDate();
 
-        if (endDate.isBefore(currentDate)) {
+        if (endDate.isBefore(currentDate) ||
+            packageEndDate.isBefore(currentDate)) {
           await FirebaseFirestore.instance
               .collection('Advertisement')
               .doc(doc.id)

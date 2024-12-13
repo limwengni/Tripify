@@ -16,7 +16,7 @@ class _TravelPackagePurchasedRepositoryPageState
   List<TravelPackagePurchasedModel> travelPackagesPurchasedList = [];
   FirestoreService firestoreService = FirestoreService();
   String currentUserId = FirebaseAuth.instance.currentUser!.uid;
-  bool isLoading = true;  // Flag for loading state
+  bool isLoading = true; // Flag for loading state
 
   @override
   void initState() {
@@ -27,7 +27,8 @@ class _TravelPackagePurchasedRepositoryPageState
   // Fetch purchased travel packages from Firestore
   Future<void> fetchTravelPackagesPurchased() async {
     try {
-      List<Map<String, dynamic>>? data = await firestoreService.getSubCollectionData(
+      List<Map<String, dynamic>>? data =
+          await firestoreService.getSubCollectionData(
         'User',
         currentUserId,
         'Travel_Packages_Purchased',
@@ -36,19 +37,18 @@ class _TravelPackagePurchasedRepositoryPageState
       if (mounted) {
         setState(() {
           if (data == null || data.isEmpty) {
-           
           } else {
             travelPackagesPurchasedList = data
                 .map((item) => TravelPackagePurchasedModel.fromMap(item))
                 .toList();
           }
-          isLoading = false; 
+          isLoading = false;
         });
       }
     } catch (e) {
       if (mounted) {
         setState(() {
-          isLoading = false;  
+          isLoading = false;
         });
       }
       print('Error fetching travel packages: $e');
@@ -63,11 +63,17 @@ class _TravelPackagePurchasedRepositoryPageState
       ),
       body: Center(
         child: isLoading
-            ? CircularProgressIndicator()  // Show loading spinner while fetching
-            : travelPackagesPurchasedList==null || travelPackagesPurchasedList.isEmpty
-                ? Text("No purchased travel packages found.")  // Show message if no data
+            ? Center(
+                child: CircularProgressIndicator(
+                    color: Color(
+                        0xFF9F76F9))) // Show loading spinner while fetching
+            : travelPackagesPurchasedList == null ||
+                    travelPackagesPurchasedList.isEmpty
+                ? Text(
+                    "No purchased travel packages found.") // Show message if no data
                 : TravelPackagePurchasedCardList(
-                    travelPackagesPurchasedList: travelPackagesPurchasedList!, currentUserId: currentUserId,
+                    travelPackagesPurchasedList: travelPackagesPurchasedList!,
+                    currentUserId: currentUserId,
                   ),
       ),
     );

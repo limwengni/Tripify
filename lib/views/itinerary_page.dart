@@ -511,8 +511,8 @@ class _ItineraryPageState extends State<ItineraryPage> {
   // Helper function to calculate the duration
   String getDuration(DateTime startDate, DateTime endDate) {
     final difference = endDate.difference(startDate).inDays;
-    final days = difference;
-    final nights = days > 0 ? days - 1 : 0;
+    final days = difference + 1;
+    final nights = days > 1 ? days - 1 : 0;
 
     return '$days D $nights N';
   }

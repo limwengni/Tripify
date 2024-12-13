@@ -1,11 +1,21 @@
+import 'package:intl/intl.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tripify/view_models/chat_viewmodel.dart';
+import 'package:tripify/view_models/itinerary_provider.dart';
 
-class TravelAssistantPage extends StatelessWidget {
+class TravelAssistantPage extends StatefulWidget {
+  @override
+  _TravelAssistantPageState createState() => _TravelAssistantPageState();
+}
+
+class _TravelAssistantPageState extends State<TravelAssistantPage> {
   final TextEditingController _controller = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  List<Widget> itineraryButtons = [];
+  bool itineraryButtonAdded = false;
 
   @override
   Widget build(BuildContext context) {
@@ -18,6 +28,12 @@ class TravelAssistantPage extends StatelessWidget {
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (viewModel.messages.isNotEmpty) {
                 _scrollToBottom();
+
+                if (!itineraryButtonAdded && viewModel.messages.length == 1) {
+                  setState(() {
+                    itineraryButtonAdded = true;
+                  });
+                }
               }
             });
 
@@ -28,6 +44,7 @@ class TravelAssistantPage extends StatelessWidget {
                     controller: _scrollController,
                     itemCount: viewModel.messages.length,
                     itemBuilder: (context, index) {
+                      var message = viewModel.messages[index];
                       return _buildChatBubble(
                         context,
                         viewModel.messages[index]['text']!,
@@ -36,12 +53,213 @@ class TravelAssistantPage extends StatelessWidget {
                     },
                   ),
                 ),
+                // if (itineraryButtonAdded)
+                //   Padding(
+                //       padding: const EdgeInsets.symmetric(horizontal: 10.0),
+                //       child: Container(
+                //         width: 300.0,
+                //         child: ElevatedButton(
+                //           onPressed: () async {
+                //             print("User inquired about the itinerary.");
+                //             await fetchUserItinerary(viewModel);
+                //           },
+                //           style: ElevatedButton.styleFrom(
+                //             backgroundColor: Color(0xFF9F76F9),
+                //             foregroundColor: Colors.white,
+                //           ),
+                //           child: Text("Inquire about Itinerary"),
+                //         ),
+                //       )),
                 _buildInputField(context, viewModel),
               ],
             );
           },
         ),
       ),
+    );
+  }
+
+  // void addItineraryButton(ChatViewModel viewModel) {
+  //   viewModel.addItineraryButton(
+  //     Padding(
+  //         padding: EdgeInsets.only(left: 20, right: 20),
+  //         child: ElevatedButton(
+  //           onPressed: () {
+  //             print("User inquired about the itinerary.");
+  //             // Handle the itinerary inquiry logic here
+  //           },
+  //           child: Text("Inquire about Itinerary"),
+  //         )),
+  //   );
+  //   itineraryButtonAdded = true;
+  // }
+
+  Future<void> fetchUserItinerary(ChatViewModel viewModel) async {
+    // Assuming you have a ViewModel or service to handle the data
+    String userId = FirebaseAuth.instance.currentUser?.uid ?? '';
+
+    if (userId.isEmpty) {
+      print("User not logged in.");
+      return;
+    }
+
+    try {
+      // Fetch itineraries from your provider/service (replace with your own logic)
+      List<Map<String, dynamic>> itineraries =
+          await ItineraryProvider().getUserItineraries(userId);
+
+      if (itineraries.isEmpty) {
+        print("No itineraries found.");
+      } else {
+        // Here you can show the itineraries to the user,
+        // either by updating the UI or navigating to a new screen
+        showItineraryDialog(itineraries, viewModel);
+      }
+    } catch (e) {
+      print("Error fetching itinerary: $e");
+    }
+  }
+
+  Future<Map<String, dynamic>> fetchDayItinerary(String itineraryId) async {
+    // Assume we are using Firebase Firestore
+    final itineraryDoc = await FirebaseFirestore.instance
+        .collection('DayItinerary')
+        .where('itinerary_id', isEqualTo: itineraryId)
+        .get();
+
+    if (itineraryDoc.docs.isNotEmpty) {
+      final itineraryData = itineraryDoc.docs.first.data();
+      List<String> locationIds =
+          List<String>.from(itineraryData['location_ids']);
+      int dayNumber = itineraryData['day_number'];
+
+      // Now use locationIds to fetch the location details
+      List<Map<String, dynamic>> locations =
+          await fetchLocations(locationIds, dayNumber);
+
+      return {
+        'itinerary_id': itineraryId,
+        'day_number': dayNumber,
+        'locations': locations,
+      };
+    } else {
+      // Return an empty JSON or error message if no itinerary found
+      return {'error': 'No locations added to this itinerary yet.'};
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> fetchLocations(
+      List<String> locationIds, int dayNumber) async {
+    List<Map<String, dynamic>> locations = [];
+
+    for (String locationId in locationIds) {
+      final locationDoc = await FirebaseFirestore.instance
+          .collection('ItineraryLocation')
+          .doc(locationId)
+          .get();
+
+      if (locationDoc.exists) {
+        final locationData = locationDoc.data();
+        locations.add({
+          'name': locationData?['name'],
+          'latitude': locationData?['latitude'],
+          'longitude': locationData?['longitude'],
+          'dayNumber': dayNumber,
+        });
+      }
+    }
+
+    return locations;
+  }
+
+// Example: Show itinerary dialog with fetched data
+  void showItineraryDialog(
+      List<Map<String, dynamic>> itineraries, ChatViewModel viewModel) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text("Your Itineraries"),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: itineraries.map((itinerary) {
+              DateTime startDate;
+              if (itinerary['start_date'] is int) {
+                startDate = DateTime.fromMillisecondsSinceEpoch(
+                    itinerary['start_date']);
+              } else if (itinerary['start_date'] is String) {
+                startDate = DateTime.parse(itinerary['start_date']);
+              } else {
+                startDate = DateTime.now();
+              }
+
+              // Calculate the end date by adding the number of days
+              DateTime endDate =
+                  startDate.add(Duration(days: itinerary['number_of_days']));
+
+              // Format the dates into readable strings
+              String formattedStartDate =
+                  DateFormat('dd MMM yyyy').format(startDate);
+              String formattedEndDate =
+                  DateFormat('dd MMM yyyy').format(endDate);
+
+              return ListTile(
+                title: Text(
+                  itinerary['name'],
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                subtitle:
+                    Text("From: $formattedStartDate to $formattedEndDate"),
+                onTap: () async {
+                  print("Selected Itinerary ID: ${itinerary['id']}");
+
+                  Map<String, dynamic> itineraryJson =
+                      await fetchDayItinerary(itinerary['id']);
+
+                  if (itineraryJson.containsKey('error')) {
+                    // If itineraryJson contains 'error', show an alert dialog with the error message
+                    showDialog(
+                      context: context,
+                      builder: (context) {
+                        return AlertDialog(
+                          title: Text("Error"),
+                          content: Text(itineraryJson['error']),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(
+                                  context), // Close the error dialog
+                              child: Text("OK"),
+                            ),
+                          ],
+                        );
+                      },
+                    );
+                  } else {
+                    // If no error, print the itinerary data
+                    print("Itinerary Data: $itineraryJson");
+                    viewModel.sendItineraryToApi(
+                        itineraryJson, FirebaseAuth.instance.currentUser!.uid);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Itinerary uploaded successfully!',
+                            style: TextStyle(color: Colors.white)),
+                        backgroundColor: Color(0xFF9F76F9),
+                      ),
+                    );
+                    Navigator.pop(context);
+                  }
+                },
+              );
+            }).toList(),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text("Close"),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -56,6 +274,16 @@ class TravelAssistantPage extends StatelessWidget {
         ),
         child: Row(
           children: [
+            IconButton(
+              icon: Icon(Icons.map,
+                  color: Color(0xFF3B3B3B)), // Icon for itinerary
+              onPressed: () async {
+                if (!viewModel.isTyping) {
+                  print("User inquired about the itinerary.");
+                  await fetchUserItinerary(viewModel);
+                }
+              },
+            ),
             Expanded(
               child: TextField(
                 controller: _controller,

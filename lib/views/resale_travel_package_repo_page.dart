@@ -14,7 +14,7 @@ class ResaleTravelPackageRepoPage extends StatefulWidget {
 
 class _ResaleTravelPackageRepoPageState
     extends State<ResaleTravelPackageRepoPage> {
-      FirestoreService _firestoreService = FirestoreService();
+  FirestoreService _firestoreService = FirestoreService();
   String currentUserId = FirebaseAuth.instance.currentUser!.uid;
 
   @override
@@ -28,12 +28,13 @@ class _ResaleTravelPackageRepoPageState
           collection: 'New_Travel_Packages',
           field: 'reseller_id',
           value: currentUserId,
-          orderBy: 'created_at', 
+          orderBy: 'created_at',
           descending: true,
         ),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
+            return Center(
+                child: CircularProgressIndicator(color: Color(0xFF9F76F9)));
           }
 
           if (snapshot.hasError) {
@@ -48,7 +49,8 @@ class _ResaleTravelPackageRepoPageState
             );
           }
 
-          List<NewTravelPackageModel> travelPackagesOnShelvesList = snapshot.data!.docs
+          List<NewTravelPackageModel> travelPackagesOnShelvesList = snapshot
+              .data!.docs
               .map((doc) => NewTravelPackageModel.fromMap(
                   doc.data() as Map<String, dynamic>))
               .toList();

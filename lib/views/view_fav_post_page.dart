@@ -471,7 +471,7 @@ class _FavouriteTravelPackagesState extends State<FavouriteTravelPackages> {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: travelPackagesList != null
+      child: travelPackagesList.isNotEmpty
           ? Column(
               children: [
                 Expanded(

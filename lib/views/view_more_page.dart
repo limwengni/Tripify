@@ -3,7 +3,6 @@ import 'package:tripify/models/itinerary_model.dart';
 import 'package:tripify/models/itinerary_location_model.dart';
 import 'package:tripify/views/add_location_page.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter_reorderable_list/flutter_reorderable_list.dart';
 
 class ViewMorePage extends StatefulWidget {
   final String itineraryId;
