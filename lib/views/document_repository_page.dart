@@ -123,7 +123,7 @@ class DocumentRepositoryPage extends StatelessWidget {
               Card(
                 child: ListTile(
                   title: const Text("Receipt for Travel Package Purchased"),
-                  subtitle: const Text("View your travel packages on shelves."),
+                  subtitle: const Text("View your receipts for purchases."),
                   trailing: const Icon(Icons.arrow_forward),
                   onTap: () {
                     Navigator.push(
