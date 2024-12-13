@@ -16,20 +16,35 @@ class SettingsPage extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(20.0),
         children: [
+          // _buildSection(
+          //   context,
+          //   items: [
+          //     "Account Security",
+          //     "Privacy Settings",
+          //     "Notification Settings",
+          //   ],
+          // ),
+          // SizedBox(height: 16.0),
+          // _buildSection(
+          //   context,
+          //   items: [
+          //     "Language Settings",
+          //     "Theme",
+          //     "About",
+          //   ],
+          // ),
+          // SizedBox(height: 16.0),
+          // _buildSection(
+          //   context,
+          //   items: [
+          //     "Help Center",
+          //     "Log Out",
+          //   ],
+          // ),
           _buildSection(
             context,
             items: [
               "Account Security",
-              "Privacy Settings",
-              "Notification Settings",
-            ],
-          ),
-          SizedBox(height: 16.0),
-          _buildSection(
-            context,
-            items: [
-              "Language Settings",
-              "Theme",
               "About",
             ],
           ),
@@ -37,7 +52,6 @@ class SettingsPage extends StatelessWidget {
           _buildSection(
             context,
             items: [
-              "Help Center",
               "Log Out",
             ],
           ),
@@ -168,18 +182,13 @@ class SettingsPage extends StatelessWidget {
               builder: (BuildContext context) {
                 final bool isDarkMode =
                     Theme.of(context).brightness == Brightness.dark;
-                final textColor = isDarkMode
-                    ? Colors.white
-                    : Colors.black;
-                final dialogBackgroundColor = isDarkMode
-                    ? Color(0xFF333333)
-                    : Colors.white;
+                final textColor = isDarkMode ? Colors.white : Colors.black;
+                final dialogBackgroundColor =
+                    isDarkMode ? Color(0xFF333333) : Colors.white;
 
                 return AlertDialog(
-                  backgroundColor:
-                      dialogBackgroundColor,
-                  title: Text("Log Out",
-                      style: TextStyle(color: textColor)),
+                  backgroundColor: dialogBackgroundColor,
+                  title: Text("Log Out", style: TextStyle(color: textColor)),
                   content: Text("Are you sure you want to log out?",
                       style: TextStyle(color: textColor)),
                   actions: [
@@ -197,13 +206,10 @@ class SettingsPage extends StatelessWidget {
                             .logout(context);
 
                         Navigator.of(context).pop();
-                        Navigator.of(context).popUntil((route) =>
-                            route.isFirst);
-                        Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(
-                                builder: (_) =>
-                                    WelcomePage()));
+                        Navigator.of(context)
+                            .popUntil((route) => route.isFirst);
+                        Navigator.pushReplacement(context,
+                            MaterialPageRoute(builder: (_) => WelcomePage()));
                       },
                     ),
                   ],
