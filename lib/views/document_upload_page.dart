@@ -257,65 +257,68 @@ class _DocumentUploadPageState extends State<DocumentUploadPage> {
       appBar: AppBar(
         title: const Text('Documents'),
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: GridView.builder(
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                crossAxisSpacing: 1,
-                mainAxisSpacing: 5,
-                childAspectRatio: 1.2,
-              ),
-              itemCount: documents.length,
-              itemBuilder: (context, index) {
-                String documentUrl = documents[index]['url']!;
-                String fileName = documents[index]['name']!;
-                String mimeType = documents[index]['mimeType']!;
+      body: documents.isNotEmpty
+          ? Column(
+              children: [
+                Expanded(
+                  child: GridView.builder(
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      crossAxisSpacing: 1,
+                      mainAxisSpacing: 5,
+                      childAspectRatio: 1.2,
+                    ),
+                    itemCount: documents.length,
+                    itemBuilder: (context, index) {
+                      String documentUrl = documents[index]['url']!;
+                      String fileName = documents[index]['name']!;
+                      String mimeType = documents[index]['mimeType']!;
 
-                return Card(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Padding(
-                          padding: EdgeInsets.only(left: 10),
-                          child: Row(
-                            children: [
-                              mimeType.startsWith('image/')
-                                  ? Icon(Icons.image, color: Colors.red)
-                                  : mimeType == 'application/pdf'
-                                      ? Icon(Icons.picture_as_pdf,
-                                          color: Colors.red)
-                                      : Icon(Icons
-                                          .insert_drive_file), // Default icon for other types
+                      return Card(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Padding(
+                                padding: EdgeInsets.only(left: 10),
+                                child: Row(
+                                  children: [
+                                    mimeType.startsWith('image/')
+                                        ? Icon(Icons.image, color: Colors.red)
+                                        : mimeType == 'application/pdf'
+                                            ? Icon(Icons.picture_as_pdf,
+                                                color: Colors.red)
+                                            : Icon(Icons
+                                                .insert_drive_file), // Default icon for other types
 
-                              SizedBox(width: 8),
-                              Expanded(
-                                child: Text(
-                                  fileName,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                              // Delete icon
-                              IconButton(
-                                icon: Icon(Icons.delete),
-                                onPressed: () => _deleteDocument(documentUrl),
-                              ),
-                            ],
-                          )),
-                      Padding(
-                        padding: EdgeInsets.only(left: 5, right: 5),
-                        child: _buildDocumentPreview(
-                            documentUrl, fileName, mimeType),
-                      )
-                    ],
+                                    SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text(
+                                        fileName,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                    // Delete icon
+                                    IconButton(
+                                      icon: Icon(Icons.delete),
+                                      onPressed: () =>
+                                          _deleteDocument(documentUrl),
+                                    ),
+                                  ],
+                                )),
+                            Padding(
+                              padding: EdgeInsets.only(left: 5, right: 5),
+                              child: _buildDocumentPreview(
+                                  documentUrl, fileName, mimeType),
+                            )
+                          ],
+                        ),
+                      );
+                    },
                   ),
-                );
-              },
-            ),
-          ),
-        ],
-      ),
+                ),
+              ],
+            )
+          : Center(child: Text('No documents found.')),
       floatingActionButton: FloatingActionButton(
         onPressed: _pickDocument,
         child: Icon(Icons.upload_file),
