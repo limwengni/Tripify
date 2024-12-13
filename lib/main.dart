@@ -240,8 +240,9 @@ class MainPageState extends State<MainPage> {
     },
     {'title': 'Profile', 'widget': ProfilePage()},
     {'title': 'Document Repository', 'widget': const DocumentRepositoryPage()},
-    {'title': 'Settings', 'widget': SettingsPage()},
+    {'title': 'Wallet', 'widget': const WalletPage()},
     {'title': 'Refund Applications', 'widget': RefundPage()},
+    {'title': 'Settings', 'widget': SettingsPage()},
   ];
 
   List<Map<String, dynamic>> staffWidgetItems = [
@@ -331,7 +332,7 @@ class MainPageState extends State<MainPage> {
       _title = widgetItems[_currentIndex]['title'];
 
       // Manage bottom navigation index based on current page
-      if (_currentIndex > 2 && _currentIndex < 7) {
+      if (_currentIndex > 2 && _currentIndex < 8) {
         _btmNavIndex = 3;
       } else {
         _btmNavIndex = _currentIndex;

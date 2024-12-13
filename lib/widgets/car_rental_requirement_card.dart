@@ -87,7 +87,9 @@ class _CarRentalRequirementCardState extends State<CarRentalRequirementCard> {
                       }
 
                       print('last');
-
+                      Map<String, dynamic>? currentUser =
+                          await _firestoreService.getDataById('User',
+                              currentUserId);
                       Navigator.push(
                         context,
                         MaterialPageRoute(
@@ -95,7 +97,9 @@ class _CarRentalRequirementCardState extends State<CarRentalRequirementCard> {
                             conversation: conversation!,
                             currentUserId: currentUserId,
                             chatPic:
-                                conversationPic!, // Use 'conversationPic' or default to an empty string
+                                conversationPic!,
+                                 predefineString:
+                                'Hi I am from ${currentUser!['username']}, I have some solution for your accoomodation requirement \n\n*${widget.carRentalRequirement.title}*\n', // Use 'conversationPic' or default to an empty string
                           ),
                         ),
                       );

@@ -23,6 +23,7 @@ class CarRentalRequirementModel {
   final String additionalRequirement;
   final CarType carType;
   final String userDocId;
+  final DateTime createdAt;
 
   CarRentalRequirementModel({
     required this.id,
@@ -35,6 +36,7 @@ class CarRentalRequirementModel {
     required this.additionalRequirement,
     required this.carType,
     required this.userDocId,
+    required this.createdAt,
   });
   Map<String, dynamic> toMap() {
     return {
@@ -48,6 +50,7 @@ class CarRentalRequirementModel {
       'additionalRequirement': additionalRequirement,
       'carType': carType.toString().split('.').last,
       'userDocId': userDocId,
+      'createdAt': createdAt
     };
   }
 
@@ -70,6 +73,9 @@ class CarRentalRequirementModel {
         orElse: () => CarType.sedan,
       ),
       userDocId: data['userDocId'] as String,
+       createdAt: (data['createdAt'] is Timestamp)
+          ? (data['createdAt'] as Timestamp).toDate()
+          : DateTime.parse(data['createdAt']),
     );
   }
 }

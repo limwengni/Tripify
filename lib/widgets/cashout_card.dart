@@ -32,7 +32,7 @@ class _CashoutCardState extends State<CashoutCard> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
+            Text('ID: '+ 
               widget.cashoutApplication.cashoutId,
               style: const TextStyle(
                 fontWeight: FontWeight.bold, // Makes the text bold

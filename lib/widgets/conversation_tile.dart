@@ -285,7 +285,8 @@ class _ConversationTileState extends State<ConversationTile> {
                             ),
                             Icon(
                               Icons.poll,
-                              color: Colors.blue,
+                              color: 
+                              Color.fromARGB(255, 159, 118, 249),
                             ),
                             SizedBox(width: 8),
                             Text('Poll'),
@@ -364,7 +365,7 @@ class _ConversationTileState extends State<ConversationTile> {
                             ),
                             Icon(
                               Icons.image,
-                              color: Colors.blue,
+                              color: Color.fromARGB(255, 159, 118, 249),
                             ),
                             SizedBox(width: 8),
                             Text('Pic'),
@@ -443,7 +444,7 @@ class _ConversationTileState extends State<ConversationTile> {
                             ),
                             Icon(
                               Icons.video_camera_back_rounded,
-                              color: Colors.blue,
+                              color: Color.fromARGB(255, 159, 118, 249),
                             ),
                             SizedBox(width: 8),
                             Text('Video'),
@@ -522,7 +523,8 @@ class _ConversationTileState extends State<ConversationTile> {
                             ),
                             Icon(
                               Icons.file_copy_rounded,
-                              color: Colors.blue,
+                              color: Color.fromARGB(255, 159, 118, 249),
+
                             ),
                             SizedBox(width: 8),
                             Text('File'),
@@ -555,7 +557,7 @@ class _ConversationTileState extends State<ConversationTile> {
                         width: 30,
                         height: 30,
                         decoration: const BoxDecoration(
-                          color: Colors.blue,
+                          color: Color.fromARGB(255, 159, 118, 249),
                           shape: BoxShape.circle,
                         ),
                         alignment: Alignment.center,

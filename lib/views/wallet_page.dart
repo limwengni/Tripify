@@ -132,7 +132,7 @@ class _WalletPageState extends State<WalletPage> {
                       },
                       child: const Text('Cancel'),
                     ),
-                    ElevatedButton(
+                    TextButton(
                       onPressed: () async {
                         if (_formKey.currentState?.saveAndValidate() ?? false) {
                           final values = _formKey.currentState!.value;
@@ -212,7 +212,7 @@ class _WalletPageState extends State<WalletPage> {
               showDialog(
                 context: context,
                 builder: (BuildContext context) {
-                  if (cashoutAmount == null) {
+                  if (cashoutAmount == null||cashoutAmount ==0) {
                     return cashoutDialog(
                         context, currentUserId, _firestoreService);
                   } else {
@@ -272,15 +272,18 @@ class _WalletPageState extends State<WalletPage> {
           ),
           Row(
             children: [
-              Text(
+             SizedBox(width: 5,), Text(
                 'Cashout History',
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
             ],
           ),
-          Divider(
-            thickness: 1,
-            color: Colors.black,
+          Padding(
+            padding: const EdgeInsets.all(5.0),
+            child: Divider(
+              thickness: 1,
+              color: Colors.black,
+            ),
           ),
           SizedBox(
             height: 10,

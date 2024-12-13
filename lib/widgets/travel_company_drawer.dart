@@ -16,7 +16,7 @@ class TravelCompanyDrawer extends StatelessWidget {
         children: [
           const DrawerHeader(
             decoration: BoxDecoration(
-              color:         const Color.fromARGB(255, 159, 118,249),
+              color: const Color.fromARGB(255, 159, 118, 249),
             ),
             child: Text('Tripify'),
           ),
@@ -35,7 +35,7 @@ class TravelCompanyDrawer extends StatelessWidget {
             },
           ),
           ListTile(
-            title: const Text('Settings'),
+            title: const Text('Wallet'),
             onTap: () {
               onItemTapped(5);
               Navigator.pop(context);
@@ -45,6 +45,13 @@ class TravelCompanyDrawer extends StatelessWidget {
             title: const Text('Refund Applications'),
             onTap: () {
               onItemTapped(6);
+              Navigator.pop(context);
+            },
+          ),
+          ListTile(
+            title: const Text('Settings'),
+            onTap: () {
+              onItemTapped(7);
               Navigator.pop(context);
             },
           ),

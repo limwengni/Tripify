@@ -8,6 +8,7 @@ import 'package:tripify/models/conversation_model.dart';
 import 'package:tripify/models/message_model.dart';
 import 'package:tripify/models/poll_model.dart';
 import 'package:tripify/view_models/firestore_service.dart';
+import 'package:tripify/views/full_screen_image.dart';
 import 'package:tripify/views/pdf_viewer_page.dart';
 import 'package:tripify/widgets/video_preview.dart';
 
@@ -258,48 +259,62 @@ class _ChatBubbleState extends State<ChatBubble> {
                         ),
                       )
                     else if (widget.contentType == "pic")
-                      Stack(
-                        children: [
-                          // Loading circle (visible when loading)
-                          if (_isLoading)
-                            const Center(
-                              child: SizedBox(
-                                width: 200,
-                                height: 200,
-                                child: CircularProgressIndicator(
-                                  color: Colors
-                                      .blue, // Customize the color of the loading circle
-                                  strokeWidth: 3.0,
-                                ),
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => FullScreenImage(
+                                imageUrl:
+                                    widget.message,
                               ),
                             ),
-                          // The actual image
-                          Image.network(
-                            widget.message,
-                            width: 200,
-                            height: 200,
-                            fit: BoxFit.cover,
-                            loadingBuilder: (context, child, loadingProgress) {
-                              if (loadingProgress == null) {
-                                // Loading finished
+                          );
+                        },
+                        child: Stack(
+                          children: [
+                            // Loading circle (visible when loading)
+                            if (_isLoading)
+                              const Center(
+                                child: SizedBox(
+                                  width: 200,
+                                  height: 200,
+                                  child: CircularProgressIndicator(
+                                    color: Colors
+                                        .blue, // Customize the color of the loading circle
+                                    strokeWidth: 3.0,
+                                  ),
+                                ),
+                              ),
+                            // The actual image
+                            Image.network(
+                              widget.message,
+                              width: 200,
+                              height: 200,
+                              fit: BoxFit.cover,
+                              loadingBuilder:
+                                  (context, child, loadingProgress) {
+                                if (loadingProgress == null) {
+                                  // Loading finished
+                                  _isLoading = false;
+                                  return child;
+                                }
+                                return const SizedBox(); // Return empty space while loading
+                              },
+                              errorBuilder: (context, error, stackTrace) {
+                                // Display an error placeholder if the image fails to load
                                 _isLoading = false;
-                                return child;
-                              }
-                              return const SizedBox(); // Return empty space while loading
-                            },
-                            errorBuilder: (context, error, stackTrace) {
-                              // Display an error placeholder if the image fails to load
-                              _isLoading = false;
-                              return Container(
-                                width: 200,
-                                height: 200,
-                                color: Colors.grey,
-                                child:
-                                    const Icon(Icons.error, color: Colors.red),
-                              );
-                            },
-                          ),
-                        ],
+                                return Container(
+                                  width: 200,
+                                  height: 200,
+                                  color: Colors.grey,
+                                  child: const Icon(Icons.error,
+                                      color: Colors.red),
+                                );
+                              },
+                            ),
+                          ],
+                        ),
                       )
                     else if (widget.contentType == "video")
                       VideoPreview(
@@ -436,8 +451,7 @@ class _ChatBubbleState extends State<ChatBubble> {
                                                         BorderRadius.circular(
                                                             10), // Button shape
                                                     child: TextButton(
-                                                      onPressed: () async 
-                                                      {
+                                                      onPressed: () async {
                                                         Map<String, int>
                                                             answerMap =
                                                             poll!.answers!;
@@ -466,7 +480,9 @@ class _ChatBubbleState extends State<ChatBubble> {
                                                                 value:
                                                                     answerMap);
 
-                                                        print('answerMap: '+answerMap.toString());
+                                                        print('answerMap: ' +
+                                                            answerMap
+                                                                .toString());
                                                         setState(() {
                                                           pollAns = optionKey;
                                                           selectedKey =

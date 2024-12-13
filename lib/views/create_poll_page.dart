@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
+import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:tripify/models/conversation_model.dart';
 import 'package:tripify/models/poll_model.dart';
 import 'package:tripify/view_models/conversation_view_model.dart';
@@ -40,7 +41,12 @@ class _CreatePollPageState extends State<CreatePollPage> {
                 name: 'question',
                 decoration: const InputDecoration(
                   labelText: 'Poll Question',
+                  border: OutlineInputBorder(),
                 ),
+                validator: FormBuilderValidators.compose([
+                  FormBuilderValidators.required(
+                      errorText: 'Poll question cannot be empty'),
+                ]),
               ),
               const SizedBox(height: 16),
               Expanded(
@@ -55,6 +61,7 @@ class _CreatePollPageState extends State<CreatePollPage> {
                             child: FormBuilderTextField(
                               name: 'option${index + 1}',
                               decoration: InputDecoration(
+                                border: OutlineInputBorder(),
                                 labelText: 'Option ${index + 1}',
                               ),
                             ),
@@ -86,7 +93,10 @@ class _CreatePollPageState extends State<CreatePollPage> {
                         options.add('');
                       });
                     },
-                    child: const Text('Add Option', style: TextStyle(color: Colors.white),),
+                    child: const Text(
+                      'Add Option',
+                      style: TextStyle(color: Colors.white),
+                    ),
                   ),
                   const SizedBox(width: 16),
                   MaterialButton(
@@ -95,20 +105,37 @@ class _CreatePollPageState extends State<CreatePollPage> {
                     onPressed: () async {
                       if (_formKey.currentState?.saveAndValidate() ?? false) {
                         final formValues = _formKey.currentState?.value;
-                        // Generate a map of options from the list
+
+                        // Validate the options
                         final List<String> optionList = [];
                         for (int i = 0; i < options.length; i++) {
-                          optionList.add(formValues!['option${i + 1}']);
+                          final option = formValues!['option${i + 1}'];
+                          if (option != null && option.trim().isNotEmpty) {
+                            optionList.add(option);
+                          }
                         }
+
+                        if (optionList.length < 2) {
+                          // Show an error message if less than two options
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                  'A poll must have at least two options.'),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                          return;
+                        }
+
                         final poll = PollModel(
-                            createdBy: widget.currentUserId,
-                            id: '',
-                            createdAt: DateTime.now(),
-                            endAt:
-                                DateTime.now().add(const Duration(hours: 24)),
-                            options: optionList,
-                            question: formValues?['question'] ?? '',
-                            answers: null);
+                          createdBy: widget.currentUserId,
+                          id: '',
+                          createdAt: DateTime.now(),
+                          endAt: DateTime.now().add(const Duration(hours: 24)),
+                          options: optionList,
+                          question: formValues?['question'] ?? '',
+                          answers: null,
+                        );
 
                         await conversationViewModel.sendPollMessage(
                             poll: poll, conversation: widget.conversation);

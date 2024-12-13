@@ -127,8 +127,8 @@ class _SignupDetailsPage2State extends State<SignupDetailsPage2> {
                                     ? pdf!.files.single.name
                                     : 'PDF'),
                                 icon: const Icon(Icons.description),
-                                backgroundColor:
-                                    Colors.blue, // Set background color to blue
+                                backgroundColor: Color.fromARGB(255, 160, 118,
+                                    249), // Set background color to blue
                               ),
                             ),
                             const SizedBox(height: 15),

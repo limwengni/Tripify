@@ -42,6 +42,12 @@ class ConversationViewModel {
         'latest_message_type', contentTypeAsString);
 
     conversation.setLatestDateTime(sendTime);
+
+    for (String key in conversation.unreadMessage!.keys) {
+      conversation.unreadMessage![key] = conversation.unreadMessage![key]! + 1;
+    }
+    await firestoreService.updateField('Conversations', conversation.id,
+        'unread_message', conversation.unreadMessage);
   }
 
   Future<void> sendPollMessage(
@@ -65,8 +71,9 @@ class ConversationViewModel {
         descending: true);
   }
 
-  Stream<DocumentSnapshot> getConversationStream({required String conversationId}){
-        return firestoreService.getConversationStreamData(collection: 'Conversations', docId: conversationId);
-
+  Stream<DocumentSnapshot> getConversationStream(
+      {required String conversationId}) {
+    return firestoreService.getConversationStreamData(
+        collection: 'Conversations', docId: conversationId);
   }
 }

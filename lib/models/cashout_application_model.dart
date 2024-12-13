@@ -28,7 +28,7 @@ class CashoutApplicationModel {
   /// Converts a Map to a CashoutApplicationMode instance
 factory CashoutApplicationModel.fromMap(Map<String, dynamic> map) {
   return CashoutApplicationModel(
-    cashoutId: map['cashout_id'] as String,
+    cashoutId: map['id'] as String,
     createdBy: map['created_by'] as String,
     amount: map['amount'] is double
         ? map['amount'] as double
@@ -52,7 +52,7 @@ factory CashoutApplicationModel.fromMap(Map<String, dynamic> map) {
   /// Converts a CashoutApplicationMode instance to a Map
   Map<String, dynamic> toMap() {
     return {
-      'cashout_id': cashoutId,
+      'id': cashoutId,
       'created_by': createdBy,
       'amount': amount,
       'created_at': createdAt.toIso8601String(),
