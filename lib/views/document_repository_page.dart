@@ -6,6 +6,7 @@ import 'package:tripify/views/expired_travel_package_repo_page.dart';
 import 'package:tripify/views/resale_travel_package_repo_page.dart';
 import 'package:tripify/views/travel_package_on_shelves_repo_page.dart';
 import 'package:tripify/views/travel_package_purchased_repository_page.dart';
+import 'package:tripify/views/document_upload_page.dart';
 import 'package:tripify/views/view_fav_post_page.dart';
 
 class DocumentRepositoryPage extends StatelessWidget {
@@ -158,7 +159,12 @@ class DocumentRepositoryPage extends StatelessWidget {
                   subtitle: const Text("Access all stored documents."),
                   trailing: const Icon(Icons.arrow_forward),
                   onTap: () {
-                    // Navigate to View Documents Page
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => DocumentUploadPage(),
+                      ),
+                    );
                   },
                 ),
               ),
