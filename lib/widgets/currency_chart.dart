@@ -88,8 +88,9 @@ class _CurrencyChartState extends State<CurrencyChart> {
       print(rateList.length);
     }
 
-   for (int i = 0; i < rateList.length; i++) {
-      print('Rate ${i + 1}: ${rateList[i]['rates'][widget.baseCurrency].toString()}');
+    for (int i = 0; i < rateList.length; i++) {
+      print(
+          'Rate ${i + 1}: ${rateList[i]['rates'][widget.baseCurrency].toString()}');
       if (lowestRate == null && highestRate == null) {
         lowestRate = rateList[i]['rates'][widget.baseCurrency];
         highestRate = rateList[i]['rates'][widget.baseCurrency];
@@ -108,47 +109,80 @@ class _CurrencyChartState extends State<CurrencyChart> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: <Widget>[
-        Padding(
-          padding: const EdgeInsets.fromLTRB(8.0, 0, 0, 0),
-          child: SizedBox(
-            width: 60,
-            height: 34,
-            child: TextButton(
-              style: ButtonStyle(
-                backgroundColor: MaterialStateProperty.all(
-                  Color.fromARGB(255, 159, 118, 249), // Blue color
+    return Stack(
+      children: [
+        Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Padding(
+              padding: const EdgeInsets.fromLTRB(8.0, 0, 0, 0),
+              child: SizedBox(
+                width: 60,
+                height: 34,
+                child: TextButton(
+                  style: ButtonStyle(
+                    backgroundColor: MaterialStateProperty.all(
+                      Color.fromARGB(255, 159, 118, 249), // Blue color
+                    ),
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      showAvg = !showAvg;
+                    });
+                  },
+                  child: Text(
+                    'avg',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: showAvg
+                          ? Colors.white.withOpacity(0.5)
+                          : Colors.white,
+                    ),
+                  ),
                 ),
               ),
-              onPressed: () {
-                setState(() {
-                  showAvg = !showAvg;
-                });
-              },
-              child: Text(
-                'avg',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: showAvg ? Colors.white.withOpacity(0.5) : Colors.white,
+            ),
+            AspectRatio(
+              aspectRatio: 1.70,
+              child: Padding(
+                padding: const EdgeInsets.only(
+                  right: 18,
+                  left: 20,
+                  top: 24,
+                  bottom: 12,
                 ),
+                child: LineChart(
+                  showAvg ? avgData() : mainData(),
+                ),
+              ),
+            ),
+          ],
+        ),
+        // Y-axis label
+        Positioned(
+          top: 100, // Adjust to position vertically
+          left: 0, // Adjust for horizontal alignment
+          child: RotatedBox(
+            quarterTurns: 3, // Rotate text to be vertical
+            child: Text(
+              'Exchange Rate',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
               ),
             ),
           ),
         ),
-        AspectRatio(
-          aspectRatio: 1.70,
-          child: Padding(
-            padding: const EdgeInsets.only(
-              right: 18,
-              left: 12,
-              top: 24,
-              bottom: 12,
-            ),
-            child: LineChart(
-              showAvg ? avgData() : mainData(),
+        // X-axis label
+        Positioned(
+          bottom: 30, // Adjust for positioning near the X-axis
+          left: MediaQuery.of(context).size.width / 2 - 50 +30, // Center align
+          child: Text(
+            'Months',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 14,
             ),
           ),
         ),
@@ -257,7 +291,11 @@ class _CurrencyChartState extends State<CurrencyChart> {
                   // Assuming the 'MYR' rate exists in the response
                   return FlSpot(
                     index.toDouble(),
-                    (rateList[index]['rates'][widget.baseCurrency]?.toDouble() -lowestRate)/gap+1 ?? 0,
+                    (rateList[index]['rates'][widget.baseCurrency]?.toDouble() -
+                                    lowestRate) /
+                                gap +
+                            1 ??
+                        0,
                   );
                 })
               : [], //

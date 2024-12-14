@@ -448,7 +448,30 @@ class _TravelPackagePurchasedCardState
               onPressed: () {
                 // Proceed with the refund logic
                 Navigator.of(context).pop(); // Close the dialog
-                _processRefund(); // Call refund processing method
+                if (travelPackage!.startDate
+                    .isAfter(DateTime.now().add(Duration(days: 3)))) {
+                  _processRefund(); // Call refund processing method
+                } else {
+                  showDialog(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return AlertDialog(
+                        title: const Text('Refund Not Possible'),
+                        content: const Text(
+                          'Refunds can only be processed if the start date is more than 2 days from today.',
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () {
+                              Navigator.of(context).pop(); // Close the dialog
+                            },
+                            child: const Text('OK'),
+                          ),
+                        ],
+                      );
+                    },
+                  );
+                }
               },
               child: const Text('Refund'),
             ),
@@ -496,6 +519,33 @@ class _TravelPackagePurchasedCardState
     TextEditingController priceController = TextEditingController();
     final _formKey = GlobalKey<FormBuilderState>();
 
+    // Check if the refund is possible before showing the resell dialog
+    if (!travelPackage!.startDate
+        .isAfter(DateTime.now().add(Duration(days: 2)))) {
+      // Show "Refund Not Possible" dialog
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('Refund Not Possible'),
+            content: const Text(
+              'Refunds can only be processed if the start date is more than 2 days from today.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop(); // Close the dialog
+                },
+                child: const Text('OK'),
+              ),
+            ],
+          );
+        },
+      );
+      return; // Exit the method to avoid showing the resell dialog
+    }
+
+    // Show the resell dialog
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -508,16 +558,12 @@ class _TravelPackagePurchasedCardState
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const SizedBox(
-                      height: 20,
-                    ),
+                    const SizedBox(height: 20),
                     Text(
                       'Quantity: $quantity',
                       style: const TextStyle(fontSize: 18),
                     ),
-                    const SizedBox(
-                      height: 20,
-                    ),
+                    const SizedBox(height: 20),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -546,9 +592,10 @@ class _TravelPackagePurchasedCardState
                     const SizedBox(height: 20),
                     FormBuilderTextField(
                       name: 'price',
-                      keyboardType:
-                          TextInputType.numberWithOptions(decimal: true),
-                      decoration: InputDecoration(
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
+                      decoration: const InputDecoration(
                         labelText: 'Enter Price',
                         border: OutlineInputBorder(),
                       ),
@@ -590,18 +637,20 @@ class _TravelPackagePurchasedCardState
                           travelPackageIdForResale: travelPackage!.id,
                           travelPackagePurchasedId:
                               widget.travelPackagePurchased.id);
+
                   try {
                     await _firestoreService.insertDataWithAutoID(
                         'New_Travel_Packages', travelPackageResale.toMap());
 
                     int newResaleQuantity = resaleQuantity + quantity;
                     await _firestoreService.updateSubCollectionField(
-                        collection: "User",
-                        documentId: widget.currentUserId,
-                        subCollection: 'Travel_Packages_Purchased',
-                        subDocumentId: widget.travelPackagePurchased.id,
-                        field: 'resale_quantity',
-                        value: newResaleQuantity);
+                      collection: "User",
+                      documentId: widget.currentUserId,
+                      subCollection: 'Travel_Packages_Purchased',
+                      subDocumentId: widget.travelPackagePurchased.id,
+                      field: 'resale_quantity',
+                      value: newResaleQuantity,
+                    );
                     setState(() {
                       resaleQuantity = newResaleQuantity;
                       resaleAvailable = widget.travelPackagePurchased.quantity -
@@ -609,7 +658,9 @@ class _TravelPackagePurchasedCardState
                           sold;
                       quantity = 0;
                     });
-                  } catch (e) {}
+                  } catch (e) {
+                    // Handle error here
+                  }
                   Navigator.of(context).pop();
                   ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(content: Text('Successfully On Shelves')));

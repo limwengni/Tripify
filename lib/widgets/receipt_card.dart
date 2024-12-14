@@ -78,7 +78,12 @@ class _ReceiptCardState extends State<ReceiptCard> {
                       style: const TextStyle(fontSize: 16),
                     ),
               const SizedBox(height: 5),
+              Text('Travel Date: ${travelPackage!.startDate}'),
+                 const SizedBox(height: 5),
+              Text('Purchased Date: ${widget.receipt!.createdAt}'),
+              const SizedBox(height: 5),
               Text('Quantity: ${ticketNoList.length}'),
+
               const SizedBox(height: 5),
               Text('Ticket No: '),
               const SizedBox(height: 5),

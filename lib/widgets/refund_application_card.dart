@@ -185,7 +185,9 @@ class _RefundApplicationCardState extends State<RefundApplicationCard> {
                           if (refundCreatorMap != null) {
                             refundCreator = UserModel.fromMap(refundCreatorMap,
                                 widget.refundPackage.createdBy);
-
+                            if (refundCreator.walletCredit == null) {
+                              refundCreator.walletCredit = 0;
+                            }
                             updatedAmount =
                                 refundCreator.walletCredit! + amount;
 
@@ -227,9 +229,19 @@ class _RefundApplicationCardState extends State<RefundApplicationCard> {
                             if (!newTravelPackageModel.ticketIdNumMap!
                                 .containsValue(
                                     widget.refundPackage.createdBy)) {
-    
-                              await _firestoreService.removeMapKey('Conversations', newTravelPackageModel.groupChatId!, 'unread_message', widget.refundPackage.createdBy);
-                              await _firestoreService.removeItemFromFirestoreList(collectionPath: 'Conversations', documentId:newTravelPackageModel.groupChatId!, fieldName: 'participants', itemToRemove: widget.refundPackage.createdBy);
+                              await _firestoreService.removeMapKey(
+                                  'Conversations',
+                                  newTravelPackageModel.groupChatId!,
+                                  'unread_message',
+                                  widget.refundPackage.createdBy);
+                              await _firestoreService
+                                  .removeItemFromFirestoreList(
+                                      collectionPath: 'Conversations',
+                                      documentId:
+                                          newTravelPackageModel.groupChatId!,
+                                      fieldName: 'participants',
+                                      itemToRemove:
+                                          widget.refundPackage.createdBy);
                               print('remove user from group chat');
                             }
                           }
@@ -278,7 +290,7 @@ class _RefundApplicationCardState extends State<RefundApplicationCard> {
                 ),
                 child: Center(
                   child: Text(
-                    'Refund',
+                    'Refund Successful',
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 16,
