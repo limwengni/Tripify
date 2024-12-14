@@ -118,10 +118,6 @@ class _TravelPackagePurchasedCardState
         String oldAdType = adData['ad_type'];
         String packageId = adData['package_id'];
 
-        if (oldEndDate.isBefore(DateTime.now())) {
-          return;
-        }
-
         // Calculate new start and end date
         DateTime newStartDate =
             DateTime.now(); // Start from now for the renewal
@@ -162,7 +158,7 @@ class _TravelPackagePurchasedCardState
             // Create a new Advertisement object with updated values
             Advertisement updatedAd = Advertisement(
               id: _adId,
-              packageId: widget.travelPackageOnShelve.id,
+              packageId: packageId,
               adType: oldAdType,
               startDate: newStartDate,
               endDate: newEndDate,
@@ -201,6 +197,12 @@ class _TravelPackagePurchasedCardState
               'Failed to fetch travel package details for renewal.',
             );
           }
+        } else {
+          _showAlertDialog(
+            context,
+            'Insufficient Balance',
+            'You do not have enough ads credit to renew this advertisement.',
+          );
         }
       } else {
         _showAlertDialog(
@@ -645,9 +647,8 @@ class _TravelPackagePurchasedCardState
 
                                   if (!walletActivated) {
                                     if (userDoc.exists) {
-                                      var userData = userDoc.data() as Map<
-                                          String,
-                                          dynamic>;
+                                      var userData = userDoc.data()
+                                          as Map<String, dynamic>;
 
                                       if (userData.containsKey('ads_credit')) {
                                         adsCredit =

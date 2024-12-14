@@ -121,7 +121,7 @@ class AccountSecurityPage extends StatelessWidget {
               },
             ),
             TextButton(
-                child: Text("Delete",
+                child: Text("Disable",
                     style: TextStyle(
                       color: Colors.red[500],
                     )),

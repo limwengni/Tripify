@@ -169,9 +169,8 @@ class _ViewAdsPerformancePageState extends State<ViewAdsPerformancePage> {
 
     // Group reports by date
     for (var report in allReports) {
-      final reportDate = report.reportDate;
-      final dateOnly =
-          DateTime(reportDate.year, reportDate.month, reportDate.day);
+      final dateOnly = DateTime(report.reportDate.year, report.reportDate.month,
+          report.reportDate.day);
 
       if (reportsGroupedByDate.containsKey(dateOnly)) {
         reportsGroupedByDate[dateOnly]!.add(report);
@@ -196,7 +195,7 @@ class _ViewAdsPerformancePageState extends State<ViewAdsPerformancePage> {
       }
     }
 
-    return true;
+    return false;
   }
 
   Future<void> fetchAdReports() async {
@@ -302,30 +301,22 @@ class _ViewAdsPerformancePageState extends State<ViewAdsPerformancePage> {
 
             if (adReportSnapshot.docs.isNotEmpty) {
               // Update the existing report
-              final reports = adReportSnapshot.docs
-                  .map((doc) => doc.data())
-                  .toList()
-                ..sort((a, b) => b['report_date'].compareTo(a['report_date']));
+              final latestReport = adReportSnapshot.docs.first.data();
+              adReport = AdReport.fromMap(latestReport);
 
-              final latestReport = reports.isNotEmpty ? reports.first : null;
+              adReport.clickCount = clickCount;
+              adReport.revenue = revenue.toDouble();
+              adReport.engagementRate = engagementRate.toDouble();
+              adReport.successRate = successRate.toDouble();
+              adReport.reach = reach.toInt();
+              adReport.cpc = cpc.toDouble();
+              adReport.cpm = cpm.toDouble();
+              adReport.roas = roas.toDouble();
 
-              if (latestReport != null) {
-                adReport = AdReport.fromMap(latestReport);
-
-                adReport.clickCount = clickCount;
-                adReport.revenue = revenue.toDouble();
-                adReport.engagementRate = engagementRate.toDouble();
-                adReport.successRate = successRate.toDouble();
-                adReport.reach = reach.toInt();
-                adReport.cpc = cpc.toDouble();
-                adReport.cpm = cpm.toDouble();
-                adReport.roas = roas.toDouble();
-
-                await FirebaseFirestore.instance
-                    .collection('AdReport')
-                    .doc(adReportSnapshot.docs.first.id)
-                    .set(adReport.toMap(), SetOptions(merge: true));
-              }
+              await FirebaseFirestore.instance
+                  .collection('AdReport')
+                  .doc(adReportSnapshot.docs.first.id)
+                  .set(adReport.toMap(), SetOptions(merge: true));
             } else {
               // Create a new report
               adReport = AdReport(
@@ -368,8 +359,14 @@ class _ViewAdsPerformancePageState extends State<ViewAdsPerformancePage> {
                     a.reportDate)); // Sort in descending order by created_at
 
               if (latestReport.isNotEmpty) {
-                reports.add(
-                    latestReport.first); // Add the latest report to the list
+                final reportToAdd = latestReport.first;
+
+                // Ensure the report is not added twice
+                if (!reports.any((report) =>
+                    report.adId == reportToAdd.adId &&
+                    report.reportDate == reportToAdd.reportDate)) {
+                  reports.add(reportToAdd);
+                }
               } else {
                 debugPrint('No new reports found.');
               }
@@ -393,8 +390,12 @@ class _ViewAdsPerformancePageState extends State<ViewAdsPerformancePage> {
   }
 
   bool isReportNew(AdReport report, DateTime startDate) {
-    // Assuming the report has a created_at field (adjust as needed)
-    return report.reportDate.isAfter(startDate); // New if it’s after startDate
+    // Ensure that reports on the start date are considered "new"
+    final startOfDay = DateTime(startDate.year, startDate.month, startDate.day);
+
+    // Report is new if it's on or after the start date
+    return report.reportDate.isAfter(startOfDay) ||
+        report.reportDate.isAtSameMomentAs(startOfDay);
   }
 
   Future<void> fetchHistoricalAdReports() async {
