@@ -1050,6 +1050,14 @@ class _TravelPackagePurchasedCardState
 
                 await _firestoreService.deleteData(
                     'New_Travel_Packages', widget.travelPackageOnShelve.id);
+
+                    ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                    'Travel Package Successfully Deleted!'),
+                                duration: Duration(seconds: 5),
+                              ),
+                            );
                 Navigator.of(context).pop();
               },
               child: const Text('Confirm'),
