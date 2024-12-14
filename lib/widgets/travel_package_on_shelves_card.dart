@@ -429,13 +429,14 @@ class _TravelPackagePurchasedCardState
     saveNum = widget.travelPackageOnShelve.saveNum?.length;
 
     double ctr = clickNum != null && viewNum != null && viewNum != 0
-        ? (clickNum! / viewNum!) *100
+        ? (clickNum! / viewNum!) * 100
         : 0;
 
     if (clickNum != null) {
       purchaseRate = ((widget.travelPackageOnShelve.quantity -
-              widget.travelPackageOnShelve.quantityAvailable) /
-          clickNum!)*100;
+                  widget.travelPackageOnShelve.quantityAvailable) /
+              clickNum!) *
+          100;
       purchaseRate = double.parse(purchaseRate!.toStringAsFixed(2));
     }
     return Stack(children: [
@@ -643,8 +644,24 @@ class _TravelPackagePurchasedCardState
                                           .get();
 
                                   if (!walletActivated) {
-                                    adsCredit =
-                                        (userDoc['ads_credit'] ?? 0).toInt();
+                                    if (userDoc.exists) {
+                                      var userData = userDoc.data() as Map<
+                                          String,
+                                          dynamic>;
+
+                                      if (userData.containsKey('ads_credit')) {
+                                        adsCredit =
+                                            (userData['ads_credit'] ?? 0)
+                                                .toInt();
+                                      } else {
+                                        adsCredit = 0;
+                                        print(
+                                            "ads_credit field does not exist, defaulting to 0.");
+                                      }
+                                    } else {
+                                      print("User document does not exist");
+                                      adsCredit = 0;
+                                    }
 
                                     showDialog(
                                       context: context,
