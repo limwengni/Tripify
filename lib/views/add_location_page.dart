@@ -234,8 +234,8 @@ class _AddLocationPageState extends State<AddLocationPage>
       ItineraryLocation newLocation = ItineraryLocation(
         id: '',
         name: location['name']!,
-        latitude: double.parse(location['latitude']!),
-        longitude: double.parse(location['longitude']!),
+        location: GeoPoint(double.parse(location['latitude']!),
+            double.parse(location['longitude']!)),
       );
       Map<String, dynamic> locationMap = newLocation.toMap();
 
@@ -268,13 +268,12 @@ class _AddLocationPageState extends State<AddLocationPage>
           if (locationSnapshot.exists) {
             var existingLocationData = locationSnapshot.data()!;
             String existingName = existingLocationData['name'];
-            double existingLatitude = existingLocationData['latitude'];
-            double existingLongitude = existingLocationData['longitude'];
+            GeoPoint existingLocation = existingLocationData['location'];
 
             // Compare with the new location
             if (existingName == newLocation.name &&
-                existingLatitude == newLocation.latitude &&
-                existingLongitude == newLocation.longitude) {
+                existingLocation.latitude == newLocation.location.latitude &&
+                existingLocation.longitude == newLocation.location.longitude) {
               // If a duplicate is found, show a message and return without adding the location
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(

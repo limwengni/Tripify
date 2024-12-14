@@ -1,32 +1,32 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class ItineraryLocation {
   final String id;
-  final double latitude; // Latitude of the location
-  final double longitude; // Longitude of the location
   final String name;
+  GeoPoint location;
 
   ItineraryLocation({
     required this.id,
-    required this.latitude,
-    required this.longitude,
     required this.name,
+    required this.location,
   });
 
   // Convert ItineraryLocation to Map for Firestore
   Map<String, dynamic> toMap() {
     return {
-      'latitude': latitude,
-      'longitude': longitude,
       'name': name,
+      'location': location,
     };
   }
 
   // Factory method to create ItineraryLocation from Firestore data
   factory ItineraryLocation.fromMap(Map<String, dynamic> data, String id) {
+    GeoPoint location = data['location'] ?? GeoPoint(0.0, 0.0);
+
     return ItineraryLocation(
       id: id,
-      latitude: data['latitude'] ?? 0.0,
-      longitude: data['longitude'] ?? 0.0,
       name: data['name'] ?? '',
+      location: location, 
     );
   }
 }

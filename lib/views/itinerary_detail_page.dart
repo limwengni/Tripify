@@ -71,9 +71,20 @@ class _ItineraryDetailPageState extends State<ItineraryDetailPage> {
         return;
       }
 
+      Map<int, List<ItineraryLocation>> locationsByDay = {};
       List<Set<Marker>> markersForDays =
           List.generate(widget.itinerary.numberOfDays, (index) => <Marker>{});
-      Map<int, List<ItineraryLocation>> locationsByDay = {};
+
+      // var dayItineraryData = dayItinerarySnapshot.docs.first.data();
+      // print("Day Itinerary Data: $dayItineraryData");
+      // List<String> locationIds =
+      //     List<String>.from(dayItineraryData['location_ids'] ?? []);
+
+      // print('locations ids1: ${locationIds.toList()}');
+
+      // List<Set<Marker>> markersForDays =
+      //     List.generate(widget.itinerary.numberOfDays, (index) => <Marker>{});
+      // Map<int, List<ItineraryLocation>> locationsByDay = {};
 
       double totalDistance = 0;
 
@@ -82,6 +93,13 @@ class _ItineraryDetailPageState extends State<ItineraryDetailPage> {
         int dayNumber = dayData['day_number'];
         List<String> locationIds =
             List<String>.from(dayData['location_ids'] ?? []);
+
+        print('Location IDs for Day $dayNumber: $locationIds');
+
+        if (locationIds.isEmpty) {
+          print("No locations for day $dayNumber, skipping.");
+          continue; // Skip processing this day if no locations are available
+        }
 
         List<ItineraryLocation> locationsForDay =
             await _fetchLocationsForIds(locationIds);
@@ -93,52 +111,69 @@ class _ItineraryDetailPageState extends State<ItineraryDetailPage> {
         for (int i = 0; i < locationsForDay.length; i++) {
           var location = locationsForDay[i];
 
-          dayMarkers.add(Marker(
-            markerId: MarkerId(location.name),
-            position: LatLng(location.latitude, location.longitude),
-            infoWindow: InfoWindow(title: location.name),
-            onTap: () {
-              setState(() {
-                selectedLocationName = location.name;
-                selectedLocationIndex = locationsForDay.indexOf(location);
-              });
-              _zoomToLocation(location.latitude, location.longitude);
-            },
-          ));
+          GeoPoint locationGeoPoint = location.location;
+          double latitude = locationGeoPoint.latitude;
+          double longitude = locationGeoPoint.longitude;
 
-          if (i < locationsForDay.length - 1) {
-            var nextLocation = locationsForDay[i + 1];
-            double distance = calculateDistance(
-              location.latitude,
-              location.longitude,
-              nextLocation.latitude,
-              nextLocation.longitude,
-            );
-            dayDistance += distance;
+          if (latitude != 0.0 && longitude != 0.0) {
+            dayMarkers.add(Marker(
+              markerId: MarkerId(location.name),
+              position: LatLng(latitude, longitude),
+              infoWindow: InfoWindow(title: location.name),
+              onTap: () {
+                setState(() {
+                  selectedLocationName = location.name;
+                  selectedLocationIndex = locationsForDay.indexOf(location);
+                });
+                _zoomToLocation(latitude, longitude);
+              },
+            ));
           }
         }
 
-        dayDistances[dayNumber] = dayDistance;
+        // Store the markers for the day
         markersForDays[dayNumber - 1] = dayMarkers;
-        _totalDistance = dayDistance;
+
+        // Calculate distance for this day
+        double dayDistance = 0;
+        for (int i = 0; i < locationsForDay.length - 1; i++) {
+          var currentLocation = locationsForDay[i];
+          var nextLocation = locationsForDay[i + 1];
+          dayDistance += calculateDistance(
+              currentLocation.location.latitude,
+              currentLocation.location.longitude,
+              nextLocation.location.latitude,
+              nextLocation.location.longitude);
+        }
+
+        dayDistances[dayNumber] = dayDistance;
+        totalDistance += dayDistance;
       }
 
+      // After processing all days, update the UI
       setState(() {
         dayMarkers = markersForDays;
+        _totalDistance = totalDistance;
       });
 
+      print("Total Distance: $_totalDistance");
+
+      // If there are locations, update map center and zoom to the first location
       if (locationsByDay.isNotEmpty) {
         List<ItineraryLocation> allLocations =
             locationsByDay.values.expand((i) => i).toList();
-        double avgLatitude =
-            allLocations.map((loc) => loc.latitude).reduce((a, b) => a + b) /
-                allLocations.length;
-        double avgLongitude =
-            allLocations.map((loc) => loc.longitude).reduce((a, b) => a + b) /
-                allLocations.length;
+        double avgLatitude = allLocations
+                .map((loc) => loc.location.latitude)
+                .reduce((a, b) => a + b) /
+            allLocations.length;
+        double avgLongitude = allLocations
+                .map((loc) => loc.location.longitude)
+                .reduce((a, b) => a + b) /
+            allLocations.length;
+
         _mapCenter = LatLng(avgLatitude, avgLongitude);
-        firstLocationLatitude = allLocations[0].latitude;
-        firstLocationLongitude = allLocations[0].longitude;
+        firstLocationLatitude = allLocations[0].location.latitude;
+        firstLocationLongitude = allLocations[0].location.longitude;
       }
 
       setState(() {});
@@ -236,7 +271,8 @@ class _ItineraryDetailPageState extends State<ItineraryDetailPage> {
         for (var location in locationsForDay) {
           markersForDay.add(Marker(
             markerId: MarkerId(location.name),
-            position: LatLng(location.latitude, location.longitude),
+            position:
+                LatLng(location.location.latitude, location.location.longitude),
             infoWindow: InfoWindow(title: location.name),
             onTap: () {
               setState(() {
@@ -270,15 +306,22 @@ class _ItineraryDetailPageState extends State<ItineraryDetailPage> {
   Future<List<ItineraryLocation>> _fetchLocationsForIds(
       List<String> locationIds) async {
     try {
-      // Fetch the ItineraryLocation documents using location_ids
-      var locationSnapshot = await FirebaseFirestore.instance
-          .collection('ItineraryLocation')
-          .where(FieldPath.documentId, whereIn: locationIds)
-          .get();
+      List<ItineraryLocation> locations = [];
 
-      List<ItineraryLocation> locations = locationSnapshot.docs.map((doc) {
-        return ItineraryLocation.fromMap(doc.data(), doc.id);
-      }).toList();
+      for (String locationId in locationIds) {
+        var locationSnapshot = await FirebaseFirestore.instance
+            .collection('ItineraryLocation')
+            .doc(locationId)
+            .get();
+
+        if (locationSnapshot.exists) {
+          String documentId = locationSnapshot.id;
+          var locationData = locationSnapshot.data()!;
+
+          print("Location ID: $documentId");
+          locations.add(ItineraryLocation.fromMap(locationData, documentId));
+        }
+      }
 
       return locations;
     } catch (e) {
@@ -332,7 +375,10 @@ class _ItineraryDetailPageState extends State<ItineraryDetailPage> {
                     target: _mapCenter,
                     zoom: 10,
                   ),
-                  markers: dayMarkers[selectedDayIndex],
+                  markers: dayMarkers[selectedDayIndex].isNotEmpty
+                      ? dayMarkers[
+                          selectedDayIndex] // Display markers for the selected day
+                      : {},
                 ),
               ],
             ),
@@ -439,8 +485,8 @@ class _ItineraryDetailPageState extends State<ItineraryDetailPage> {
                           child: ListTile(
                             title: Text(location.name),
                             onTap: () {
-                              _zoomToLocation(
-                                  location.latitude, location.longitude);
+                              _zoomToLocation(location.location.latitude,
+                                  location.location.longitude);
                             },
                           ),
                         );
@@ -581,8 +627,8 @@ class _ItineraryDetailPageState extends State<ItineraryDetailPage> {
       ItineraryLocation newLocation = ItineraryLocation(
         id: '',
         name: location['name']!,
-        latitude: double.parse(location['latitude']!),
-        longitude: double.parse(location['longitude']!),
+        location: GeoPoint(double.parse(location['latitude']!),
+            double.parse(location['longitude']!)),
       );
       Map<String, dynamic> locationMap = newLocation.toMap();
 
@@ -651,7 +697,8 @@ class _ItineraryDetailPageState extends State<ItineraryDetailPage> {
         dayMarkers[dayIndex].add(
           Marker(
             markerId: MarkerId(location.name),
-            position: LatLng(location.latitude, location.longitude),
+            position:
+                LatLng(location.location.latitude, location.location.longitude),
             infoWindow: InfoWindow(title: location.name),
             onTap: () {
               setState(() {
