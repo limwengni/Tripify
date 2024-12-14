@@ -26,7 +26,12 @@ class ItineraryLocation {
     return ItineraryLocation(
       id: id,
       name: data['name'] ?? '',
-      location: location, 
+      location: location,
     );
+  }
+
+  @override
+  String toString() {
+    return 'ItineraryLocation{id: $id, name: $name, latitude: ${location.latitude}, longitude: ${location.longitude}}';
   }
 }

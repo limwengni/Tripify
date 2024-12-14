@@ -144,6 +144,8 @@ class _ItineraryPageState extends State<ItineraryPage> {
         throw Exception("Original itinerary not found");
       }
 
+      print('newNumberOfDays: $newNumberOfDays');
+
       String userId = FirebaseAuth.instance.currentUser?.uid ?? '';
 
       if (userId.isEmpty) {
@@ -184,6 +186,9 @@ class _ItineraryPageState extends State<ItineraryPage> {
           .where('itinerary_id', isEqualTo: originalItineraryId)
           .get();
 
+      print(
+          'Total DayItineraries fetched: ${dayItinerarySnapshot.docs.length}');
+
       List<DayItinerary> newDayItineraries = [];
 
       // Loop through the original DayItineraries and copy data
@@ -195,6 +200,9 @@ class _ItineraryPageState extends State<ItineraryPage> {
         int dayNumber = dayData['day_number'];
         List<String> originalLocationIds =
             List<String>.from(dayData['location_ids'] ?? []);
+
+        print('Copied Days: $copiedDays');
+        print('Copying day: $dayNumber');
 
         // Create a list to store new location IDs
         List<String> newLocationIds = [];
@@ -212,8 +220,7 @@ class _ItineraryPageState extends State<ItineraryPage> {
               .collection('ItineraryLocation')
               .add({
             'name': locationData['name'],
-            'latitude': locationData['latitude'],
-            'longitude': locationData['longitude'],
+            'location': locationData['location'],
           });
 
           // Add new location ID to the list

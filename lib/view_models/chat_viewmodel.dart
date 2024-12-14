@@ -42,7 +42,7 @@ class ChatViewModel extends ChangeNotifier {
   }
 
   Future<void> sendItineraryToApi(
-      Map<String, dynamic> selectedItineraryData, String userId) async {
+      List<Map<String, dynamic>> selectedItineraryData, String userId) async {
     isTyping = true;
     notifyListeners();
 

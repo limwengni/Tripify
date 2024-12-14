@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tripify/view_models/chat_viewmodel.dart';
 import 'package:tripify/view_models/itinerary_provider.dart';
+import 'package:tripify/models/itinerary_location_model.dart';
 
 class TravelAssistantPage extends StatefulWidget {
   @override
@@ -120,37 +121,48 @@ class _TravelAssistantPageState extends State<TravelAssistantPage> {
     }
   }
 
-  Future<Map<String, dynamic>> fetchDayItinerary(String itineraryId) async {
+  Future<List<Map<String, dynamic>>> fetchDayItinerary(
+      String itineraryId) async {
     // Assume we are using Firebase Firestore
-    final itineraryDoc = await FirebaseFirestore.instance
+    final itineraryDocs = await FirebaseFirestore.instance
         .collection('DayItinerary')
         .where('itinerary_id', isEqualTo: itineraryId)
         .get();
 
-    if (itineraryDoc.docs.isNotEmpty) {
-      final itineraryData = itineraryDoc.docs.first.data();
-      List<String> locationIds =
-          List<String>.from(itineraryData['location_ids']);
-      int dayNumber = itineraryData['day_number'];
+    List<Map<String, dynamic>> itineraryDataList = [];
 
-      // Now use locationIds to fetch the location details
-      List<Map<String, dynamic>> locations =
-          await fetchLocations(locationIds, dayNumber);
+    if (itineraryDocs.docs.isNotEmpty) {
+      for (var doc in itineraryDocs.docs) {
+        final itineraryData = doc.data();
+        List<String> locationIds =
+            List<String>.from(itineraryData['location_ids']);
+        int dayNumber = itineraryData['day_number'];
 
-      return {
-        'itinerary_id': itineraryId,
-        'day_number': dayNumber,
-        'locations': locations,
-      };
+        if (locationIds.isEmpty) {
+          itineraryDataList
+              .add({'error': 'No locations found for day $dayNumber.'});
+        } else {
+          // Fetch the locations for the current day
+          List<ItineraryLocation> locations =
+              await fetchLocations(locationIds, dayNumber);
+          itineraryDataList.add({
+            'itinerary_id': itineraryId,
+            'day_number': dayNumber,
+            'locations': locations,
+          });
+        }
+      }
+      return itineraryDataList;
     } else {
-      // Return an empty JSON or error message if no itinerary found
-      return {'error': 'No locations added to this itinerary yet.'};
+      return [
+        {'error': 'No DayItinerary found for this itinerary.'}
+      ];
     }
   }
 
-  Future<List<Map<String, dynamic>>> fetchLocations(
+  Future<List<ItineraryLocation>> fetchLocations(
       List<String> locationIds, int dayNumber) async {
-    List<Map<String, dynamic>> locations = [];
+    List<ItineraryLocation> locations = [];
 
     for (String locationId in locationIds) {
       final locationDoc = await FirebaseFirestore.instance
@@ -160,12 +172,9 @@ class _TravelAssistantPageState extends State<TravelAssistantPage> {
 
       if (locationDoc.exists) {
         final locationData = locationDoc.data();
-        locations.add({
-          'name': locationData?['name'],
-          'latitude': locationData?['latitude'],
-          'longitude': locationData?['longitude'],
-          'dayNumber': dayNumber,
-        });
+        final itineraryLocation =
+            ItineraryLocation.fromMap(locationData!, locationId);
+        locations.add(itineraryLocation);
       }
     }
 
@@ -213,17 +222,24 @@ class _TravelAssistantPageState extends State<TravelAssistantPage> {
                 onTap: () async {
                   print("Selected Itinerary ID: ${itinerary['id']}");
 
-                  Map<String, dynamic> itineraryJson =
+                  List<Map<String, dynamic>> itineraryJson =
                       await fetchDayItinerary(itinerary['id']);
 
-                  if (itineraryJson.containsKey('error')) {
+                  itineraryJson.sort(
+                      (a, b) => a['day_number'].compareTo(b['day_number']));
+
+                  print('iti json22: $itineraryJson');
+
+                  if (itineraryJson.isEmpty ||
+                      itineraryJson.first.containsKey('error')) {
                     // If itineraryJson contains 'error', show an alert dialog with the error message
                     showDialog(
                       context: context,
                       builder: (context) {
                         return AlertDialog(
                           title: Text("Error"),
-                          content: Text(itineraryJson['error']),
+                          content: Text(
+                              itineraryJson.first['error'] ?? 'Unknown error'),
                           actions: [
                             TextButton(
                               onPressed: () => Navigator.pop(
