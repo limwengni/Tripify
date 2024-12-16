@@ -272,6 +272,12 @@ class AdProvider with ChangeNotifier {
           'id': doc.id,
           'status': doc['status'],
           'renewal_type': doc['renewal_type'],
+          'package_id': doc['package_id'],
+          'ad_type': doc['ad_type'],
+          'cpc_rate':doc['cpc_rate'],
+          'cpm_rate':doc['cpm_rate'],
+          'flat_rate':doc['flat_rate'],
+          'start_date': doc['start_date'],
         });
       }
 

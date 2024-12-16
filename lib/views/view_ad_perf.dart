@@ -163,39 +163,19 @@ class _ViewAdsPerformancePageState extends State<ViewAdsPerformancePage> {
   }
 
   // Function to check if the ad is renewed
-  bool isAdRenewed(List<AdReport> allReports, DateTime startDate) {
-    // Check if there are two reports on the same day
-    final reportsGroupedByDate = <DateTime, List<AdReport>>{};
+  bool isAdRenewed(List<AdReport> allReports) {
+    final reportsGroupedByDate = <DateTime, int>{};
 
-    // Group reports by date
+    // Group and count reports by date
     for (var report in allReports) {
       final dateOnly = DateTime(report.reportDate.year, report.reportDate.month,
           report.reportDate.day);
-
-      if (reportsGroupedByDate.containsKey(dateOnly)) {
-        reportsGroupedByDate[dateOnly]!.add(report);
-      } else {
-        reportsGroupedByDate[dateOnly] = [report];
-      }
+      reportsGroupedByDate[dateOnly] =
+          (reportsGroupedByDate[dateOnly] ?? 0) + 1;
     }
 
-    // Check for reports on the same day
-    for (var reportsOnSameDay in reportsGroupedByDate.values) {
-      if (reportsOnSameDay.length > 1) {
-        // More than 1 report on the same day, means renewed
-        return true;
-      }
-    }
-
-    // If no reports on the same day, check if any report is before the start date (old report)
-    for (var report in allReports) {
-      if (report.reportDate.isBefore(startDate)) {
-        // This report is before the start date, so it's an old report
-        return false;
-      }
-    }
-
-    return false;
+    // Check if any date has more than one report
+    return reportsGroupedByDate.values.any((count) => count > 1);
   }
 
   Future<void> fetchAdReports() async {
@@ -208,182 +188,362 @@ class _ViewAdsPerformancePageState extends State<ViewAdsPerformancePage> {
           .where('ad_id', isEqualTo: widget.adId) // Filter by the specific adId
           .get();
 
-      if (travelPackagesSnapshot.docs.isEmpty) {
-        debugPrint('No travel packages found for adId: ${widget.adId}');
-      } else {
-        for (var doc in travelPackagesSnapshot.docs) {
-          final data = doc.data() as Map<String, dynamic>; // Get data as a map
-          debugPrint('Document ID: ${doc.id}');
-          debugPrint(
-              'Travel Package Data: $data'); // Data of the travel package
-          final adId = data['ad_id'];
-          final price = data['price'];
-        }
-      }
-
       final reports = <AdReport>[];
 
-      for (var doc in travelPackagesSnapshot.docs) {
-        final purchaseData = doc.data();
-        final adId = purchaseData['ad_id'] as String?;
+      // If there are no purchases, provide default data
+      if (travelPackagesSnapshot.docs.isEmpty) {
+        debugPrint('No travel packages found for adId: ${widget.adId}');
 
-        if (adId != null && adId.isNotEmpty) {
-          // Step 2: Fetch Ad details using ad_id
-          final adSnapshot = await FirebaseFirestore.instance
-              .collection('Advertisement')
-              .doc(adId)
+        // Fetch ad details even without purchases
+        final adSnapshot = await FirebaseFirestore.instance
+            .collection('Advertisement')
+            .doc(widget.adId)
+            .get();
+
+        if (adSnapshot.exists) {
+          final adData = adSnapshot.data()!;
+          final today = DateTime.now();
+          final todayDateOnly = DateTime(today.year, today.month, today.day);
+          final startOfDay = DateTime(today.year, today.month, today.day);
+          final endOfDay =
+              DateTime(today.year, today.month, today.day, 23, 59, 59);
+
+          // Fetch ad interactions
+          final adInteractionsSnapshot = await FirebaseFirestore.instance
+              .collection('AdInteraction')
+              .where('ad_id', isEqualTo: widget.adId)
+              .where('timestamp', isGreaterThanOrEqualTo: startOfDay)
+              .where('timestamp', isLessThanOrEqualTo: endOfDay)
               .get();
 
-          if (adSnapshot.exists) {
-            final today = DateTime.now();
-            final startOfDay = DateTime(today.year, today.month, today.day);
-            final endOfDay =
-                DateTime(today.year, today.month, today.day, 23, 59, 59);
+          final totalImpressions = adInteractionsSnapshot.docs.length;
+          final uniqueUsers = adInteractionsSnapshot.docs
+              .map((doc) => doc['user_id'])
+              .toSet()
+              .length;
+          final clickCount = adInteractionsSnapshot.docs.length;
 
-            final adData = adSnapshot.data()!;
-            final price = purchaseData['price'] as num? ?? 0;
-            final quantity =
-                await getQuantityByDate(adId, startOfDay, endOfDay);
-            print("qty: $quantity");
-            adType = adData['ad_type'];
-            final cpcRate = adData['cpc_rate'] as num? ?? 0;
-            final cpmRate = adData['cpm_rate'] as num? ?? 0;
-            final flatRate = adData['flat_rate'] as num? ?? 0;
+          // Calculate metrics
+          final engagementRate =
+              totalImpressions > 0 ? (clickCount / totalImpressions) * 100 : 0;
+          final frequency =
+              uniqueUsers > 0 ? totalImpressions / uniqueUsers : 0;
+          final reach = (frequency > 0) ? totalImpressions / frequency : 0;
 
-            final startDate = adData['start_date'].toDate();
+          final defaultAdReport = AdReport(
+            adId: widget.adId,
+            reportDate: DateTime.now(),
+            clickCount: clickCount,
+            engagementRate: engagementRate.toDouble(),
+            successRate: 0, // No purchases, so success rate is 0
+            reach: reach.toInt(),
+            cpc: 0,
+            cpm: 0,
+            flatRate: (adData['flat_rate'] as num? ?? 0).toDouble(),
+            revenue: 0,
+            roas: 0,
+          );
 
-            final adInteractionsSnapshot = await FirebaseFirestore.instance
-                .collection('AdInteraction')
-                .where('ad_id', isEqualTo: adId)
-                .where('timestamp', isGreaterThanOrEqualTo: startOfDay)
-                .where('timestamp', isLessThanOrEqualTo: endOfDay)
+          final existingReportSnapshot = await FirebaseFirestore.instance
+              .collection('AdReport')
+              .where('ad_id', isEqualTo: widget.adId)
+              .get();
+
+          bool reportExists = false;
+
+          for (var doc in existingReportSnapshot.docs) {
+            final reportDate = (doc['report_date'] as Timestamp).toDate();
+            final normalizedReportDate =
+                DateTime(reportDate.year, reportDate.month, reportDate.day);
+
+            if (normalizedReportDate.isAtSameMomentAs(todayDateOnly)) {
+              reportExists = true;
+              break; // If found, no need to continue looping
+            }
+          }
+
+          if (!reportExists) {
+            final adSnapshot = await FirebaseFirestore.instance
+                .collection('Advertisement')
+                .doc(widget.adId)
                 .get();
 
-            final totalImpressions = adInteractionsSnapshot.docs.length;
-            final uniqueUsers = adInteractionsSnapshot.docs
-                .map((doc) => doc['user_id'])
-                .toSet()
-                .length;
-
-            final clickCount = adInteractionsSnapshot.docs.length;
-
-            final revenue = (clickCount / 1000) * cpmRate;
-
-            final engagementRate = totalImpressions > 0
-                ? (clickCount / totalImpressions) * 100
-                : 0;
-
-            final successRate =
-                totalImpressions > 0 ? (quantity / totalImpressions) * 100 : 0;
-
-            final frequency =
-                uniqueUsers > 0 ? totalImpressions / uniqueUsers : 0;
-
-            final reach = (frequency > 0) ? totalImpressions / frequency : 0;
-
-            final cpc =
-                (cpcRate > 0 && clickCount > 0) ? revenue / clickCount : 0;
-            final cpm = (cpmRate > 0 && totalImpressions > 0)
-                ? (revenue / totalImpressions) * 1000
-                : 0;
-
-            final roas = flatRate > 0 ? revenue / flatRate : 0;
-
-            // Step 3: Check if there's already an existing report for the ad on the same day
-            final adReportSnapshot = await FirebaseFirestore.instance
-                .collection('AdReport')
-                .where('ad_id', isEqualTo: adId)
-                .where('report_date', isGreaterThanOrEqualTo: startOfDay)
-                .where('report_date', isLessThanOrEqualTo: endOfDay)
-                .get();
-
-            AdReport adReport;
-
-            if (adReportSnapshot.docs.isNotEmpty) {
-              // Update the existing report
-              final latestReport = adReportSnapshot.docs.first.data();
-              adReport = AdReport.fromMap(latestReport);
-
-              adReport.clickCount = clickCount;
-              adReport.revenue = revenue.toDouble();
-              adReport.engagementRate = engagementRate.toDouble();
-              adReport.successRate = successRate.toDouble();
-              adReport.reach = reach.toInt();
-              adReport.cpc = cpc.toDouble();
-              adReport.cpm = cpm.toDouble();
-              adReport.roas = roas.toDouble();
-
-              await FirebaseFirestore.instance
-                  .collection('AdReport')
-                  .doc(adReportSnapshot.docs.first.id)
-                  .set(adReport.toMap(), SetOptions(merge: true));
-            } else {
-              // Create a new report
-              adReport = AdReport(
-                adId: adId,
-                reportDate: DateTime.now(),
-                clickCount: clickCount,
-                engagementRate: engagementRate.toDouble(),
-                successRate: successRate.toDouble(),
-                reach: reach.toInt(),
-                cpc: cpc.toDouble(),
-                cpm: cpm.toDouble(),
-                flatRate: flatRate.toDouble(),
-                revenue: revenue.toDouble(),
-                roas: roas.toDouble(),
+            if (adSnapshot.exists) {
+              final adData = adSnapshot.data()!;
+              final adReport = AdReport(
+                adId: widget.adId,
+                reportDate: todayDateOnly, // Use today's date
+                clickCount: 0, // Add actual values
+                engagementRate: 0,
+                successRate: 0,
+                reach: 0,
+                cpc: 0,
+                cpm: 0,
+                flatRate: (adData['flat_rate'] as num? ?? 0).toDouble(),
+                revenue: 0,
+                roas: 0,
               );
 
+              // Save the new report
               await FirebaseFirestore.instance
                   .collection('AdReport')
                   .add(adReport.toMap());
+              debugPrint('Default report created for adId: ${widget.adId}');
             }
+          } else {
+            adType = adData['ad_type'];
+            debugPrint(
+                'Report already exists for adId: ${widget.adId} on ${todayDateOnly.toString()}');
+          }
 
-            final allReportsSnapshot = await FirebaseFirestore.instance
-                .collection('AdReport')
-                .where('ad_id', isEqualTo: adId)
+          setState(() {
+            adReports.add(defaultAdReport);
+          });
+        } else {
+          debugPrint('No ad found for adId: ${widget.adId}');
+        }
+      } else {
+        for (var doc in travelPackagesSnapshot.docs) {
+          final purchaseData = doc.data();
+          final adId = purchaseData['ad_id'] as String?;
+
+          if (adId != null && adId.isNotEmpty) {
+            // Step 2: Fetch Ad details using ad_id
+            final adSnapshot = await FirebaseFirestore.instance
+                .collection('Advertisement')
+                .doc(adId)
                 .get();
 
-            final allReports = allReportsSnapshot.docs.map((doc) {
-              final data = doc.data();
-              return AdReport.fromMap(data);
-            }).toList();
+            if (adSnapshot.exists) {
+              final today = DateTime.now();
+              final startOfDay = DateTime(today.year, today.month, today.day);
+              final endOfDay =
+                  DateTime(today.year, today.month, today.day, 23, 59, 59);
 
-            final isRenewed = isAdRenewed(allReports, startDate);
+              final adData = adSnapshot.data()!;
+              final price = purchaseData['price'] as num? ?? 0;
+              final quantity =
+                  await getQuantityByDate(adId, startOfDay, endOfDay);
+              print("qty: $quantity");
+              adType = adData['ad_type'];
+              final cpcRate = adData['cpc_rate'] as num? ?? 0;
+              final cpmRate = adData['cpm_rate'] as num? ?? 0;
+              final flatRate = adData['flat_rate'] as num? ?? 0;
 
-            if (isRenewed) {
-              final latestReport = allReports.where((report) {
-                // Check if the report was created after the start date or any other relevant condition
-                return isReportNew(report, startDate);
-              }).toList()
-                ..sort((a, b) => b.reportDate.compareTo(
-                    a.reportDate)); // Sort in descending order by created_at
+              final startDate = adData['start_date'].toDate();
 
-              if (latestReport.isNotEmpty) {
-                final reportToAdd = latestReport.first;
+              final adInteractionsSnapshot = await FirebaseFirestore.instance
+                  .collection('AdInteraction')
+                  .where('ad_id', isEqualTo: adId)
+                  .where('timestamp', isGreaterThanOrEqualTo: startOfDay)
+                  .where('timestamp', isLessThanOrEqualTo: endOfDay)
+                  .get();
 
-                // Ensure the report is not added twice
-                if (!reports.any((report) =>
-                    report.adId == reportToAdd.adId &&
-                    report.reportDate == reportToAdd.reportDate)) {
-                  reports.add(reportToAdd);
+              final totalImpressions = adInteractionsSnapshot.docs.length;
+              final uniqueUsers = adInteractionsSnapshot.docs
+                  .map((doc) => doc['user_id'])
+                  .toSet()
+                  .length;
+
+              final clickCount = adInteractionsSnapshot.docs.length;
+
+              final revenue = (clickCount / 1000) * cpmRate;
+
+              final engagementRate = totalImpressions > 0
+                  ? (clickCount / totalImpressions) * 100
+                  : 0;
+
+              final successRate = totalImpressions > 0
+                  ? (quantity / totalImpressions) * 100
+                  : 0;
+
+              final frequency =
+                  uniqueUsers > 0 ? totalImpressions / uniqueUsers : 0;
+
+              final reach = (frequency > 0) ? totalImpressions / frequency : 0;
+
+              final cpc =
+                  (cpcRate > 0 && clickCount > 0) ? revenue / clickCount : 0;
+              final cpm = (cpmRate > 0 && totalImpressions > 0)
+                  ? (revenue / totalImpressions) * 1000
+                  : 0;
+
+              final roas = flatRate > 0 ? revenue / flatRate : 0;
+
+              // Step 3: Check if there's already an existing report for the ad on the same day
+              final adReportSnapshot = await FirebaseFirestore.instance
+                  .collection('AdReport')
+                  .where('ad_id', isEqualTo: adId)
+                  .where('report_date', isGreaterThanOrEqualTo: startOfDay)
+                  .where('report_date', isLessThanOrEqualTo: endOfDay)
+                  .get();
+
+              AdReport adReport;
+
+              if (adReportSnapshot.docs.isNotEmpty) {
+                // Update the existing report
+                final docId = adReportSnapshot.docs.first.id;
+                final existingReport =
+                    AdReport.fromMap(adReportSnapshot.docs.first.data());
+
+                existingReport.clickCount = clickCount;
+                existingReport.revenue = revenue.toDouble();
+                existingReport.engagementRate = engagementRate.toDouble();
+                existingReport.successRate = successRate.toDouble();
+                existingReport.reach = reach.toInt();
+                existingReport.cpc = cpc.toDouble();
+                existingReport.cpm = cpm.toDouble();
+                existingReport.roas = roas.toDouble();
+
+                await FirebaseFirestore.instance
+                    .collection('AdReport')
+                    .doc(adReportSnapshot.docs.first.id)
+                    .set(existingReport.toMap(), SetOptions(merge: true));
+              } else {
+                final backfillDate =
+                    DateTime(today.year, today.month, today.day - 1);
+                final startBackfill = DateTime(
+                    backfillDate.year, backfillDate.month, backfillDate.day);
+                final endBackfill = DateTime(backfillDate.year,
+                    backfillDate.month, backfillDate.day, 23, 59, 59);
+
+// Fetch the interactions for the previous day (backfill)
+                final adInteractionsSnapshotBackfill = await FirebaseFirestore
+                    .instance
+                    .collection('AdInteraction')
+                    .where('ad_id', isEqualTo: adId)
+                    .where('timestamp', isGreaterThanOrEqualTo: startBackfill)
+                    .where('timestamp', isLessThanOrEqualTo: endBackfill)
+                    .get();
+
+// Recalculate values for backfilling based on interactions on the backfill day
+                final backfillImpressions =
+                    adInteractionsSnapshotBackfill.docs.length;
+                final backfillUniqueUsers = adInteractionsSnapshotBackfill.docs
+                    .map((doc) => doc['user_id'])
+                    .toSet()
+                    .length;
+                final backfillClickCount =
+                    adInteractionsSnapshotBackfill.docs.length;
+                final backfillRevenue = (backfillClickCount / 1000) *
+                    cpmRate; // or use cpcRate as needed
+                final backfillEngagementRate = backfillImpressions > 0
+                    ? (backfillClickCount / backfillImpressions) * 100
+                    : 0;
+                final backfillSuccessRate = backfillImpressions > 0
+                    ? (quantity / backfillImpressions) * 100
+                    : 0;
+                final backfillFrequency = backfillUniqueUsers > 0
+                    ? backfillImpressions / backfillUniqueUsers
+                    : 0;
+                final backfillReach = (backfillFrequency > 0)
+                    ? backfillImpressions / backfillFrequency
+                    : 0;
+                final backfillCpc = (cpcRate > 0 && backfillClickCount > 0)
+                    ? backfillRevenue / backfillClickCount
+                    : 0;
+                final backfillCpm = (cpmRate > 0 && backfillImpressions > 0)
+                    ? (backfillRevenue / backfillImpressions) * 1000
+                    : 0;
+                final backfillRoas =
+                    flatRate > 0 ? backfillRevenue / flatRate : 0;
+
+// Check if backfill report already exists
+                final backfillReportSnapshot = await FirebaseFirestore.instance
+                    .collection('AdReport')
+                    .where('ad_id', isEqualTo: adId)
+                    .where('report_date', isGreaterThanOrEqualTo: startBackfill)
+                    .where('report_date', isLessThanOrEqualTo: endBackfill)
+                    .get();
+
+                if (backfillReportSnapshot.docs.isEmpty) {
+                  final backfillReport = AdReport(
+                    adId: adId,
+                    reportDate: backfillDate,
+                    clickCount: backfillClickCount,
+                    engagementRate: backfillEngagementRate.toDouble(),
+                    successRate: backfillSuccessRate.toDouble(),
+                    reach: backfillReach.toInt(),
+                    cpc: backfillCpc.toDouble(),
+                    cpm: backfillCpm.toDouble(),
+                    flatRate: flatRate.toDouble(),
+                    revenue: backfillRevenue.toDouble(),
+                    roas: backfillRoas.toDouble(),
+                  );
+
+                  await FirebaseFirestore.instance
+                      .collection('AdReport')
+                      .add(backfillReport.toMap());
+                  debugPrint(
+                      'Backfilled missing report for $adId on $backfillDate');
+                } else {
+                  // Handle if a backfill already exists (update the report instead)
+                  final docId = backfillReportSnapshot.docs.first.id;
+                  final existingBackfillReport = AdReport.fromMap(
+                      backfillReportSnapshot.docs.first.data());
+
+                  existingBackfillReport.clickCount = backfillClickCount;
+                  existingBackfillReport.revenue = backfillRevenue.toDouble();
+                  existingBackfillReport.engagementRate =
+                      backfillEngagementRate.toDouble();
+                  existingBackfillReport.successRate =
+                      backfillSuccessRate.toDouble();
+                  existingBackfillReport.reach = backfillReach.toInt();
+                  existingBackfillReport.cpc = backfillCpc.toDouble();
+                  existingBackfillReport.cpm = backfillCpm.toDouble();
+                  existingBackfillReport.roas = backfillRoas.toDouble();
+
+                  await FirebaseFirestore.instance
+                      .collection('AdReport')
+                      .doc(docId)
+                      .set(existingBackfillReport.toMap(),
+                          SetOptions(merge: true));
+                  debugPrint(
+                      'Backfill report updated for $adId on $backfillDate');
+                }
+              }
+
+              final allReportsSnapshot = await FirebaseFirestore.instance
+                  .collection('AdReport')
+                  .where('ad_id', isEqualTo: adId)
+                  .get();
+
+              final allReports = allReportsSnapshot.docs.map((doc) {
+                final data = doc.data();
+                return AdReport.fromMap(data);
+              }).toList();
+
+              allReports.sort((a, b) => a.reportDate.compareTo(b.reportDate));
+
+              final isRenewed = isAdRenewed(allReports);
+
+              if (isRenewed) {
+                final latestReports = allReports
+                    .where((report) => isReportNew(report, startDate))
+                    .toList()
+                  ..sort((a, b) => b.reportDate.compareTo(a.reportDate));
+
+                if (latestReports.isNotEmpty) {
+                  reports.addAll(latestReports
+                      .where((newReport) => !reports.contains(newReport)));
+                } else {
+                  debugPrint('No new reports found.');
                 }
               } else {
-                debugPrint('No new reports found.');
+                debugPrint('Ad is not renewed, handling as a new ad.');
+                reports.addAll(allReports);
               }
-            } else {
-              debugPrint('Ad is not renewed, handling as a new ad.');
-              // You can choose to handle new ads (e.g., still showing reports for ongoing ads)
-              reports.addAll(
-                  allReports); // For new ongoing ads, add reports anyway
+
+              reports.sort((a, b) => a.reportDate.compareTo(b.reportDate));
             }
           }
         }
-      }
 
-      // Update state with reports
-      setState(() {
-        adReports = reports;
-      });
+        // Update state with reports
+        setState(() {
+          adReports = reports;
+        });
+      }
     } catch (error) {
       debugPrint('Error fetching ad reports: $error');
     }

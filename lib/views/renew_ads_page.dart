@@ -149,6 +149,16 @@ class _RenewAdsPageState extends State<RenewAdsPage> {
       return;
     }
 
+    if (_renewalType == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Please select a renewal type'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
     double cpcRate = _calculateCPC();
     double cpmRate = _calculateCPM();
     double flatRate = _calculateFlatRate();
@@ -161,40 +171,38 @@ class _RenewAdsPageState extends State<RenewAdsPage> {
             Center(child: CircularProgressIndicator(color: Color(0xFF9F76F9))),
       );
 
-      var adDoc = await FirebaseFirestore.instance
-          .collection('Advertisement')
-          .doc(widget.adId)
-          .get();
-
-      if (adDoc.exists) {
-        DateTime oldCreatedAt = adDoc['created_at'].toDate();
-
-        Advertisement updatedAd = Advertisement(
-          id: widget.adId,
+      try {
+        // Create a new advertisement with an auto-generated ID
+        final newAdRef =
+            FirebaseFirestore.instance.collection('Advertisement').doc();
+        Advertisement newAd = Advertisement(
+          id: newAdRef.id,
           packageId: widget.travelPackageId,
           adType: _selectedAdType!,
           startDate: _startDate!,
           endDate: _endDate!,
           status: 'ongoing',
-          renewalType: 'automatic',
-          createdAt: oldCreatedAt,
+          renewalType: _renewalType!,
+          createdAt: DateTime.now(),
           cpcRate: cpcRate,
           cpmRate: cpmRate,
           flatRate: flatRate,
         );
 
-        await AdProvider().renewAdvertisement(
-          widget.adId,
-          updatedAd,
-          _totalPrice,
-          context,
-        );
+        await newAdRef.set(newAd.toMap());
+
+        int remainingCredits = widget.adsCredit - _totalPrice;
+        await FirebaseFirestore.instance
+            .collection('User')
+            .doc(FirebaseAuth.instance.currentUser!.uid)
+            .update({'ads_credit': remainingCredits});
+
         Navigator.pop(context);
         Navigator.pop(context, true);
-      } else {
+      } catch (error) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Advertisement not found.'),
+            content: Text('Failed to renew advertisement: $error'),
             backgroundColor: Colors.red,
           ),
         );
