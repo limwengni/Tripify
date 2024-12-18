@@ -270,6 +270,8 @@ class _ViewAdsPerformancePageState extends State<ViewAdsPerformancePage> {
 
             if (adSnapshot.exists) {
               final adData = adSnapshot.data()!;
+
+              adType = adData['ad_type'];
               final adReport = AdReport(
                 adId: widget.adId,
                 reportDate: todayDateOnly, // Use today's date
@@ -559,6 +561,15 @@ class _ViewAdsPerformancePageState extends State<ViewAdsPerformancePage> {
   }
 
   Future<void> fetchHistoricalAdReports() async {
+    final adSnapshot = await FirebaseFirestore.instance
+        .collection('Advertisement')
+        .doc(widget.adId)
+        .get();
+
+    final adData = adSnapshot.data()!;
+
+    adType = adData['ad_type'];
+    
     try {
       // Fetch historical reports directly using ad_id
       final adReportSnapshot = await FirebaseFirestore.instance

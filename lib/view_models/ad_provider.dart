@@ -90,89 +90,97 @@ class AdProvider with ChangeNotifier {
     }
   }
 
-  Future<void> renewAdvertisement(String adId, Advertisement updatedAd,
-      int renewalCost, BuildContext context) async {
-    try {
-      String currentUserId = FirebaseAuth.instance.currentUser!.uid;
-      DocumentSnapshot userDoc =
-          await _db.collection('User').doc(currentUserId).get();
+  // Future<void> renewAdvertisement(String adId, Advertisement updatedAd,
+  //     int renewalCost, BuildContext context) async {
+  //   try {
+  //     String currentUserId = FirebaseAuth.instance.currentUser!.uid;
+  //     DocumentSnapshot userDoc =
+  //         await _db.collection('User').doc(currentUserId).get();
 
-      if (userDoc.exists) {
-        int currentAdsCredit = (userDoc['ads_credit'] ?? 0).toInt();
+  //     if (userDoc.exists) {
+  //       int currentAdsCredit = (userDoc['ads_credit'] ?? 0).toInt();
 
-        if (currentAdsCredit < renewalCost) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text('Insufficient ads credit to renew the ad.'),
-            backgroundColor: Colors.red,
-          ));
-          return;
-        }
+  //       if (currentAdsCredit < renewalCost) {
+  //         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+  //           content: Text('Insufficient ads credit to renew the ad.'),
+  //           backgroundColor: Colors.red,
+  //         ));
+  //         return;
+  //       }
 
-        // Fetch the existing ad
-        DocumentReference adRef = _db.collection('Advertisement').doc(adId);
-        DocumentSnapshot adSnapshot = await adRef.get();
+  //       // Fetch the existing ad
+  //       DocumentReference adRef = _db.collection('Advertisement').doc(adId);
+  //       DocumentSnapshot adSnapshot = await adRef.get();
 
-        if (!adSnapshot.exists) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text('Advertisement not found for renewal.'),
-            backgroundColor: Colors.red,
-          ));
-          return;
-        }
+  //       if (!adSnapshot.exists) {
+  //         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+  //           content: Text('Advertisement not found for renewal.'),
+  //           backgroundColor: Colors.red,
+  //         ));
+  //         return;
+  //       }
 
-        WriteBatch batch = FirebaseFirestore.instance.batch();
+  //       await adRef.delete();
 
-        // Assuming ad data contains fields like 'start_date', 'end_date', and 'ad_type'
-        var adData = adSnapshot.data() as Map<String, dynamic>;
+  //       WriteBatch batch = FirebaseFirestore.instance.batch();
 
-        DateTime now = DateTime.now();
-        String transactionType = 'adspurchase';
+  //       // Create new ad with updated details
+  //       DocumentReference newAdRef = _db.collection('Advertisement').doc();
+  //       batch.set(newAdRef, {
+  //         'user_id': currentUserId,
+  //         'start_date': updatedAd.startDate,
+  //         'end_date': updatedAd.endDate,
+  //         'ad_type': updatedAd.adType,
+  //         'status': 'ongoing',
+  //         'created_at': Timestamp.now(),
+  //         'renewal_type':
+  //             'manual',
+  //         'flat_rate': updatedAd.flatRate,
+  //         'cpc_rate': updatedAd.cpcRate,
+  //         'cpm_rate': updatedAd.cpmRate,
+  //         'package_id': updatedAd.packageId,
+  //       });
 
-        batch.set(
-          FirebaseFirestore.instance.collection('AdsCredTransaction').doc(),
-          {
-            'user_id': currentUserId,
-            'amount': renewalCost,
-            'created_at': now,
-            'type': 'adspurchase',
-          },
-        );
+  //       // Log the ad credit transaction
+  //       DateTime now = DateTime.now();
+  //       batch.set(
+  //         FirebaseFirestore.instance.collection('AdsCredTransaction').doc(),
+  //         {
+  //           'user_id': currentUserId,
+  //           'amount': renewalCost,
+  //           'created_at': now,
+  //           'type': 'adspurchase', // Purchase of ad credit
+  //         },
+  //       );
 
-        batch.update(adRef, {
-          'start_date': updatedAd.startDate,
-          'end_date': updatedAd.endDate,
-          'ad_type': updatedAd.adType,
-          'status': 'ongoing',
-        });
+  //       // Update the user's ads credit
+  //       int newAdsCredit = currentAdsCredit - renewalCost;
+  //       batch.update(_db.collection('User').doc(currentUserId), {
+  //         'ads_credit': newAdsCredit,
+  //       });
 
-        // Update ads credit after renewal
-        int newAdsCredit = currentAdsCredit - renewalCost;
-        batch.update(_db.collection('User').doc(currentUserId), {
-          'ads_credit': newAdsCredit,
-        });
+  //       await batch.commit();
 
-        await batch.commit();
-
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('Advertisement renewed successfully!'),
-          backgroundColor: Color.fromARGB(255, 159, 118, 249),
-        ));
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('Failed to renew advertisement.'),
-          backgroundColor: Colors.red,
-        ));
-      }
-    } catch (e) {
-      print("Error renewing advertisement: $e");
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('An error occurred while renewing the advertisement.'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
-  }
+  //       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+  //         content: Text('Advertisement renewed successfully!'),
+  //         backgroundColor: Color.fromARGB(255, 159, 118, 249),
+  //       ));
+  //     } else {
+  //       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+  //         content: Text('Failed to renew advertisement.'),
+  //         backgroundColor: Colors.red,
+  //       ));
+  //     }
+  //   } catch (e) {
+  //     print("Error renewing advertisement: $e");
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       SnackBar(
+  //         content: Text('An error occurred while renewing the advertisement.'),
+  //         backgroundColor: Colors.red,
+  //       ),
+  //     );
+  //   }
+  // }
 
   Future<void> updateAdStatus() async {
     try {
@@ -185,8 +193,15 @@ class AdProvider with ChangeNotifier {
 
       // Loop through each ad to check if it has expired
       for (var doc in adsSnapshot.docs) {
-        DateTime endDate = doc['end_date'].toDate();
-        String packageId = doc['package_id'];
+        Map<String, dynamic> adData = doc.data();
+        if (!adData.containsKey('end_date')) {
+          print("Missing end_date for Ad: ${doc.id}");
+          continue;
+        }
+
+        DateTime endDate = adData['end_date'].toDate();
+        String packageId = adData['package_id'];
+        String currentStatus = adData['status'];
 
         final packageDoc = await FirebaseFirestore.instance
             .collection('New_Travel_Packages')
@@ -202,15 +217,19 @@ class AdProvider with ChangeNotifier {
         bool isAvailable = packageDoc['is_available'];
         DateTime packageEndDate = packageDoc['end_date'].toDate();
 
-        if (endDate.isBefore(currentDate) ||
-            packageEndDate.isBefore(currentDate)) {
+        print(
+            "Ad ID: ${doc.id}, End Date: $endDate, Current Date: $currentDate");
+        print(
+            "Package $packageId -> Quantity: $quantityAvailable, Available: $isAvailable, Package End Date: $packageEndDate");
+
+        if (endDate.isBefore(currentDate)) {
           await FirebaseFirestore.instance
               .collection('Advertisement')
               .doc(doc.id)
               .update({
             'status': 'ended',
           });
-        } else if ((quantityAvailable == 0 || !isAvailable) &&
+        } else if ((quantityAvailable == 0 || !isAvailable || packageEndDate.isBefore(currentDate)) &&
             doc['status'] != 'paused') {
           await FirebaseFirestore.instance
               .collection('Advertisement')
@@ -274,9 +293,9 @@ class AdProvider with ChangeNotifier {
           'renewal_type': doc['renewal_type'],
           'package_id': doc['package_id'],
           'ad_type': doc['ad_type'],
-          'cpc_rate':doc['cpc_rate'],
-          'cpm_rate':doc['cpm_rate'],
-          'flat_rate':doc['flat_rate'],
+          'cpc_rate': doc['cpc_rate'],
+          'cpm_rate': doc['cpm_rate'],
+          'flat_rate': doc['flat_rate'],
           'start_date': doc['start_date'],
         });
       }

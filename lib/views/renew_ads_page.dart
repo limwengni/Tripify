@@ -191,6 +191,18 @@ class _RenewAdsPageState extends State<RenewAdsPage> {
 
         await newAdRef.set(newAd.toMap());
 
+        // Log the ad credit transaction
+        DateTime now = DateTime.now();
+        await FirebaseFirestore.instance
+            .collection('AdsCredTransaction')
+            .doc()
+            .set({
+          'user_id': FirebaseAuth.instance.currentUser!.uid,
+          'amount': _totalPrice,
+          'created_at': now,
+          'type': 'adspurchase', // Purchase of ad credit
+        });
+
         int remainingCredits = widget.adsCredit - _totalPrice;
         await FirebaseFirestore.instance
             .collection('User')

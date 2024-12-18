@@ -39,6 +39,8 @@ class TravelPackageOnShelvesCard extends StatefulWidget {
 class _TravelPackagePurchasedCardState
     extends State<TravelPackageOnShelvesCard> {
   FirestoreService _firestoreService = FirestoreService();
+  final FirebaseFirestore _db = FirebaseFirestore.instance;
+
   NewTravelPackageModel? travelPackage;
   bool showMore = false; // State to control visibility of the last row
   int? viewNum;
@@ -106,10 +108,8 @@ class _TravelPackagePurchasedCardState
       int renewalCost, BuildContext context) async {
     try {
       String currentUserId = FirebaseAuth.instance.currentUser!.uid;
-      DocumentSnapshot userDoc = await FirebaseFirestore.instance
-          .collection('User')
-          .doc(currentUserId)
-          .get();
+      DocumentSnapshot userDoc =
+          await _db.collection('User').doc(currentUserId).get();
 
       if (userDoc.exists) {
         int currentAdsCredit = (userDoc['ads_credit'] ?? 0).toInt();
@@ -122,31 +122,57 @@ class _TravelPackagePurchasedCardState
           return;
         }
 
-        // Create new advertisement instead of updating the existing one
-        Advertisement newAd = Advertisement(
-          id: adId, // If you want to keep the same ID, otherwise remove this line and let Firestore generate a new one.
-          packageId: updatedAd.packageId,
-          adType: updatedAd.adType,
-          startDate: updatedAd.startDate,
-          endDate: updatedAd.endDate,
-          status: 'ongoing',
-          renewalType: 'automatic',
-          createdAt: DateTime.now(), // New created time for renewal
-          cpcRate: updatedAd.cpcRate,
-          cpmRate: updatedAd.cpmRate,
-          flatRate: updatedAd.flatRate,
+        // Fetch the existing ad
+        DocumentReference adRef = _db.collection('Advertisement').doc(adId);
+        DocumentSnapshot adSnapshot = await adRef.get();
+
+        if (!adSnapshot.exists) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text('Advertisement not found for renewal.'),
+            backgroundColor: Colors.red,
+          ));
+          return;
+        }
+
+        await adRef.delete();
+
+        WriteBatch batch = FirebaseFirestore.instance.batch();
+
+        // Create new ad with updated details
+        DocumentReference newAdRef = _db.collection('Advertisement').doc();
+        batch.set(newAdRef, {
+          'user_id': currentUserId,
+          'start_date': updatedAd.startDate,
+          'end_date': updatedAd.endDate,
+          'ad_type': updatedAd.adType,
+          'status': 'ongoing',
+          'created_at': Timestamp.now(),
+          'renewal_type': 'manual',
+          'flat_rate': updatedAd.flatRate,
+          'cpc_rate': updatedAd.cpcRate,
+          'cpm_rate': updatedAd.cpmRate,
+          'package_id': updatedAd.packageId,
+        });
+
+        // Log the ad credit transaction
+        DateTime now = DateTime.now();
+        batch.set(
+          FirebaseFirestore.instance.collection('AdsCredTransaction').doc(),
+          {
+            'user_id': currentUserId,
+            'amount': renewalCost,
+            'created_at': now,
+            'type': 'adspurchase', // Purchase of ad credit
+          },
         );
 
-        // Call the create advertisement function with the new ad data
-        await AdProvider().createAdvertisement(newAd, context, renewalCost);
-
-        // Handle credit transaction update (reusing the existing functionality)
-        await FirebaseFirestore.instance
-            .collection('User')
-            .doc(currentUserId)
-            .update({
-          'ads_credit': currentAdsCredit - renewalCost,
+        // Update the user's ads credit
+        int newAdsCredit = currentAdsCredit - renewalCost;
+        batch.update(_db.collection('User').doc(currentUserId), {
+          'ads_credit': newAdsCredit,
         });
+
+        await batch.commit();
 
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text('Advertisement renewed successfully!'),
@@ -282,6 +308,16 @@ class _TravelPackagePurchasedCardState
     print("eligible: $_isEligible");
   }
 
+  DateTime calculateEndDate(String renewalType) {
+    if (renewalType == '3 Days') {
+      return DateTime.now().add(Duration(days: 3));
+    } else if (renewalType == '7 Days') {
+      return DateTime.now().add(Duration(days: 7));
+    } else {
+      return DateTime.now().add(Duration(days: 30)); // Default for '30 Days'
+    }
+  }
+
   Future<bool> checkIfAds(String travelPackageId) async {
     // Fetch the ad details using your provider
     List<Map<String, dynamic>> adDetails =
@@ -291,6 +327,7 @@ class _TravelPackagePurchasedCardState
     String adId = '';
     String status = '';
     String renewalType = '';
+    int flatRate = 0;
 
     // Check if there are ads available
     Advertisement? updatedAd;
@@ -303,29 +340,22 @@ class _TravelPackagePurchasedCardState
       for (var ad in adDetails) {
         adId = ad['id']; // Get the ad ID
         status = ad['status']; // Get the status of the ad
-        renewalType = ad['renewal_type']; // Get renewal type
-
-        if (renewalType == '3 Days') {
-          renewalCost = 50;
-        } else if (renewalType == '7 Days') {
-          renewalCost = 100;
-        } else {
-          renewalCost = 300;
-        }
+        flatRate = (ad['flat_rate'] ?? 0).toInt(); // Get flat rate
+        renewalCost = flatRate;
+        renewalType = (ad['renewal_type']);
 
         updatedAd = Advertisement(
           id: adId,
           packageId: ad['package_id'],
           adType: ad['ad_type'],
           startDate: DateTime.now(),
-          endDate: DateTime.now()
-              .add(Duration(days: 30)),
+          endDate: calculateEndDate(renewalType),
           status: 'ongoing',
           renewalType: renewalType,
           createdAt: DateTime.now(),
           cpcRate: ad['cpc_rate'],
           cpmRate: ad['cpm_rate'],
-          flatRate: ad['flat_rate'],
+          flatRate: flatRate.toDouble(),
         );
       }
 
@@ -347,7 +377,13 @@ class _TravelPackagePurchasedCardState
         _renewalType = renewalType;
       });
 
+      print('is ad ended: $_isAdEnded');
+      print('renewal cost: $renewalCost');
+      print('renewal type: $renewalType');
+      print('updatedAd: $updatedAd');
+
       if (_isAdEnded && _renewalType == 'automatic' && updatedAd != null) {
+        print('renewal cost 2: $renewalCost');
         await renewAdvertisement(adId, updatedAd, renewalCost, context);
       }
     } else {
@@ -355,7 +391,7 @@ class _TravelPackagePurchasedCardState
 
       // If no ads, then check if that package can create ads or not
       await checkAdEligibility(travelPackageId);
-      print("No ads available for this travel package.");
+      print("No ads available for this travel package. $travelPackageId");
     }
 
     return _hasAds;
