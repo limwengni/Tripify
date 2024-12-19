@@ -208,6 +208,24 @@ class _ViewAdsPerformancePageState extends State<ViewAdsPerformancePage> {
           final endOfDay =
               DateTime(today.year, today.month, today.day, 23, 59, 59);
 
+          final existingReportsSnapshot = await FirebaseFirestore.instance
+              .collection('AdReport')
+              .where('ad_id', isEqualTo: widget.adId)
+              .get();
+
+          for (var doc in existingReportsSnapshot.docs) {
+            final reportDate = (doc['report_date'] as Timestamp).toDate();
+            final normalizedReportDate =
+                DateTime(reportDate.year, reportDate.month, reportDate.day);
+
+            // Exclude today's report from the list
+            if (!normalizedReportDate.isAtSameMomentAs(todayDateOnly)) {
+              final existingAdReport = AdReport.fromMap(doc
+                  .data());
+              adReports.add(existingAdReport);
+            }
+          }
+
           // Fetch ad interactions
           final adInteractionsSnapshot = await FirebaseFirestore.instance
               .collection('AdInteraction')
@@ -301,6 +319,8 @@ class _ViewAdsPerformancePageState extends State<ViewAdsPerformancePage> {
           setState(() {
             adReports.add(defaultAdReport);
           });
+
+          print('lenght: ${adReports.length}');
         } else {
           debugPrint('No ad found for adId: ${widget.adId}');
         }
@@ -569,7 +589,7 @@ class _ViewAdsPerformancePageState extends State<ViewAdsPerformancePage> {
     final adData = adSnapshot.data()!;
 
     adType = adData['ad_type'];
-    
+
     try {
       // Fetch historical reports directly using ad_id
       final adReportSnapshot = await FirebaseFirestore.instance

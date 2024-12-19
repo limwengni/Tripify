@@ -210,21 +210,21 @@ class _HomePageState extends State<HomePage> {
                                 'timestamp': FieldValue.serverTimestamp(),
                               });
 
-                              final adReportSnapshot = await FirebaseFirestore
-                                  .instance
-                                  .collection('AdReport')
-                                  .where('ad_id', isEqualTo: adId)
-                                  .get();
+                              // final adReportSnapshot = await FirebaseFirestore
+                              //     .instance
+                              //     .collection('AdReport')
+                              //     .where('ad_id', isEqualTo: adId)
+                              //     .get();
 
-                              if (adReportSnapshot.docs.isNotEmpty) {
-                                final adReportDoc = adReportSnapshot.docs.first;
-                                await FirebaseFirestore.instance
-                                    .collection('AdReport')
-                                    .doc(adReportDoc.id)
-                                    .update({
-                                  'click_count': FieldValue.increment(1),
-                                });
-                              }
+                              // if (adReportSnapshot.docs.isNotEmpty) {
+                              //   final adReportDoc = adReportSnapshot.docs.first;
+                              //   await FirebaseFirestore.instance
+                              //       .collection('AdReport')
+                              //       .doc(adReportDoc.id)
+                              //       .update({
+                              //     'click_count': FieldValue.increment(1),
+                              //   });
+                              // }
                             }
 
                             // Navigate to the Travel Package Details Page after checking the ad interaction
