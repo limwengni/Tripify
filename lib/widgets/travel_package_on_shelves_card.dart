@@ -147,7 +147,7 @@ class _TravelPackagePurchasedCardState
           'ad_type': updatedAd.adType,
           'status': 'ongoing',
           'created_at': Timestamp.now(),
-          'renewal_type': 'manual',
+          'renewal_type': 'automatic',
           'flat_rate': updatedAd.flatRate,
           'cpc_rate': updatedAd.cpcRate,
           'cpm_rate': updatedAd.cpmRate,
@@ -327,6 +327,7 @@ class _TravelPackagePurchasedCardState
     String adId = '';
     String status = '';
     String renewalType = '';
+    String adType = '';
     int flatRate = 0;
 
     // Check if there are ads available
@@ -343,13 +344,14 @@ class _TravelPackagePurchasedCardState
         flatRate = (ad['flat_rate'] ?? 0).toInt(); // Get flat rate
         renewalCost = flatRate;
         renewalType = (ad['renewal_type']);
+        adType = (ad['ad_type']);
 
         updatedAd = Advertisement(
           id: adId,
           packageId: ad['package_id'],
           adType: ad['ad_type'],
           startDate: DateTime.now(),
-          endDate: calculateEndDate(renewalType),
+          endDate: calculateEndDate(adType),
           status: 'ongoing',
           renewalType: renewalType,
           createdAt: DateTime.now(),
@@ -382,7 +384,7 @@ class _TravelPackagePurchasedCardState
       print('renewal type: $renewalType');
       print('updatedAd: $updatedAd');
 
-      if (_isAdEnded && _renewalType == 'automatic' && updatedAd != null) {
+      if (_isAdEnded && !_isAdPaused && _renewalType == 'automatic' && updatedAd != null) {
         print('renewal cost 2: $renewalCost');
         await renewAdvertisement(adId, updatedAd, renewalCost, context);
       }
@@ -605,7 +607,7 @@ class _TravelPackagePurchasedCardState
                                   child: const Text('View Ads Performance'),
                                 ),
                               ] else if (_isAdEnded &&
-                                  _renewalType == 'manual') ...[
+                                  _renewalType == 'manual' && _isAdPaused) ...[
                                 TextButton(
                                   onPressed: () async {
                                     // Logic to renew the ad
