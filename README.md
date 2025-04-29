@@ -1,8 +1,6 @@
 # Tripify
 
-Tripify is an AI-powered Flutter application that generates personalized travel itineraries based on user preferences such as destination, dates, budget, and interests. The app helps simplify the travel planning process by automating itinerary creation and offering intelligent recommendations for destinations, activities, accommodations, and transportation.
-
-Tripify is made by **Lim Weng Ni** and **Tan Wei Siang**.
+Tripify is an AI-powered Flutter application designed by **Lim Weng Ni** and **Tan Wei Siang** to simplify travel planning through a content-based recommendation system and an intelligent travel assistant. Developed using Flutter and Dart, with Python AI integration via Ollama, the app generates personalized itineraries based on user preferences such as destination and travel dates. Users can manage their profiles, create and share posts, store documents, and collaborate with friends on trip planning. The AI assistant offers general travel tips and personalized advice, even allowing users to upload itineraries for further guidance. The app streamlines the selection of destinations, activities, accommodations, and transportation, improving planning efficiency. Testing focused on the relevance of recommendations, UI responsiveness, and AI interaction quality. Future improvements include expanding the travel recommendation database and adding offline access features for greater convenience.
 
 ## Getting Started
 
@@ -57,10 +55,10 @@ To get started with the Tripify project, you’ll need to have the following too
 
 ### Features
 
-- **AI-Powered Itinerary Generation**: Tripify creates personalized itineraries based on the user's preferences.
-- **Destination, Accommodation, and Activity Recommendations**: AI suggests destinations, places to stay, and activities based on user inputs.
-- **Customizable Itineraries**: Users can adjust their itineraries to better fit their needs.
-- **Cross-Platform Support**: Built using Flutter for smooth operation on both iOS and Android.
+- **Customizable and Collaborative Itineraries**: Tripify allows users to create and manage personalized itineraries based on their preferences. Users can manually select places, set dates, organize activities, and invite friends to collaborate on trip planning in real-time.
+- **Content-Based Recommendation System**: Tripify recommends posts that match the user's liked hashtags, helping users discover relevant travel content based on their interests.
+- **AI Travel Assistant**: Integrated with Ollama, the AI assistant offers general travel tips, answers user queries, and provides advice based on uploaded itineraries.
+- **Post Management and Document Repository**: Users can create posts to share travel experiences and upload important travel documents securely within the app.
 
 ## Documentation
 
